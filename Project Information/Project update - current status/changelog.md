@@ -1,5 +1,39 @@
 # API Sentinel — Changelog
 
+## [Stage 19 - AI Recommendation Layer] - 2026-09-09
+- **Completed**: Structured Prompt Synthesis & Guardrails, Deterministic Rule-Based Fallback Engine, Google Gemini Integration, and AIRecommendation Persistence (Stage 19 Complete).
+- Created `app/models/entities/ai_recommendation.py`:
+  - `AIRecommendation` database entity model storing evidence IDs, root cause categories, likely causes, severity, suggested fixes, code snippets, confidence percentages, recommendation sources (`GEMINI_LLM` vs `RULE_BASED_HEURISTIC`), model names, and JSON-encoded documentation references.
+- Exported `AIRecommendation` in `app/models/entities/__init__.py`.
+- Created `app/models/schemas/ai_recommendation.py` with:
+  - `RecommendationSource` (`GEMINI_LLM`, `RULE_BASED_HEURISTIC`).
+  - `RecommendationSeverity` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).
+  - `SynthesizedPrompt`, `FixRecommendation`, `AIEngineStatus`, `GenerateRecommendationRequest`.
+- Created `app/utils/prompt_synthesizer.py` (Sub-Stage 19.01):
+  - Structured prompt compiler transforming `FailureEvidence` into token-efficient system and user prompts.
+  - Enforced the **Prime Directive**: the deterministic execution and classification engines strictly own pass/fail verdicts; the LLM is restricted to diagnosing context and generating actionable code fixes.
+  - Attached strict JSON response schema and validation guardrails.
+- Created `app/utils/heuristic_recommender.py` (Sub-Stage 19.02):
+  - Deterministic expert remediation engine providing concrete Python/FastAPI/Pydantic/SQLAlchemy code snippets and RFC references across all 13 root cause categories in offline/fallback mode.
+- Implemented `AIRecommendationService` in `app/services/ai_recommendation_service.py` (Sub-Stage 19.03):
+  - `engine_status()`: Diagnostic probe reporting AI engine availability and active engine mode.
+  - `synthesize()`: Structured prompt generation.
+  - `generate()`: Dual-mode dispatcher invoking Google Gemini LLM when configured, with seamless, zero-crash fallback to heuristics.
+  - `generate_from_snapshot()`: One-step evidence packaging and recommendation synthesis.
+  - `_persist()`: Database persistence for generated recommendations.
+  - `recommend_for_result()` & `for_result()`: Attaches and retrieves remediation proposals linked to persisted `TestResult` records.
+- Implemented REST API router in `app/api/v1/ai_recommendations.py`:
+  - `GET /api/v1/ai/status`
+  - `POST /api/v1/ai/synthesize-prompt`
+  - `POST /api/v1/ai/recommend`
+  - `POST /api/v1/ai/recommend-from-snapshot`
+  - `POST /api/v1/results/{result_id}/recommendation`
+  - `GET /api/v1/results/{result_id}/recommendations`
+- Mounted `ai_recommendations_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_ai_recommendations.py` (12 new tests passing).
+- Total test suite count increased to 242 passing tests with 100% pass rate.
+- Marked Stage 19: AI Recommendation Layer as 100% COMPLETE.
+
 ## [Stage 18 - Failure Analysis Engine] - 2026-09-09
 - **Completed**: Structured Evidence Packaging, Credential Masking, cURL Reproduction Generator, 13-Category Root-Cause Taxonomy, and Run Failure Reporting (Stage 18 Complete).
 - Created `app/models/schemas/failure_analysis.py` with:
