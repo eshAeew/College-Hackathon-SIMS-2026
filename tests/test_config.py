@@ -16,7 +16,7 @@ class TestConfig(unittest.TestCase):
 
     def test_default_settings(self):
         """Verify default configuration values."""
-        settings = Settings()
+        settings = Settings(_env_file=None)
         self.assertEqual(settings.PROJECT_NAME, "API Sentinel")
         self.assertEqual(settings.VERSION, "0.1.0")
         self.assertEqual(settings.ENVIRONMENT, "development")
