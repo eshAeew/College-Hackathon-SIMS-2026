@@ -27,6 +27,7 @@ from app.api.v1.database import router as database_router
 from app.api.v1.resilience import router as resilience_router
 from app.api.v1.audit import router as audit_router
 from app.api.v1.self_test import router as self_test_router
+from app.api.v1.demo_workflow import router as demo_workflow_router
 from app.web.routes import dashboard_api_router
 
 
@@ -101,6 +102,7 @@ api_router.include_router(database_router)
 api_router.include_router(resilience_router)
 api_router.include_router(audit_router)
 api_router.include_router(self_test_router)
+api_router.include_router(demo_workflow_router)
 api_router.include_router(dashboard_api_router)
 
 

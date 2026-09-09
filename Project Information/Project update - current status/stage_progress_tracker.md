@@ -32,4 +32,4 @@
 | **Stage 26** | Platform Self-Testing Suite | Tier 1 | `COMPLETED` | Programmatic SelfTestService, subsystem health & readiness matrix, detailed test result parser, self-test CLI runner, self-test REST router (5/5 tests OK) |
 | **Stage 27** | Intentionally Flawed Demo API | Tier 2 | `COMPLETED` | Mock Alpha Commerce store with 6 injected bugs (500 crash, slow query, schema drift, flaky 503, bad JSON, state leak), dynamic bug controller, standalone runner (7/7 tests OK) |
 
-| **Stage 28** | Final Demo Workflow & Pitch | Tier 1 | `PLANNED` | 3-minute live presentation script & playbook |
+| **Stage 28** | Final Demo Workflow & Pitch | Tier 1 | `COMPLETED` | 14-step demo story orchestrator, `/api/v1/demo/*` REST APIs, 3-min pitch script, live demo presenter guide, judge Q&A cheatsheet, CLI story runner (6/6 tests OK) |

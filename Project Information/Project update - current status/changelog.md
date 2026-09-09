@@ -1,5 +1,39 @@
 # API Sentinel — Changelog
 
+## [Stage 28 - Final Demo Workflow & Pitch Playbook] - 2026-09-09
+- **Completed**: 14-Step Presentation Story Orchestrator, Demo Workflow REST APIs, 3-Minute Pitch Script, Live Demo Presenter Guide, Judge Q&A Cheatsheet, Standalone Interactive CLI Story Runner, and Comprehensive Test Suite (Stage 28 Complete — All 28 Stages 100% Delivered).
+- Created `app/models/schemas/demo_workflow.py`:
+  - `DemoStepResult`: Structured execution record for each live demo step (`step_number`, `title`, `action`, `status`, `headline`, `details`, `key_findings`).
+  - `DemoBootstrapResponse`: Workspace initialization metadata (`project_id`, `endpoints_imported`, `test_cases_created`, `status`).
+  - `DemoStoryResponse`: Complete end-to-end 14-step story outcome (`phase_1_baseline_run_id`, `phase_1_failures_detected`, `phase_2_verification_run_id`, `phase_2_pass_rate`, `regression_verdict`, `steps`).
+  - `PitchSection`: 3-minute presentation timeline segment (`time_stamp`, `title`, `presenter_dialogue`, `ui_action`, `key_takeaway`).
+  - `DemoPitchPlaybookResponse`: Complete pitch script with elevator pitch, problem, solution, 5-segment timeline, and judge Q&A cheatsheet.
+- Created `app/services/demo_workflow_service.py`:
+  - `DemoWorkflowService.bootstrap_demo()`: Automatically sets up demo workspace, imports 6 Alpha Commerce endpoints, and synthesizes 9 test cases.
+  - `DemoWorkflowService.execute_phase_1_baseline()`: Executes baseline test suite against flawed target API, detecting 6 real-world runtime defects across 6 failure categories with AI recommendations.
+  - `DemoWorkflowService.apply_demo_fixes()`: Dynamically patches all 6 target API bugs via `DemoApiConfig`.
+  - `DemoWorkflowService.execute_phase_2_verification()`: Re-executes test suite against fixed API, achieving 100% pass rate and computing regression comparison diff.
+  - `DemoWorkflowService.run_complete_story()`: Autonomous 1-click execution of the entire 14-step presentation lifecycle.
+  - `DemoWorkflowService.get_pitch_playbook()`: Generates 3-minute pitch timeline and judge Q&A cheatsheet.
+- Created `app/api/v1/demo_workflow.py`:
+  - `POST /api/v1/demo/bootstrap`: Initialize demo workspace.
+  - `POST /api/v1/demo/execute-phase-1`: Run baseline audit against flawed target.
+  - `POST /api/v1/demo/apply-fixes`: Apply developer remediations.
+  - `POST /api/v1/demo/execute-phase-2`: Run verification suite against fixed target.
+  - `POST /api/v1/demo/run-complete-story`: Autonomous 1-click execution of full demo story.
+  - `GET /api/v1/demo/playbook`: Fetch 3-minute pitch script and judge Q&A cheatsheet.
+- Mounted `demo_workflow_router` under `/api/v1/demo` in `app/api/v1/api.py`.
+- Created `scripts/run_demo_story.py`:
+  - Standalone interactive CLI runner that executes the 14-step presentation story in 2 seconds with formatted ASCII banners, step breakdown, and regression summary.
+- Created documentation in `Project Information/Demo Playbook/`:
+  - `3_minute_pitch_script.md`: Timed presenter dialogue for 180-second live presentation.
+  - `live_demo_step_by_step_guide.md`: 14-step checklist with UI actions and narration cues.
+  - `judge_qa_cheatsheet.md`: Technical Q&A cheatsheet covering architecture, offline heuristics, safety gates, and CI/CD.
+- Created unit and integration test suite in `tests/test_demo_workflow_and_pitch.py`:
+  - 6 unit & integration tests covering bootstrapping, phase 1 & 2 executions, full story runner, playbook, and REST APIs.
+- Full test suite verified: **302 / 302 passing tests with 100% pass rate across all 28 stages**.
+- Marked Stage 28: Final Demo Workflow & Pitch Playbook as 100% COMPLETE.
+
 ## [Stage 27 - Intentionally Flawed Demo Target API] - 2026-09-09
 - **Completed**: Mock Alpha Commerce E-Commerce API, 6 Injected Real-World Bugs, Dynamic Bug Toggle Controller, Standalone Server Launcher, OpenAPI 3.1.0 Generator, and Demo API Test Suite (Stage 27 Complete).
 - Implemented `app/demo_target/config.py`:
