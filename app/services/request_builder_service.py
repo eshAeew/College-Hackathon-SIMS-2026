@@ -13,7 +13,10 @@ from app.models.schemas.request_config import (
     RequestCompileOverride,
     CompiledRequestResponse,
     DirectRequestBuilderRequest,
+    PreflightValidationRequest,
+    PreflightValidationReport,
 )
+from app.utils.preflight_validator import execute_preflight_check
 
 logger = logging.getLogger("app.services.request_builder")
 
@@ -331,3 +334,63 @@ class RequestBuilderService:
         )
 
         return httpx_req, response_dto
+
+    @classmethod
+    def validate_preflight(cls, req: PreflightValidationRequest) -> PreflightValidationReport:
+        """Run pre-flight validation audit on an arbitrary direct request."""
+        method_str = req.method.value if hasattr(req.method, "value") else str(req.method)
+        return execute_preflight_check(
+            base_url=req.base_url,
+            method=method_str,
+            path=req.path,
+            path_params=req.path_params,
+            query_params=req.query_params,
+            headers=req.headers,
+            body=req.body,
+            body_type=req.body_type
+        )
+
+    @classmethod
+    def validate_endpoint_preflight(
+        cls,
+        project: Project,
+        endpoint: Endpoint,
+        overrides: Optional[RequestCompileOverride] = None
+    ) -> PreflightValidationReport:
+        """Run pre-flight validation audit on a stored Endpoint + Project workspace with overrides."""
+        overrides = overrides or RequestCompileOverride()
+
+        method_str = endpoint.method
+        base_url = overrides.base_url or project.base_url
+
+        # Merge path parameters
+        merged_path_params = dict(endpoint.path_params)
+        if overrides.path_params:
+            merged_path_params.update(overrides.path_params)
+
+        # Merge query parameters
+        merged_query_params = dict(endpoint.query_params)
+        if overrides.query_params:
+            merged_query_params.update(overrides.query_params)
+
+        # Merge headers
+        merged_headers = cls.merge_headers(
+            project_headers=project.global_headers,
+            endpoint_headers=endpoint.headers,
+            override_headers=overrides.headers
+        )
+
+        # Effective body
+        effective_body = overrides.body if overrides.body is not None else endpoint.body_schema
+        effective_body_type = overrides.body_type or (BodyType.JSON if effective_body and effective_body != {} else BodyType.EMPTY)
+
+        return execute_preflight_check(
+            base_url=base_url,
+            method=method_str,
+            path=endpoint.path,
+            path_params=merged_path_params,
+            query_params=merged_query_params,
+            headers=merged_headers,
+            body=effective_body,
+            body_type=effective_body_type
+        )

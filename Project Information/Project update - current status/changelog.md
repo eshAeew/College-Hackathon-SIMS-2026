@@ -1,5 +1,22 @@
 # API Sentinel — Changelog
 
+## [Stage 04 - Sub-Stage 02] - 2026-09-09
+- **Completed**: Pre-flight Syntax & Configuration Validation (Stage 04 Complete).
+- Created `app/utils/preflight_validator.py` with standalone and composite pre-flight validation utilities:
+  - `validate_url_syntax()`: Scheme verification (`http`/`https`), host/domain format checking, and port range validation (`1-65535`).
+  - `validate_path_parameters()`: Token parsing and unfulfilled path placeholder detection.
+  - `validate_body_syntax()`: Content-Type alignment, JSON parse validation, and form-data format checking.
+  - `validate_headers_syntax()`: ASCII/ISO-8859-1 enforcement, header name character checks, and forbidden header detection (e.g., `Host`).
+  - `execute_preflight_check()`: Composite analyzer aggregating blocking `errors` and non-blocking `warnings`.
+- Added `PreflightValidationRequest` and `PreflightValidationReport` DTO schemas in `app/models/schemas/request_config.py`.
+- Extended `RequestBuilderService` in `app/services/request_builder_service.py` with `validate_preflight()` and `validate_endpoint_preflight()`.
+- Implemented Pre-flight Validation REST endpoints in `app/api/v1/requests.py`:
+  - `POST /api/v1/requests/preflight-check`
+  - `POST /api/v1/projects/{project_id}/endpoints/{endpoint_id}/preflight-check`
+- Added comprehensive unit and integration test suite in `tests/test_preflight_validation.py` (8 new tests passing).
+- Total test suite count increased to 63 passing tests with 100% pass rate.
+- Marked Stage 04: Dynamic Request Configuration Engine as 100% COMPLETE.
+
 ## [Stage 04 - Sub-Stage 01] - 2026-09-09
 - **Completed**: Dynamic HTTP Request Builder & Payload Serializers.
 - Created `app/models/schemas/request_config.py` with `BodyType`, `RequestCompileOverride`, `DirectRequestBuilderRequest`, and `CompiledRequestResponse` DTOs.

@@ -7,9 +7,9 @@ Catch malformed URLs, invalid JSON strings, and missing mandatory parameters bef
 Pre-flight validation routines detecting syntax errors and unresolved variables.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Validate URL scheme (http/https) and hostname.
-- [ ] Verify JSON payload syntax validity.
-- [ ] Ensure all path parameters in URL template have supplied values.
+- [x] Validate URL scheme (http/https) and hostname.
+- [x] Verify JSON payload syntax validity.
+- [x] Ensure all path parameters in URL template have supplied values.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Pre-flight validation routines detecting syntax errors and unresolved variables.
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Pre-flight validator blocks invalid configurations with descriptive error messages.**
