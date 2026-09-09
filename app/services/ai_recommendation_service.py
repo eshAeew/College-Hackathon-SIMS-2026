@@ -16,6 +16,7 @@ from app.models.entities.ai_recommendation import AIRecommendation
 from app.models.schemas.ai_recommendation import (
     AIEngineStatus,
     FixRecommendation,
+    GenerateRecommendationRequest,
     RecommendationSeverity,
     RecommendationSource,
     SynthesizedPrompt,
@@ -47,16 +48,16 @@ class AIRecommendationService:
         sdk = _sdk_available()
         online = bool(settings.is_ai_enabled and sdk)
         if online:
-            message = f"Google Gemini ({settings.GEMINI_MODEL}) is configured and will be used."
+            message = f"Google Gemini ({settings.GEMINI_MODEL}) is configured and active."
         elif settings.is_ai_enabled and not sdk:
             message = (
-                "GEMINI_API_KEY is set but the google-genai SDK is not installed; "
-                "falling back to the deterministic rule-based engine."
+                "GEMINI_API_KEY is configured but google-genai SDK is not installed; "
+                "falling back to the deterministic rule-based heuristic engine."
             )
         else:
             message = (
-                "No GEMINI_API_KEY configured - running fully offline on the "
-                "deterministic rule-based engine."
+                "No GEMINI_API_KEY configured - running in offline mode with "
+                "the deterministic rule-based heuristic engine."
             )
         return AIEngineStatus(
             ai_enabled=settings.is_ai_enabled,
@@ -71,12 +72,12 @@ class AIRecommendationService:
 
     @staticmethod
     def synthesize(evidence: FailureEvidence) -> SynthesizedPrompt:
-        """Expose the exact prompt that would be sent to the LLM (sub-stage 19.01)."""
+        """Expose the exact structured prompt that would be sent to the LLM (Sub-Stage 19.01)."""
         return synthesize_prompt(evidence)
 
     @staticmethod
     def _call_gemini(prompt: SynthesizedPrompt) -> Optional[FixRecommendation]:
-        """Attempt an LLM completion; return None so the caller can fall back."""
+        """Attempt an LLM completion; returns None on failure so caller falls back gracefully."""
         settings = get_settings()
         try:
             from google import genai
@@ -108,7 +109,7 @@ class AIRecommendationService:
         likely_cause = payload.get("likely_cause")
         suggested_fix = payload.get("suggested_fix")
         if not likely_cause or not suggested_fix:
-            logger.warning("Gemini returned an incomplete card; using rule-based fallback.")
+            logger.warning("Gemini returned an incomplete payload; falling back to heuristics.")
             return None
 
         return FixRecommendation(
@@ -117,9 +118,10 @@ class AIRecommendationService:
             severity=severity,
             suggested_fix=str(suggested_fix),
             code_snippet=payload.get("code_snippet"),
-            confidence_pct=float(payload.get("confidence_pct") or 70.0),
+            confidence_pct=float(payload.get("confidence_pct") or 85.0),
             source=RecommendationSource.GEMINI_LLM,
             model_name=settings.GEMINI_MODEL,
+            references=payload.get("references") or [],
         )
 
     @classmethod
@@ -130,7 +132,7 @@ class AIRecommendationService:
         persist: bool = False,
         test_result_id: Optional[int] = None
     ) -> FixRecommendation:
-        """Produce a remediation card, preferring the LLM and falling back to heuristics."""
+        """Produce a remediation card, preferring Gemini and seamlessly falling back to heuristics."""
         settings = get_settings()
         recommendation: Optional[FixRecommendation] = None
 
@@ -140,7 +142,6 @@ class AIRecommendationService:
         if recommendation is None:
             recommendation = recommend_from_evidence(evidence)
 
-        # Keep the deterministic category attached regardless of which engine answered.
         recommendation.root_cause_category = evidence.root_cause.category.value
         recommendation.evidence_id = evidence.evidence_id
 
@@ -157,7 +158,7 @@ class AIRecommendationService:
         persist: bool = False,
         test_result_id: Optional[int] = None
     ) -> FixRecommendation:
-        """Package evidence and recommend a fix in a single call."""
+        """Package evidence and recommend a fix in a single workflow."""
         evidence = FailureAnalysisService.package_adhoc(req)
         return cls.generate(evidence, db=db, persist=persist, test_result_id=test_result_id)
 
@@ -167,11 +168,11 @@ class AIRecommendationService:
         recommendation: FixRecommendation,
         test_result_id: Optional[int]
     ) -> AIRecommendation:
-        """Store a generated recommendation for later retrieval."""
+        """Store a generated recommendation in the database."""
         record = AIRecommendation(
             test_result_id=test_result_id,
             evidence_id=recommendation.evidence_id,
-            root_cause_category=recommendation.root_cause_category,
+            root_cause_category=recommendation.root_cause_category or "UNKNOWN_FAILURE",
             likely_cause=recommendation.likely_cause,
             severity=recommendation.severity.value,
             suggested_fix=recommendation.suggested_fix,
@@ -185,7 +186,7 @@ class AIRecommendationService:
         db.commit()
         db.refresh(record)
         logger.info(
-            f"Stored AIRecommendation #{record.id} ({record.source}) for "
+            f"Persisted AIRecommendation #{record.id} ({record.source}) for "
             f"evidence {record.evidence_id}"
         )
         return record

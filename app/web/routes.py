@@ -1,148 +1,101 @@
-"""Server-rendered web interface for API Sentinel (Stage 20).
-
-Thin presentation layer: every figure shown here comes from DashboardService or
-RunComparisonService, so the UI never computes its own verdicts.
-"""
+"""FastAPI router serving the Web UI and Dashboard Aggregator APIs (Stage 20)."""
 import logging
-from pathlib import Path as FilePath
-
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
+from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, JSONResponse
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
 from app.core.database import get_db
-from app.models.entities.project import Project
-from app.services.ai_recommendation_service import AIRecommendationService
+from app.models.schemas.dashboard import DashboardOverviewResponse, ProjectDetailView
+from app.models.schemas.response import StandardResponse
 from app.services.dashboard_service import DashboardService
-from app.services.run_comparison_service import RunComparisonService
 
-logger = logging.getLogger("app.web")
+logger = logging.getLogger("app.web.routes")
 settings = get_settings()
 
-TEMPLATES_DIR = FilePath(__file__).parent / "templates"
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+web_router = APIRouter(tags=["Web Dashboard"])
+dashboard_api_router = APIRouter(prefix="/dashboard", tags=["Dashboard Aggregator"])
 
-router = APIRouter(tags=["Web Interface"], include_in_schema=False)
-
-
-@router.get("/ui", response_class=HTMLResponse, name="ui_dashboard")
-def ui_dashboard(request: Request, db: Session = Depends(get_db)):
-    """Global dashboard: KPI cards, recent runs, critical issues."""
-    data = DashboardService.global_dashboard(db)
-    projects = db.query(Project).order_by(Project.updated_at.desc()).all()
-    return templates.TemplateResponse(
-        request=request,
-        name="dashboard.html",
-        context={
-            "title": "Dashboard",
-            "data": data,
-            "projects": projects,
-            "ai": AIRecommendationService.engine_status(),
-            "version": settings.VERSION,
-        },
-    )
+TEMPLATE_PATH = Path(__file__).parent / "templates" / "dashboard.html"
+WELCOME_TEMPLATE_PATH = Path(__file__).parent / "templates" / "welcome.html"
 
 
-@router.get("/ui/projects/{project_id}", response_class=HTMLResponse, name="ui_project")
-def ui_project(request: Request, project_id: int, db: Session = Depends(get_db)):
-    """Project detail: endpoint health table, run feed, critical issues."""
-    data = DashboardService.project_dashboard(db, project_id)
-    if data is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Project #{project_id} not found.")
-    return templates.TemplateResponse(
-        request=request,
-        name="project.html",
-        context={"title": data.project_name, "data": data, "version": settings.VERSION},
-    )
+@web_router.get("/welcome", response_class=HTMLResponse, summary="Serve Welcome Landing Page")
+async def render_welcome(request: Request):
+    """Render the ThreeUI Sylva Living Green landing page for API Sentinel."""
+    if not WELCOME_TEMPLATE_PATH.exists():
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Welcome HTML template not found on server."
+        )
+    html_content = WELCOME_TEMPLATE_PATH.read_text(encoding="utf-8")
+    return HTMLResponse(content=html_content, status_code=200)
 
 
-@router.get("/ui/endpoints/{endpoint_id}", response_class=HTMLResponse, name="ui_endpoint")
-def ui_endpoint(request: Request, endpoint_id: int, db: Session = Depends(get_db)):
-    """Endpoint inspector: contract, test cases, recent results."""
-    data = DashboardService.endpoint_inspector(db, endpoint_id)
-    if data is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"Endpoint #{endpoint_id} not found.")
-    return templates.TemplateResponse(
-        request=request,
-        name="endpoint.html",
-        context={"title": data.name, "data": data, "version": settings.VERSION},
-    )
+@web_router.get("/", summary="Serve Web Dashboard UI or Root Identity")
+@web_router.get("/dashboard", response_class=HTMLResponse, summary="Serve Web Dashboard UI")
+async def render_dashboard(request: Request):
+    """Render the high-contrast dark AI theme dashboard web interface."""
+    accept = request.headers.get("accept", "")
+    is_explicit_dashboard = request.url.path.rstrip("/").endswith("dashboard")
+    is_browser_html = "text/html" in accept
 
-
-@router.get("/ui/results/{result_id}", response_class=HTMLResponse, name="ui_result")
-def ui_result(request: Request, result_id: int, db: Session = Depends(get_db)):
-    """Result detail: evidence bundle plus the remediation card."""
-    data = DashboardService.result_detail(db, result_id, include_recommendation=True)
-    if data is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, f"TestResult #{result_id} not found.")
-    return templates.TemplateResponse(
-        request=request,
-        name="result.html",
-        context={"title": data.test_name, "data": data, "version": settings.VERSION},
-    )
-
-
-@router.get("/ui/projects/{project_id}/compare", response_class=HTMLResponse, name="ui_compare")
-def ui_compare(
-    request: Request,
-    project_id: int,
-    run_a: int = Query(default=0, description="Baseline run id (0 = auto)"),
-    run_b: int = Query(default=0, description="Current run id (0 = auto)"),
-    db: Session = Depends(get_db),
-):
-    """Side-by-side run comparison with the delta visualizer."""
-    if not run_a or not run_b:
-        pair = RunComparisonService.latest_two_run_ids(db, project_id)
-        if pair is None:
+    if is_explicit_dashboard or is_browser_html:
+        if not TEMPLATE_PATH.exists():
             raise HTTPException(
-                status.HTTP_404_NOT_FOUND,
-                f"Project #{project_id} needs at least two runs to compare.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Dashboard HTML template not found on server."
             )
-        run_a, run_b = pair
+        html_content = TEMPLATE_PATH.read_text(encoding="utf-8")
+        return HTMLResponse(content=html_content, status_code=200)
 
-    view = RunComparisonService.visualize(db, run_a, run_b)
-    report = RunComparisonService.compare_runs(db, run_a, run_b, project_id=project_id)
-    if view is None or report is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "One or both runs were not found.")
-
-    return templates.TemplateResponse(
-        request=request,
-        name="compare.html",
-        context={
-            "title": "Run Comparison",
-            "view": view,
-            "report": report,
-            "project_id": project_id,
+    return JSONResponse(
+        status_code=200,
+        content={
+            "name": settings.PROJECT_NAME,
             "version": settings.VERSION,
-        },
+            "environment": settings.ENVIRONMENT,
+            "status": "active",
+            "documentation": "/docs",
+            "redoc": "/redoc",
+            "api_v1": settings.API_V1_PREFIX
+        }
     )
 
 
-SYLVA_HERO_CANONICAL = "/landing-pages/inner-green-3d.html"
-SYLVA_HERO_BRANDED = "/landing-pages/sentinel-hero.html"
-# ThreeUI URL_FRAME_SANDBOX plus allow-top-navigation-by-user-activation: the catalog frame
-# never leaves the preview, but a landing hero must be able to enter the app on a click.
-SYLVA_FRAME_SANDBOX = (
-    "allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts "
-    "allow-top-navigation-by-user-activation"
+@dashboard_api_router.get(
+    "/overview",
+    response_model=StandardResponse[DashboardOverviewResponse],
+    summary="Get Global Dashboard Telemetry Overview",
+    description="Aggregates KPI metrics, recent test runs, active critical issues, and projects."
 )
+def get_dashboard_overview(db: Session = Depends(get_db)):
+    """Fetch global dashboard telemetry bundle."""
+    overview = DashboardService.get_global_overview(db)
+    return StandardResponse(
+        success=True,
+        data=overview,
+        message="Dashboard overview telemetry aggregated successfully."
+    )
 
 
-@router.get("/ui/welcome", response_class=HTMLResponse, name="ui_welcome")
-def ui_welcome(
-    request: Request,
-    exact: bool = Query(default=False, description="Serve the untouched canonical Sylva page"),
-):
-    """Full-bleed SylvaHero (Living Green) hero hosted in the ThreeUI frame contract."""
-    return templates.TemplateResponse(
-        request=request,
-        name="hero.html",
-        context={
-            "title": "Welcome",
-            "src": SYLVA_HERO_CANONICAL if exact else SYLVA_HERO_BRANDED,
-            "sandbox": SYLVA_FRAME_SANDBOX,
-            "version": settings.VERSION,
-        },
+@dashboard_api_router.get(
+    "/projects/{project_id}",
+    response_model=StandardResponse[ProjectDetailView],
+    summary="Get Project Detail Dashboard View",
+    description="Fetches project metadata, endpoints, and recent runs for drill-down views."
+)
+def get_project_dashboard_view(project_id: int, db: Session = Depends(get_db)):
+    """Fetch project detail dashboard bundle."""
+    view = DashboardService.get_project_detail(db, project_id)
+    if not view:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project #{project_id} not found."
+        )
+    return StandardResponse(
+        success=True,
+        data=view,
+        message=f"Retrieved dashboard view for Project #{project_id}."
     )

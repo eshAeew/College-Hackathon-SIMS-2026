@@ -1,74 +1,1383 @@
-{% extends "base.html" %}
-{% block content %}
-<h1>Global Dashboard</h1>
-<div class="sub">{{ data.total_projects }} project(s) &middot; {{ data.total_endpoints }} endpoint(s)
-  &middot; {{ data.total_test_cases }} test case(s) &middot; {{ data.total_runs }} run(s)</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>API Sentinel — Autonomous API Quality, Telemetry & AI Remediation</title>
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'brand-primary': 'rgb(0, 195, 201)',
+            'brand-glow': 'rgba(0, 195, 201, 0.35)',
+            'neutral-background': 'rgb(9, 9, 11)',
+            'neutral-surface': 'rgb(15, 15, 17)',
+            'neutral-card': 'rgb(18, 18, 22)',
+            'text-primary': 'rgb(255, 255, 255)',
+            'text-secondary': 'rgb(150, 150, 150)',
+            'tier-pass': '#10b981',
+            'tier-fail': '#ef4444',
+            'tier-warn': '#f59e0b',
+            'tier-error': '#a855f7',
+          },
+          fontFamily: {
+            'sans': ['DM Sans', 'Inter', 'sans-serif'],
+            'mono': ['JetBrains Mono', 'monospace'],
+          },
+          boxShadow: {
+            'dashboard': 'inset 0 1px 2px 0 rgba(255, 255, 255, 0.12), 0 30px 60px -15px rgba(0, 0, 0, 0.6)',
+            'glow-cyan': '0 0 25px -5px rgba(0, 195, 201, 0.4)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: rgb(9, 9, 11); }
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 195, 201, 0.4); }
+  </style>
+</head>
+<body class="bg-neutral-background text-text-primary font-sans antialiased min-h-screen flex flex-col relative overflow-x-hidden">
 
-<div class="cards">
-  {% for c in data.kpi_cards %}
-  <div class="card {{ c.tone.value }}">
-    <div class="label">{{ c.label }}</div>
-    <div class="value">{{ c.value }}</div>
-    <div class="hint">{{ c.hint }}</div>
+  <!-- Ambient Grid Overlay & Focused Top Glow -->
+  <div class="fixed inset-0 z-0 pointer-events-none">
+    <!-- Subtle Grid Lines -->
+    <div class="absolute inset-0 bg-[linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:100%_48px]"></div>
+    <div class="absolute inset-0 bg-[linear-gradient(to_right,#ffffff06_1px,transparent_1px)] bg-[size:48px_100%]"></div>
+    
+    <!-- Top Focused Neon Cyan Ambient Glow -->
+    <div class="absolute -top-[140px] left-1/2 -translate-x-1/2 w-[800px] h-[300px] flex items-center justify-center">
+      <div class="absolute w-[700px] h-[240px] bg-brand-primary/25 blur-[110px] rounded-full"></div>
+      <div class="absolute w-[450px] h-[140px] bg-[#d0f5ff]/20 blur-[80px] rounded-full"></div>
+      <div class="absolute w-[200px] h-[40px] bg-white/40 blur-[40px] rounded-full"></div>
+    </div>
+    <!-- Top Rim Highlight Line -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[70%] h-[1.5px] bg-gradient-to-r from-transparent via-brand-primary/80 to-transparent"></div>
   </div>
-  {% endfor %}
-</div>
 
-{% if data.critical_issues %}
-<h2>Critical Issues</h2>
-{% for i in data.critical_issues %}
-<div class="banner">
-  <span class="pill {{ i.tone.value }}">{{ i.status }}</span>
-  <strong>{{ i.test_name }}</strong>
-  <span class="muted">{{ i.http_method }} {{ i.url }}</span>
-  <div class="muted">{{ i.detail }}{% if i.result_id %} &middot;
-    <a href="/ui/results/{{ i.result_id }}">inspect</a>{% endif %}</div>
-</div>
-{% endfor %}
-{% endif %}
+  <!-- Header Navigation -->
+  <header class="sticky top-0 z-50 h-[72px] flex items-center justify-between px-6 lg:px-12 border-b border-white/10 backdrop-blur-md bg-neutral-background/90">
+    <div class="flex items-center gap-4">
+      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-primary to-cyan-700 flex items-center justify-center shadow-glow-cyan">
+        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xl font-bold tracking-tight text-white">API Sentinel</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/30 font-mono font-semibold">JP-009</span>
+        </div>
+        <p class="text-[11px] text-text-secondary hidden sm:block">Automated Quality, Profiling & AI Remediation</p>
+      </div>
+    </div>
 
-<h2>Projects</h2>
-<div class="wrap">
-<table>
-  <tr><th>Project</th><th>Base URL</th><th>Environment</th><th>Actions</th></tr>
-  {% for p in projects %}
-  <tr>
-    <td><a href="/ui/projects/{{ p.id }}">{{ p.name }}</a></td>
-    <td class="muted"><code>{{ p.base_url }}</code></td>
-    <td><span class="pill INFO">{{ p.environment }}</span></td>
-    <td><a href="/ui/projects/{{ p.id }}/compare">compare runs</a></td>
-  </tr>
-  {% else %}
-  <tr><td colspan="4" class="empty">No projects yet. Create one via POST /api/v1/projects.</td></tr>
-  {% endfor %}
-</table>
-</div>
+    <!-- Right Controls -->
+    <div class="flex items-center gap-3">
+      <!-- AI Engine Status Badge -->
+      <div id="aiStatusPill" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs">
+        <span class="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
+        <span id="aiEngineLabel" class="text-text-secondary">AI: Deterministic Heuristic + Gemini</span>
+      </div>
 
-<h2>Recent Runs</h2>
-<div class="wrap">
-<table>
-  <tr><th>Run</th><th>Project</th><th>Status</th><th>Tests</th><th>Passed</th>
-      <th>Failed</th><th>Errors</th><th>Pass Rate</th><th>Duration</th></tr>
-  {% for r in data.recent_runs %}
-  <tr>
-    <td>#{{ r.run_id }} {{ r.name }}</td>
-    <td class="muted">{{ r.project_name or "-" }}</td>
-    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
-    <td>{{ r.total_tests }}</td><td>{{ r.passed_tests }}</td>
-    <td>{{ r.failed_tests }}</td><td>{{ r.error_tests }}</td>
-    <td>{{ "%.1f"|format(r.pass_rate_pct) }}%</td>
-    <td class="muted">{{ "%.0f"|format(r.duration_ms) }} ms</td>
-  </tr>
-  {% else %}
-  <tr><td colspan="9" class="empty">No runs recorded yet.</td></tr>
-  {% endfor %}
-</table>
-</div>
+      <!-- Quick Action Buttons -->
+      <a href="/welcome" class="px-3.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-medium text-emerald-300 transition-all flex items-center gap-1.5" title="View 3D Welcome Landing Page">
+        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+        <span>Welcome 3D</span>
+      </a>
 
-<h2>Diagnostic Engine</h2>
-<div class="card {{ 'SUCCESS' if ai.ai_enabled else 'INFO' }}">
-  <div class="label">Active Engine</div>
-  <div class="value" style="font-size:18px">{{ ai.active_engine.value }}</div>
-  <div class="hint">{{ ai.message }}</div>
-</div>
-{% endblock %}
+      <button onclick="openReportModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5" title="Generate and export comprehensive quality reports">
+        <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Reports</span>
+      </button>
+
+      <button onclick="openRunCompareModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        <span>Compare Runs</span>
+      </button>
+
+
+      <button onclick="openOpenApiModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span>Import OpenAPI</span>
+      </button>
+
+      <button onclick="triggerTestSuiteRun()" id="runSuiteBtn" class="px-4 py-1.5 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all shadow-glow-cyan flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        <span>Run All Tests</span>
+      </button>
+
+      <a href="/docs" target="_blank" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white transition-all" title="Swagger API Documentation">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="relative z-10 flex-grow max-w-[1440px] w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
+
+    <!-- KPI Metric Cards Grid -->
+    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <!-- 1. Total Projects -->
+      <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
+        <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Workspaces</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span id="kpiProjects" class="text-2xl font-bold text-white tracking-tight">--</span>
+          <span id="kpiProjectsBadge" class="text-[10px] text-brand-primary bg-brand-primary/10 px-1.5 py-0.5 rounded font-mono">SQLite 3</span>
+        </div>
+      </div>
+
+      <!-- 2. Endpoints -->
+      <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
+        <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Endpoints</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span id="kpiEndpoints" class="text-2xl font-bold text-white tracking-tight">--</span>
+          <span id="kpiEndpointsBadge" class="text-[10px] text-text-secondary font-mono">-- Active</span>
+        </div>
+      </div>
+
+      <!-- 3. Test Cases -->
+      <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
+        <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Test Scenarios</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span id="kpiTestCases" class="text-2xl font-bold text-white tracking-tight">--</span>
+          <span id="kpiAssertionsBadge" class="text-[10px] text-brand-primary font-mono">-- Assertions</span>
+        </div>
+      </div>
+
+      <!-- 4. Pass Rate -->
+      <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
+        <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Pass Rate</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span id="kpiPassRate" class="text-2xl font-bold tracking-tight">--%</span>
+          <span id="kpiPassRateBadge" class="text-[10px] px-1.5 py-0.5 rounded font-mono">--</span>
+        </div>
+      </div>
+
+      <!-- 5. Avg Latency -->
+      <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
+        <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Avg Latency</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span id="kpiLatency" class="text-2xl font-bold text-white tracking-tight">--ms</span>
+          <span class="text-[10px] text-text-secondary font-mono">P95: <span id="kpiP95">--</span>ms</span>
+        </div>
+      </div>
+
+      <!-- 6. AI Remediations -->
+      <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
+        <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">AI Fix Cards</span>
+        <div class="flex items-baseline justify-between mt-2">
+          <span id="kpiRemediations" class="text-2xl font-bold text-brand-primary tracking-tight">--</span>
+          <span id="kpiRemediationsBadge" class="text-[10px] text-brand-primary bg-brand-primary/10 px-1.5 py-0.5 rounded font-mono">-- Critical</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Two-Column Operations Dashboard Area -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column (7 cols): Endpoint Registry & Test Explorer -->
+      <div class="lg:col-span-7 space-y-4">
+        
+        <!-- Project Context Bar -->
+        <div class="bg-neutral-surface/70 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="flex items-center flex-wrap gap-2">
+            <span class="text-xs uppercase tracking-widest text-text-secondary font-semibold">Active Project:</span>
+            <select id="projectSelect" onchange="onProjectChange()" class="bg-black/50 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-primary font-medium max-w-[260px] truncate">
+              <option value="">Loading workspaces...</option>
+            </select>
+            <button onclick="openNewProjectModal()" class="px-2.5 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-xs text-brand-primary font-semibold transition-all flex items-center gap-1" title="Create new workspace">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              <span>New</span>
+            </button>
+            <button onclick="deleteCurrentWorkspace()" class="px-2 py-1.5 rounded-lg bg-white/5 hover:bg-rose-500/20 border border-white/10 text-xs text-text-secondary hover:text-rose-400 transition-all flex items-center gap-1" title="Delete current workspace">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              <span>Delete</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs shrink-0">
+            <span class="px-2.5 py-1 rounded bg-white/5 border border-white/10 text-text-secondary font-mono truncate max-w-[200px]" id="projectBaseUrl">http://127.0.0.1:8000</span>
+            <span class="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] uppercase font-semibold" id="projectEnvBadge">Development</span>
+          </div>
+        </div>
+
+        <!-- Endpoints List Card -->
+        <div class="bg-neutral-surface/70 border border-white/10 rounded-xl overflow-hidden shadow-dashboard flex flex-col">
+          <div class="p-4 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-brand-primary"></span>
+              <h3 class="text-sm font-semibold text-white tracking-tight">Registered Endpoints & Contracts</h3>
+            </div>
+            <span id="endpointCountBadge" class="text-xs text-text-secondary font-mono">0 endpoints</span>
+          </div>
+
+          <!-- Endpoints Table Container -->
+          <div class="max-h-[460px] overflow-y-auto custom-scrollbar divide-y divide-white/5" id="endpointsListContainer">
+            <div class="p-8 text-center text-text-secondary text-sm">
+              <svg class="w-8 h-8 mx-auto mb-2 text-white/20 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+              Loading endpoints from SQLite registry...
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column (5 cols): Live Execution Console & AI Remediations -->
+      <div class="lg:col-span-5 space-y-4">
+
+        <!-- Tabs Header -->
+        <div class="bg-neutral-surface/70 border border-white/10 rounded-xl p-1 flex items-center gap-1 text-xs">
+          <button onclick="switchTab('terminal')" id="tabBtnTerminal" class="flex-1 py-2 rounded-lg bg-white/10 text-white font-medium transition-all text-center">
+            Live Console Log
+          </button>
+          <button onclick="switchTab('runs')" id="tabBtnRuns" class="flex-1 py-2 rounded-lg text-text-secondary hover:text-white transition-all text-center">
+            Recent Test Runs
+          </button>
+          <button onclick="switchTab('ai')" id="tabBtnAi" class="flex-1 py-2 rounded-lg text-text-secondary hover:text-white transition-all text-center flex items-center justify-center gap-1">
+            <span>AI Fix Cards</span>
+            <span id="aiCardCountBadge" class="w-4 h-4 rounded-full bg-brand-primary/20 text-brand-primary text-[10px] flex items-center justify-center font-mono">0</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Live Terminal Log -->
+        <div id="tabContentTerminal" class="bg-[rgb(12,12,14)] border border-white/10 rounded-xl p-4 font-mono text-xs flex flex-col h-[520px] shadow-dashboard overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3 text-text-secondary">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/80"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80"></span>
+              <span class="text-[11px] text-white/50 ml-1">sentinel-runtime.log</span>
+            </div>
+            <button onclick="clearTerminal()" class="text-[10px] text-text-secondary hover:text-white">Clear</button>
+          </div>
+
+          <div id="terminalLog" class="flex-grow overflow-y-auto custom-scrollbar space-y-1.5 text-[11px]">
+            <div class="flex gap-2">
+              <span class="text-brand-primary">[SYSTEM]</span>
+              <span class="text-white/40">Ready</span>
+              <span class="text-text-secondary">API Sentinel core engine initialized. 247 tests verified.</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-brand-primary">[PERSISTENCE]</span>
+              <span class="text-white/40">Ready</span>
+              <span class="text-text-secondary">SQLite schema mounted. Session connection active.</span>
+            </div>
+            <div class="flex gap-2">
+              <span class="text-brand-primary">[AI_LAYER]</span>
+              <span class="text-white/40">Ready</span>
+              <span class="text-white">Dual-Mode AI Remediation ready (Gemini + Rule-Based Heuristic).</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Recent Test Runs Feed -->
+        <div id="tabContentRuns" class="hidden bg-neutral-surface/70 border border-white/10 rounded-xl p-4 h-[520px] flex flex-col shadow-dashboard overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+            <h4 class="text-xs uppercase tracking-wider text-text-secondary font-semibold">Historical Executions</h4>
+            <span class="text-[11px] text-text-secondary font-mono">Last 10 Runs</span>
+          </div>
+
+          <div id="recentRunsList" class="flex-grow overflow-y-auto custom-scrollbar divide-y divide-white/5 space-y-2">
+            <div class="p-6 text-center text-text-secondary text-sm">No test runs recorded yet. Click 'Run All Tests' to execute.</div>
+          </div>
+        </div>
+
+        <!-- Tab 3: AI Remediations Feed -->
+        <div id="tabContentAi" class="hidden bg-neutral-surface/70 border border-white/10 rounded-xl p-4 h-[520px] flex flex-col shadow-dashboard overflow-hidden">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
+            <h4 class="text-xs uppercase tracking-wider text-brand-primary font-semibold flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              Remediation Action Cards
+            </h4>
+            <span class="text-[11px] text-text-secondary font-mono">Prime Directive Enforced</span>
+          </div>
+
+          <div id="aiRemediationsList" class="flex-grow overflow-y-auto custom-scrollbar space-y-3">
+            <div class="p-6 text-center text-text-secondary text-sm">No failure recommendations needed. System is operating at 100% health!</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- AI Remediation Details Modal -->
+  <div id="aiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-brand-primary/20 text-brand-primary flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight" id="modalTitle">AI Remediation Proposal</h3>
+            <p class="text-xs text-text-secondary font-mono" id="modalEvidenceId">EV-...</p>
+          </div>
+        </div>
+        <button onclick="closeAiModal()" class="text-text-secondary hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto custom-scrollbar space-y-4 text-sm">
+        <!-- Root Cause Banner -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold uppercase tracking-wider text-brand-primary" id="modalCategory">Category</span>
+            <span class="text-xs px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono font-medium" id="modalSeverity">CRITICAL</span>
+          </div>
+          <p class="text-white text-xs leading-relaxed" id="modalLikelyCause">--</p>
+        </div>
+
+        <!-- Actionable Fix Steps -->
+        <div class="space-y-1.5">
+          <h4 class="text-xs font-semibold text-white uppercase tracking-wider">Suggested Fix Strategy</h4>
+          <p class="text-text-secondary text-xs whitespace-pre-line leading-relaxed bg-black/40 p-3 rounded-lg border border-white/5 font-mono" id="modalSuggestedFix">--</p>
+        </div>
+
+        <!-- Concrete Code Snippet -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-semibold text-white uppercase tracking-wider">Ready-To-Apply Code Fix</h4>
+            <button onclick="copyCodeSnippet()" class="text-xs text-brand-primary hover:underline flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+              <span>Copy Code</span>
+            </button>
+          </div>
+          <pre class="bg-[rgb(10,10,12)] border border-white/10 rounded-xl p-4 text-xs font-mono text-cyan-300 overflow-x-auto custom-scrollbar" id="modalCodeSnippet"># Code snippet loading...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- OpenAPI Spec Ingestion Modal -->
+  <div id="openApiModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-brand-primary"></span>
+          <h3 class="text-base font-semibold text-white">Import OpenAPI / Swagger Spec</h3>
+        </div>
+        <button onclick="closeOpenApiModal()" class="text-text-secondary hover:text-white p-1 rounded-lg">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Target Workspace:</label>
+          <select id="openApiProjectSelect" class="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-primary font-medium">
+            <option value="">Select a workspace...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Paste OpenAPI 3.0/3.1 or Swagger 2.0 (JSON or YAML):</label>
+          <textarea id="openApiContent" rows="8" class="w-full bg-black/50 border border-white/15 rounded-xl p-3 font-mono text-white focus:outline-none focus:border-brand-primary" placeholder='{"openapi": "3.0.0", "info": {"title": "Sample API", "version": "1.0.0"}, "paths": {...}}'></textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="generateSmokeTestsCheck" checked class="rounded bg-black/50 border-white/20 text-brand-primary focus:ring-0">
+          <label for="generateSmokeTestsCheck" class="text-white/80">Automatically generate positive & negative smoke test scenarios</label>
+        </div>
+
+        <div class="pt-2 flex justify-end gap-2">
+          <button onclick="closeOpenApiModal()" class="px-4 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-white font-medium">Cancel</button>
+          <button onclick="submitOpenApiSpec()" id="importSpecSubmitBtn" class="px-5 py-2 rounded-lg bg-brand-primary text-black font-semibold hover:bg-cyan-400 transition-all">Import & Generate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client-Side Controller Script -->
+  <script>
+    let globalOverviewData = null;
+    let currentProjectId = null;
+    let selectedModalSnippet = "";
+
+    // On DOM Load
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchDashboardOverview();
+      fetchAiEngineStatus();
+    });
+
+    // Probe AI Status
+    async function fetchAiEngineStatus() {
+      try {
+        const res = await fetch("/api/v1/ai/status");
+        if (res.ok) {
+          const json = await res.json();
+          if (json.data) {
+            document.getElementById("aiEngineLabel").innerText = `AI: ${json.data.active_engine} (${json.data.model_name || 'Heuristic-v1'})`;
+          }
+        }
+      } catch (err) {
+        console.warn("AI status probe error", err);
+      }
+    }
+
+    // Fetch Full Dashboard Overview
+    async function fetchDashboardOverview() {
+      try {
+        const res = await fetch("/api/v1/dashboard/overview");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const json = await res.json();
+        globalOverviewData = json.data;
+        renderDashboard(globalOverviewData);
+      } catch (err) {
+        logToTerminal("[ERROR]", "Failed to fetch dashboard overview: " + err.message);
+      }
+    }
+
+    // Render Dashboard Elements
+    function renderDashboard(data) {
+      if (!data) return;
+
+      // 1. KPI Cards
+      document.getElementById("kpiProjects").innerText = data.kpi.total_projects;
+      if (document.getElementById("kpiProjectsBadge")) {
+        document.getElementById("kpiProjectsBadge").innerText = data.kpi.db_engine || "SQLite 3";
+      }
+      
+      document.getElementById("kpiEndpoints").innerText = data.kpi.total_endpoints;
+      if (document.getElementById("kpiEndpointsBadge")) {
+        document.getElementById("kpiEndpointsBadge").innerText = `${data.kpi.total_active_endpoints || 0} Active`;
+      }
+      
+      document.getElementById("kpiTestCases").innerText = data.kpi.total_test_cases;
+      if (document.getElementById("kpiAssertionsBadge")) {
+        document.getElementById("kpiAssertionsBadge").innerText = `${data.kpi.total_assertions || 0} Assertions`;
+      }
+      
+      const passRateElem = document.getElementById("kpiPassRate");
+      const passBadgeElem = document.getElementById("kpiPassRateBadge");
+      const pr = data.kpi.global_pass_rate_pct;
+      passRateElem.innerText = pr + "%";
+      if (pr >= 90) {
+        passRateElem.className = "text-2xl font-bold tracking-tight text-emerald-400";
+        passBadgeElem.className = "text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono border border-emerald-500/20";
+        passBadgeElem.innerText = "Nominal";
+      } else if (pr >= 60) {
+        passRateElem.className = "text-2xl font-bold tracking-tight text-amber-400";
+        passBadgeElem.className = "text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded font-mono border border-amber-500/20";
+        passBadgeElem.innerText = "Degraded";
+      } else {
+        passRateElem.className = "text-2xl font-bold tracking-tight text-rose-400";
+        passBadgeElem.className = "text-[10px] text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded font-mono border border-rose-500/20";
+        passBadgeElem.innerText = "Critical";
+      }
+
+      document.getElementById("kpiLatency").innerText = data.kpi.avg_latency_ms + "ms";
+      document.getElementById("kpiP95").innerText = data.kpi.p95_latency_ms;
+      document.getElementById("kpiRemediations").innerText = data.kpi.ai_remediations_count;
+      if (document.getElementById("kpiRemediationsBadge")) {
+        document.getElementById("kpiRemediationsBadge").innerText = `${data.critical_issues.length} Critical`;
+      }
+      document.getElementById("aiCardCountBadge").innerText = data.critical_issues.length;
+
+      if (document.getElementById("aiEngineLabel")) {
+        document.getElementById("aiEngineLabel").innerText = `AI: ${data.kpi.ai_engine_status || 'Active'}`;
+      }
+
+      // 2. Projects Dropdown
+      const sel = document.getElementById("projectSelect");
+      sel.innerHTML = "";
+      if (data.projects && data.projects.length > 0) {
+        data.projects.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.innerText = `${p.name} (${p.total_endpoints} endpoints)`;
+          sel.appendChild(opt);
+        });
+        if (!currentProjectId) {
+          const firstWithEndpoints = data.projects.find(p => p.total_endpoints > 0);
+          currentProjectId = firstWithEndpoints ? firstWithEndpoints.id : data.projects[0].id;
+        }
+        sel.value = currentProjectId;
+        updateSelectedProjectView();
+      } else {
+        sel.innerHTML = `<option value="">No projects registered</option>`;
+      }
+
+      // 3. Render Recent Runs
+      renderRecentRuns(data.recent_runs);
+
+      // 4. Update Workspace View (Endpoints & Scoped AI Remediations)
+      updateSelectedProjectView();
+    }
+
+    let currentDisplayedIssues = [];
+
+    function onProjectChange() {
+      currentProjectId = parseInt(document.getElementById("projectSelect").value);
+      updateSelectedProjectView();
+    }
+
+    function updateSelectedProjectView() {
+      if (!globalOverviewData || !globalOverviewData.projects) return;
+      const proj = globalOverviewData.projects.find(p => p.id === currentProjectId);
+      if (!proj) return;
+
+      document.getElementById("projectBaseUrl").innerText = proj.base_url || "http://127.0.0.1:8000";
+      document.getElementById("projectEnvBadge").innerText = proj.environment || "Development";
+      document.getElementById("endpointCountBadge").innerText = `${proj.endpoints.length} endpoints`;
+
+      // Filter and render AI Remediations scoped to the selected project
+      let currentProjectIssues = [];
+      if (globalOverviewData.critical_issues) {
+        currentProjectIssues = globalOverviewData.critical_issues.filter(iss => !iss.project_id || iss.project_id === currentProjectId);
+      }
+      renderAiRemediations(currentProjectIssues);
+      document.getElementById("aiCardCountBadge").innerText = currentProjectIssues.length;
+      if (document.getElementById("kpiRemediationsBadge")) {
+        document.getElementById("kpiRemediationsBadge").innerText = `${currentProjectIssues.length} in Workspace`;
+      }
+
+      // Render Endpoints List
+      const container = document.getElementById("endpointsListContainer");
+      if (proj.endpoints.length === 0) {
+        container.innerHTML = `<div class="p-8 text-center text-text-secondary text-sm">No endpoints registered in this project. Click 'Import OpenAPI' to populate automatically.</div>`;
+        return;
+      }
+
+      container.innerHTML = proj.endpoints.map(ep => {
+        let badgeColor = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        if (ep.http_method === "POST") badgeColor = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        if (ep.http_method === "PUT") badgeColor = "bg-amber-500/10 text-amber-400 border-amber-500/20";
+        if (ep.http_method === "DELETE") badgeColor = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+        if (ep.http_method === "PATCH") badgeColor = "bg-purple-500/10 text-purple-400 border-purple-500/20";
+
+        return `
+          <div class="p-4 hover:bg-white/[0.02] flex items-center justify-between gap-4 transition-colors">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="px-2.5 py-1 rounded text-[11px] font-mono font-bold uppercase border ${badgeColor}">${ep.http_method}</span>
+              <div class="min-w-0">
+                <span class="text-sm font-mono text-white truncate block">${ep.path}</span>
+                <span class="text-xs text-text-secondary">${ep.name || 'Unnamed Endpoint'}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-xs text-text-secondary font-mono">${ep.test_cases_count} test(s)</span>
+              <button onclick="executeEndpointDirect(${ep.id}, '${ep.http_method}', '${ep.path}')" class="px-2.5 py-1 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-xs text-white transition-all">
+                Test
+              </button>
+              <button onclick="deleteEndpointDirect(${ep.id}, '${ep.http_method}', '${ep.path}')" class="p-1.5 rounded hover:bg-rose-500/20 text-white/30 hover:text-rose-400 transition-all" title="Delete endpoint">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+
+    // Stage 21: Run Comparison Functions
+    function openRunCompareModal(preselectedTargetId) {
+      const modal = document.getElementById("runCompareModal");
+      const baseSel = document.getElementById("compareBaseRunSelect");
+      const targetSel = document.getElementById("compareTargetRunSelect");
+
+      baseSel.innerHTML = '<option value="">Select Base Run...</option>';
+      targetSel.innerHTML = '<option value="">Select Target Run...</option>';
+
+      if (globalOverviewData && globalOverviewData.recent_runs && globalOverviewData.recent_runs.length > 0) {
+        globalOverviewData.recent_runs.forEach((r, idx) => {
+          const opt1 = document.createElement("option");
+          opt1.value = r.id;
+          opt1.innerText = `Run #${r.id} - ${r.name} (${r.passed_tests}/${r.total_tests} pass, ${r.pass_rate_pct}%)`;
+          baseSel.appendChild(opt1);
+
+          const opt2 = document.createElement("option");
+          opt2.value = r.id;
+          opt2.innerText = `Run #${r.id} - ${r.name} (${r.passed_tests}/${r.total_tests} pass, ${r.pass_rate_pct}%)`;
+          targetSel.appendChild(opt2);
+        });
+
+        // Smart selection
+        if (preselectedTargetId) {
+          targetSel.value = preselectedTargetId;
+          const targetIdx = globalOverviewData.recent_runs.findIndex(r => r.id === preselectedTargetId);
+          if (targetIdx !== -1 && targetIdx + 1 < globalOverviewData.recent_runs.length) {
+            baseSel.value = globalOverviewData.recent_runs[targetIdx + 1].id;
+          } else if (globalOverviewData.recent_runs.length > 1) {
+            baseSel.value = globalOverviewData.recent_runs[globalOverviewData.recent_runs.length - 1].id;
+          }
+        } else if (globalOverviewData.recent_runs.length >= 2) {
+          targetSel.value = globalOverviewData.recent_runs[0].id;
+          baseSel.value = globalOverviewData.recent_runs[1].id;
+        }
+      }
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      if (baseSel.value && targetSel.value && baseSel.value !== targetSel.value) {
+        executeRunComparison();
+      }
+    }
+
+    function closeRunCompareModal() {
+      const modal = document.getElementById("runCompareModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    async function executeRunComparison() {
+      const baseId = document.getElementById("compareBaseRunSelect").value;
+      const targetId = document.getElementById("compareTargetRunSelect").value;
+      const container = document.getElementById("compareReportContainer");
+
+      if (!baseId || !targetId) {
+        container.innerHTML = '<div class="p-8 text-center text-text-secondary">Please select both a Base Run and a Target Run.</div>';
+        return;
+      }
+      if (baseId === targetId) {
+        container.innerHTML = '<div class="p-8 text-center text-amber-400">Base Run and Target Run are identical. Please select two distinct runs to view deltas.</div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="p-12 text-center text-text-secondary"><svg class="w-8 h-8 mx-auto mb-2 text-brand-primary animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>Computing side-by-side run delta analysis...</div>';
+
+      try {
+        const res = await fetch(`/api/v1/runs/compare?base_run_id=${baseId}&target_run_id=${targetId}`);
+        const json = await res.json();
+        if (res.ok) {
+          renderRunComparisonReport(json.data);
+        } else {
+          container.innerHTML = `<div class="p-8 text-center text-rose-400">Comparison failed: ${json.detail || json.message}</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = `<div class="p-8 text-center text-rose-400">Network error during comparison: ${err.message}</div>`;
+      }
+    }
+
+    function renderRunComparisonReport(report) {
+      const container = document.getElementById("compareReportContainer");
+      const m = report.metrics;
+
+      function renderDeltaBadge(deltaObj, isLowerBetter = false) {
+        const d = deltaObj.delta;
+        if (d === 0) return '<span class="text-text-secondary font-mono">0</span>';
+        
+        let isGood = isLowerBetter ? (d < 0) : (d > 0);
+        let colorClass = isGood ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-rose-400 bg-rose-500/10 border-rose-500/20";
+        let sign = d > 0 ? "+" : "";
+        return `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono border ${colorClass}">${sign}${d}${deltaObj.unit ? ' ' + deltaObj.unit : ''}</span>`;
+      }
+
+      let insightsHtml = report.insights.map(ins => `
+        <li class="flex items-start gap-2 text-white/90">
+          <span class="text-brand-primary mt-0.5">•</span>
+          <span>${ins}</span>
+        </li>
+      `).join("");
+
+      let diffRowsHtml = report.diffs.map(d => {
+        let badgeClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        if (d.category === "NEW_FAILURE") badgeClass = "bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold";
+        if (d.category === "FIXED_FAILURE") badgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold";
+        if (d.category === "BEHAVIOR_CHANGED") badgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold";
+        if (d.category === "LATENCY_DEGRADED") badgeClass = "bg-purple-500/20 text-purple-300 border-purple-500/40";
+
+        return `
+          <tr class="hover:bg-white/[0.02] border-b border-white/5 font-mono">
+            <td class="p-3 text-white font-medium">${d.test_name}</td>
+            <td class="p-3 text-text-secondary">[${d.http_method}] ${d.url}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] uppercase border ${badgeClass}">${d.category.replace('_', ' ')}</span>
+            </td>
+            <td class="p-3 text-white/80">${d.previous_status || '—'} ${d.previous_status_code ? `(${d.previous_status_code})` : ''}</td>
+            <td class="p-3 text-white/80">${d.current_status || '—'} ${d.current_status_code ? `(${d.current_status_code})` : ''}</td>
+            <td class="p-3 text-text-secondary">${d.latency_delta_ms !== null ? (d.latency_delta_ms > 0 ? `+${d.latency_delta_ms}ms` : `${d.latency_delta_ms}ms`) : '—'}</td>
+          </tr>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <!-- Metrics Comparison Table -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div class="p-3 bg-white/[0.02] border-b border-white/10 font-semibold text-white flex items-center justify-between">
+            <span>Side-by-Side Metric Comparison</span>
+            <span class="text-text-secondary font-mono text-[11px] font-normal">Run #${report.base_run.id} vs Run #${report.target_run.id}</span>
+          </div>
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-white/10 text-text-secondary text-[10px] uppercase font-mono">
+                <th class="p-3">Metric</th>
+                <th class="p-3">Previous (Run #${report.base_run.id})</th>
+                <th class="p-3">Current (Run #${report.target_run.id})</th>
+                <th class="p-3">Delta</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 font-mono">
+              <tr><td class="p-3 text-white">Total Tests</td><td class="p-3 text-white/80">${m.total_tests.previous}</td><td class="p-3 text-white/80">${m.total_tests.current}</td><td class="p-3">${renderDeltaBadge(m.total_tests)}</td></tr>
+              <tr><td class="p-3 text-white">Passed</td><td class="p-3 text-emerald-400">${m.passed_tests.previous}</td><td class="p-3 text-emerald-400">${m.passed_tests.current}</td><td class="p-3">${renderDeltaBadge(m.passed_tests)}</td></tr>
+              <tr><td class="p-3 text-white">Failed</td><td class="p-3 text-rose-400">${m.failed_tests.previous}</td><td class="p-3 text-rose-400">${m.failed_tests.current}</td><td class="p-3">${renderDeltaBadge(m.failed_tests, true)}</td></tr>
+              <tr><td class="p-3 text-white">Avg Latency</td><td class="p-3 text-white/80">${m.avg_latency.previous}ms</td><td class="p-3 text-white/80">${m.avg_latency.current}ms</td><td class="p-3">${renderDeltaBadge(m.avg_latency, true)}</td></tr>
+              <tr><td class="p-3 text-white">Success Rate</td><td class="p-3 text-white/80">${m.pass_rate.previous}%</td><td class="p-3 text-white/80">${m.pass_rate.current}%</td><td class="p-3">${renderDeltaBadge(m.pass_rate)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Synthesized Summary Insights -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+          <h4 class="font-semibold text-brand-primary uppercase tracking-wider text-[11px]">Synthesized Executive Insights</h4>
+          <ul class="space-y-1">
+            ${insightsHtml}
+          </ul>
+        </div>
+
+        <!-- Granular Test Transitions Table -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div class="p-3 bg-white/[0.02] border-b border-white/10 font-semibold text-white flex items-center justify-between">
+            <span>Granular Test Transitions (${report.diffs.length} tests)</span>
+            <span class="text-text-secondary text-[11px] font-mono">${report.new_failures_count} regressions • ${report.fixed_failures_count} fixes</span>
+          </div>
+          <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="border-b border-white/10 text-text-secondary text-[10px] uppercase font-mono">
+                  <th class="p-3">Test Case</th>
+                  <th class="p-3">Endpoint</th>
+                  <th class="p-3">Category</th>
+                  <th class="p-3">Prev Status</th>
+                  <th class="p-3">Curr Status</th>
+                  <th class="p-3">Latency Delta</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${diffRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // Report Modal & Export Controller (Stage 22)
+    let currentReportRunId = null;
+
+    function openReportModal(preselectedRunId) {
+      const modal = document.getElementById("reportModal");
+      const runSel = document.getElementById("reportRunSelect");
+      const baseSel = document.getElementById("reportBaselineSelect");
+
+      runSel.innerHTML = '<option value="">Select Test Run...</option>';
+      baseSel.innerHTML = '<option value="">None (Standalone)</option>';
+
+      if (globalOverviewData && globalOverviewData.recent_runs && globalOverviewData.recent_runs.length > 0) {
+        globalOverviewData.recent_runs.forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.innerText = `Run #${r.id} - ${r.name} (${r.passed_tests}/${r.total_tests} passed, ${r.pass_rate_pct}%)`;
+          runSel.appendChild(opt);
+
+          const baseOpt = document.createElement("option");
+          baseOpt.value = r.id;
+          baseOpt.innerText = `Run #${r.id} - ${r.name}`;
+          baseSel.appendChild(baseOpt);
+        });
+
+        if (preselectedRunId) {
+          runSel.value = preselectedRunId;
+          currentReportRunId = preselectedRunId;
+        } else {
+          runSel.value = globalOverviewData.recent_runs[0].id;
+          currentReportRunId = globalOverviewData.recent_runs[0].id;
+        }
+      }
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      loadReportPreview();
+    }
+
+    function closeReportModal() {
+      const modal = document.getElementById("reportModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function loadReportPreview() {
+      const runId = document.getElementById("reportRunSelect").value;
+      const baseId = document.getElementById("reportBaselineSelect").value;
+      const iframe = document.getElementById("reportPreviewIframe");
+
+      if (!runId) {
+        iframe.srcdoc = '<body style="background:#09090b;color:#94a3b8;font-family:sans-serif;text-align:center;padding:60px 20px;"><div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">No Run Selected</div><div>Select a test run to synthesize and preview the comprehensive report.</div></body>';
+        return;
+      }
+
+      currentReportRunId = runId;
+      let url = `/api/v1/reports/runs/${runId}/html`;
+      if (baseId && baseId !== runId) {
+        url += `?baseline_run_id=${baseId}`;
+      }
+      iframe.src = url;
+    }
+
+    function downloadCurrentReport(format) {
+      if (!currentReportRunId) {
+        const sel = document.getElementById("reportRunSelect");
+        if (sel && sel.value) currentReportRunId = sel.value;
+      }
+      if (!currentReportRunId) {
+        alert("Please select a test run first.");
+        return;
+      }
+      const baseId = document.getElementById("reportBaselineSelect").value;
+      let url = `/api/v1/reports/runs/${currentReportRunId}/download?format=${format}`;
+      if (baseId && baseId !== currentReportRunId) {
+        url += `&baseline_run_id=${baseId}`;
+      }
+      window.open(url, "_blank");
+    }
+
+    function openCurrentReportTab() {
+      if (!currentReportRunId) {
+        const sel = document.getElementById("reportRunSelect");
+        if (sel && sel.value) currentReportRunId = sel.value;
+      }
+      if (!currentReportRunId) return;
+      const baseId = document.getElementById("reportBaselineSelect").value;
+      let url = `/api/v1/reports/runs/${currentReportRunId}/html`;
+      if (baseId && baseId !== currentReportRunId) {
+        url += `?baseline_run_id=${baseId}`;
+      }
+      window.open(url, "_blank");
+    }
+
+    function renderRecentRuns(runs) {
+
+      const container = document.getElementById("recentRunsList");
+      if (!runs || runs.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-text-secondary text-sm">No test runs recorded yet.</div>`;
+        return;
+      }
+
+      container.innerHTML = runs.map(r => {
+        let statusBadge = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        if (r.status === "FAILED") statusBadge = "bg-rose-500/10 text-rose-400 border-rose-500/20";
+        if (r.status === "RUNNING") statusBadge = "bg-brand-primary/10 text-brand-primary border-brand-primary/20";
+
+        return `
+          <div class="p-3 bg-white/[0.02] rounded-lg border border-white/5 flex items-center justify-between text-xs">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-medium text-white">${r.name}</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono border ${statusBadge}">${r.status}</span>
+              </div>
+              <div class="text-[11px] text-text-secondary mt-1">
+                ${r.passed_tests}/${r.total_tests} passed (${r.pass_rate_pct}%) • ${r.duration_ms !== undefined && r.duration_ms !== null ? Number(r.duration_ms).toFixed(1) + 'ms' : '0ms'}
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="openReportModal(${r.id})" class="px-2 py-1 rounded bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-[10px] text-brand-primary font-mono transition-all flex items-center gap-1" title="Generate Executive Report">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Report
+              </button>
+              <button onclick="openRunCompareModal(${r.id})" class="px-2 py-1 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[10px] text-white/80 hover:text-white font-mono transition-all" title="Compare this run">
+                Compare
+              </button>
+              <span class="text-[10px] text-white/40 font-mono">#${r.id}</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderAiRemediations(issues) {
+      currentDisplayedIssues = issues || [];
+      const container = document.getElementById("aiRemediationsList");
+      if (!issues || issues.length === 0) {
+        container.innerHTML = `<div class="p-6 text-center text-text-secondary text-sm">All endpoints in this workspace operating at 100% health. No remediations required!</div>`;
+        return;
+      }
+
+      container.innerHTML = issues.map((iss, idx) => `
+        <div class="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-brand-primary font-mono">[${iss.endpoint_method}] ${iss.endpoint_url}</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono font-bold">${iss.severity}</span>
+          </div>
+          <p class="text-xs text-white/90 leading-snug">${iss.likely_cause}</p>
+          <div class="flex items-center justify-between pt-1">
+            <span class="text-[10px] text-text-secondary font-mono">Evidence: ${iss.evidence_id}</span>
+            <button onclick="openAiModalDirect(${idx})" class="text-xs text-brand-primary hover:underline font-medium">Inspect Fix & Code →</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function openAiModalDirect(index) {
+      if (!currentDisplayedIssues || !currentDisplayedIssues[index]) return;
+      const issue = currentDisplayedIssues[index];
+      if (!issue) return;
+
+      document.getElementById("modalTitle").innerText = `Remediation for [${issue.endpoint_method}] ${issue.endpoint_url}`;
+      document.getElementById("modalEvidenceId").innerText = issue.evidence_id;
+      document.getElementById("modalCategory").innerText = issue.root_cause_category;
+      document.getElementById("modalSeverity").innerText = issue.severity;
+      document.getElementById("modalLikelyCause").innerText = issue.likely_cause;
+      document.getElementById("modalSuggestedFix").innerText = issue.suggested_fix;
+      document.getElementById("modalCodeSnippet").innerText = issue.code_snippet || "# No snippet provided";
+      selectedModalSnippet = issue.code_snippet || "";
+
+      const modal = document.getElementById("aiModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    }
+
+    function closeAiModal() {
+      const modal = document.getElementById("aiModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function copyCodeSnippet() {
+      if (selectedModalSnippet) {
+        navigator.clipboard.writeText(selectedModalSnippet);
+        logToTerminal("[CLIPBOARD]", "AI remediation code snippet copied to clipboard.");
+      }
+    }
+
+    // Trigger Test Run
+    async function triggerTestSuiteRun() {
+      if (!currentProjectId) {
+        logToTerminal("[WARN]", "No active workspace selected.");
+        return;
+      }
+      const btn = document.getElementById("runSuiteBtn");
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin">↻</span> Running...`;
+      logToTerminal("[DISPATCH]", `Starting automated test suite run for project #${currentProjectId}...`);
+
+      try {
+        const res = await fetch(`/api/v1/projects/${currentProjectId}/runs`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: "Automated Dashboard Suite Run",
+            environment: "development",
+            concurrency: 5
+          })
+        });
+        const json = await res.json();
+        if (res.ok && json.data) {
+          const duration = json.data.duration_ms !== undefined ? json.data.duration_ms : (json.data.elapsed_ms || 0);
+          logToTerminal("[SUCCESS]", `TestRun #${json.data.id} completed: ${json.data.passed_tests}/${json.data.total_tests} passed in ${Number(duration).toFixed(1)}ms.`);
+          fetchDashboardOverview();
+        } else {
+          logToTerminal("[ERROR]", `TestRun failed: ${json.message || 'Unknown error'}`);
+        }
+      } catch (err) {
+        logToTerminal("[ERROR]", `Execution dispatch failed: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<svg class="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg><span>Run All Tests</span>`;
+      }
+    }
+
+    // Direct Endpoint Execution
+    async function executeEndpointDirect(endpointId, method, path) {
+      logToTerminal("[HTTP_DISPATCH]", `Executing single test probe: [${method}] ${path}...`);
+      try {
+        const res = await fetch(`/api/v1/projects/${currentProjectId}/endpoints/${endpointId}/execute`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+        const json = await res.json();
+        if (res.ok && json.data) {
+          const lat = json.data.elapsed_ms !== undefined ? json.data.elapsed_ms : (json.data.latency_ms !== undefined ? json.data.latency_ms : 0);
+          const statusCode = json.data.status_code || (json.data.error ? 'ERR' : 'OK');
+          let preview = "";
+          if (json.data.body !== undefined && json.data.body !== null) {
+            preview = typeof json.data.body === "object" ? JSON.stringify(json.data.body) : String(json.data.body);
+          } else if (json.data.error) {
+            preview = `Error: ${json.data.error}`;
+          } else {
+            preview = "Empty response";
+          }
+          logToTerminal("[HTTP_RESPONSE]", `Status: ${statusCode} in ${Number(lat).toFixed(1)}ms. ${preview.slice(0, 80)}${preview.length > 80 ? '...' : ''}`);
+        } else {
+          logToTerminal("[HTTP_ERROR]", `Execution probe failed: ${json.detail || json.message || ('Status ' + res.status)}`);
+        }
+      } catch (err) {
+        logToTerminal("[HTTP_ERROR]", `Execution error: ${err.message}`);
+      }
+    }
+
+    // OpenAPI Modal Functions
+    function openOpenApiModal() {
+      const sel = document.getElementById("openApiProjectSelect");
+      sel.innerHTML = "";
+      if (globalOverviewData && globalOverviewData.projects && globalOverviewData.projects.length > 0) {
+        globalOverviewData.projects.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.innerText = `${p.name} (${p.total_endpoints} endpoints)`;
+          if (p.id === currentProjectId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } else {
+        sel.innerHTML = '<option value="">No workspaces available. Create one first.</option>';
+      }
+      document.getElementById("openApiModal").classList.remove("hidden");
+      document.getElementById("openApiModal").classList.add("flex");
+    }
+
+    function closeOpenApiModal() {
+      document.getElementById("openApiModal").classList.add("hidden");
+      document.getElementById("openApiModal").classList.remove("flex");
+    }
+
+    async function submitOpenApiSpec() {
+      const targetProjId = parseInt(document.getElementById("openApiProjectSelect").value) || currentProjectId;
+      if (!targetProjId) {
+        alert("Please select or create a target workspace first.");
+        return;
+      }
+      let content = document.getElementById("openApiContent").value.trim();
+      const autoGen = document.getElementById("generateSmokeTestsCheck").checked;
+      if (!content) {
+        alert("Please paste OpenAPI/Swagger JSON or YAML content.");
+        return;
+      }
+
+      // Automatically strip markdown backticks if user copied ```json / ```yaml
+      if (content.startsWith("```")) {
+        const lines = content.split("\n");
+        if (lines.length > 1) {
+          const endIdx = lines[lines.length - 1].trim().startsWith("```") ? lines.length - 1 : lines.length;
+          content = lines.slice(1, endIdx).join("\n").trim();
+        }
+      }
+
+      const btn = document.getElementById("importSpecSubmitBtn");
+      btn.disabled = true;
+      btn.innerText = "Ingesting...";
+      logToTerminal("[OPENAPI]", `Importing specification into workspace #${targetProjId}...`);
+
+      try {
+        const res = await fetch(`/api/v1/projects/${targetProjId}/openapi/import`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            spec_content: content,
+            overwrite_existing: true,
+            create_smoke_tests: autoGen
+          })
+        });
+        const json = await res.json();
+        if (res.ok) {
+          logToTerminal("[OPENAPI_SUCCESS]", `Imported ${json.data.created_count} endpoints (out of ${json.data.total_discovered} discovered).`);
+          closeOpenApiModal();
+          currentProjectId = targetProjId;
+          fetchDashboardOverview();
+        } else {
+          const errMsg = json.detail || json.message || "Invalid specification format";
+          logToTerminal("[OPENAPI_ERROR]", `Import failed: ${errMsg}`);
+          alert(`OpenAPI Import Failed: ${errMsg}`);
+        }
+      } catch (err) {
+        logToTerminal("[OPENAPI_ERROR]", `Ingestion network error: ${err.message}`);
+        alert(`OpenAPI Import Network Error: ${err.message}`);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "Import & Generate";
+      }
+    }
+
+    // Terminal Logging Utility
+    function logToTerminal(tag, message) {
+      const log = document.getElementById("terminalLog");
+      const time = new Date().toLocaleTimeString();
+      const line = document.createElement("div");
+      line.className = "flex gap-2";
+      line.innerHTML = `<span class="text-brand-primary">${tag}</span><span class="text-white/40">${time}</span><span class="text-white">${message}</span>`;
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function clearTerminal() {
+      document.getElementById("terminalLog").innerHTML = "";
+    }
+
+    // Tab Switcher
+    function switchTab(tab) {
+      document.getElementById("tabContentTerminal").classList.add("hidden");
+      document.getElementById("tabContentRuns").classList.add("hidden");
+      document.getElementById("tabContentAi").classList.add("hidden");
+
+      document.getElementById("tabBtnTerminal").className = "flex-1 py-2 rounded-lg text-text-secondary hover:text-white transition-all text-center";
+      document.getElementById("tabBtnRuns").className = "flex-1 py-2 rounded-lg text-text-secondary hover:text-white transition-all text-center";
+      document.getElementById("tabBtnAi").className = "flex-1 py-2 rounded-lg text-text-secondary hover:text-white transition-all text-center flex items-center justify-center gap-1";
+
+      if (tab === "terminal") {
+        document.getElementById("tabContentTerminal").classList.remove("hidden");
+        document.getElementById("tabBtnTerminal").className = "flex-1 py-2 rounded-lg bg-white/10 text-white font-medium transition-all text-center";
+      } else if (tab === "runs") {
+        document.getElementById("tabContentRuns").classList.remove("hidden");
+        document.getElementById("tabBtnRuns").className = "flex-1 py-2 rounded-lg bg-white/10 text-white font-medium transition-all text-center";
+      } else if (tab === "ai") {
+        document.getElementById("tabContentAi").classList.remove("hidden");
+        document.getElementById("tabBtnAi").className = "flex-1 py-2 rounded-lg bg-white/10 text-white font-medium transition-all text-center flex items-center justify-center gap-1";
+      }
+    }
+
+    // Workspace & Endpoint Management Functions
+    function openNewProjectModal() {
+      document.getElementById("newProjectName").value = "";
+      document.getElementById("newProjectBaseUrl").value = "http://127.0.0.1:8000";
+      document.getElementById("newProjectModal").classList.remove("hidden");
+      document.getElementById("newProjectModal").classList.add("flex");
+    }
+
+    function closeNewProjectModal() {
+      document.getElementById("newProjectModal").classList.add("hidden");
+      document.getElementById("newProjectModal").classList.remove("flex");
+    }
+
+    async function submitNewProject() {
+      const name = document.getElementById("newProjectName").value.trim();
+      const baseUrl = document.getElementById("newProjectBaseUrl").value.trim() || "http://127.0.0.1:8000";
+      const env = document.getElementById("newProjectEnv").value;
+      if (!name) {
+        alert("Please enter a workspace name.");
+        return;
+      }
+      try {
+        const res = await fetch("/api/v1/projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: name, base_url: baseUrl, environment: env })
+        });
+        const json = await res.json();
+        if (res.ok) {
+          logToTerminal("[PROJECT_CREATED]", `Created new workspace '${name}' (#${json.data.id}).`);
+          closeNewProjectModal();
+          currentProjectId = json.data.id;
+          fetchDashboardOverview();
+        } else {
+          alert(`Failed to create project: ${json.detail || json.message}`);
+        }
+      } catch (err) {
+        logToTerminal("[ERROR]", `Failed to create workspace: ${err.message}`);
+      }
+    }
+
+    async function deleteCurrentWorkspace() {
+      if (!currentProjectId) return;
+      const proj = globalOverviewData && globalOverviewData.projects && globalOverviewData.projects.find(p => p.id === currentProjectId);
+      const name = proj ? proj.name : `#${currentProjectId}`;
+      if (!confirm(`Are you sure you want to permanently delete workspace '${name}' and all its registered endpoints and test cases?`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/v1/projects/${currentProjectId}`, {
+          method: "DELETE"
+        });
+        if (res.ok) {
+          logToTerminal("[PROJECT_DELETED]", `Deleted workspace '${name}'.`);
+          currentProjectId = null;
+          fetchDashboardOverview();
+        } else {
+          const json = await res.json();
+          alert(`Failed to delete workspace: ${json.detail || json.message}`);
+        }
+      } catch (err) {
+        logToTerminal("[ERROR]", `Failed to delete workspace: ${err.message}`);
+      }
+    }
+
+    async function deleteEndpointDirect(endpointId, method, path) {
+      if (!confirm(`Delete endpoint [${method}] ${path}?`)) return;
+      try {
+        const res = await fetch(`/api/v1/endpoints/${endpointId}`, {
+          method: "DELETE"
+        });
+        if (res.ok) {
+          logToTerminal("[ENDPOINT_DELETED]", `Deleted endpoint [${method}] ${path}.`);
+          fetchProjectDetail(currentProjectId);
+          fetchDashboardOverview();
+        } else {
+          const json = await res.json();
+          logToTerminal("[ERROR]", `Failed to delete endpoint: ${json.detail || json.message}`);
+        }
+      } catch (err) {
+        logToTerminal("[ERROR]", `Failed to delete endpoint: ${err.message}`);
+      }
+    }
+  </script>
+
+  <!-- New Project Modal -->
+  <div id="newProjectModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-white/10 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-brand-primary/20 text-brand-primary flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </div>
+          <h3 class="text-base font-semibold text-white">Create New Workspace</h3>
+        </div>
+        <button onclick="closeNewProjectModal()" class="text-text-secondary hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Workspace Name</label>
+          <input id="newProjectName" type="text" placeholder="e.g. My New API Workspace" class="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-primary font-medium" />
+        </div>
+        <div>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Target Base URL</label>
+          <input id="newProjectBaseUrl" type="text" value="http://127.0.0.1:8000" class="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white font-mono focus:outline-none focus:border-brand-primary" />
+        </div>
+        <div>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Environment</label>
+          <select id="newProjectEnv" class="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-primary font-mono">
+            <option value="development">Development</option>
+            <option value="staging">Staging</option>
+            <option value="production">Production</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex justify-end gap-3 pt-2">
+        <button onclick="closeNewProjectModal()" class="px-4 py-1.5 rounded-lg border border-white/10 text-text-secondary hover:text-white text-xs">Cancel</button>
+        <button onclick="submitNewProject()" id="newProjectSubmitBtn" class="px-4 py-1.5 rounded-lg bg-brand-primary hover:bg-cyan-400 text-black font-semibold text-xs transition-all shadow-glow-cyan">Create Workspace</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Run Comparison & Diff Modal (Stage 21) -->
+  <div id="runCompareModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-brand-primary/20 text-brand-primary flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight">Run Comparison & Diff Tool</h3>
+            <p class="text-xs text-text-secondary font-mono">Stage 21 — Side-by-Side Execution Delta Analysis</p>
+          </div>
+        </div>
+        <button onclick="closeRunCompareModal()" class="text-text-secondary hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Selector Bar -->
+      <div class="p-4 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center gap-4 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-text-secondary font-semibold uppercase tracking-wider">Base Run (Previous):</span>
+          <select id="compareBaseRunSelect" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+            <option value="">Select Base Run...</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-text-secondary font-semibold uppercase tracking-wider">Target Run (Current):</span>
+          <select id="compareTargetRunSelect" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+            <option value="">Select Target Run...</option>
+          </select>
+        </div>
+
+        <button onclick="executeRunComparison()" id="compareActionBtn" class="ml-auto px-4 py-1.5 rounded-lg bg-brand-primary hover:bg-cyan-400 text-black font-semibold text-xs transition-all shadow-glow-cyan">
+          Analyze Diff
+        </button>
+      </div>
+
+      <!-- Report View Body -->
+      <div id="compareReportContainer" class="p-6 overflow-y-auto custom-scrollbar space-y-6 text-xs">
+        <div class="p-12 text-center text-text-secondary">Select a Base Run and Target Run above to view side-by-side metrics and regressions.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Comprehensive Test & Quality Report Modal (Stage 22) -->
+  <div id="reportModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-brand-primary/20 text-brand-primary flex items-center justify-center shadow-glow-cyan">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight">Executive Test & Quality Report</h3>
+            <p class="text-xs text-text-secondary font-mono">Stage 22 — Comprehensive 6-Section Synthesis & Multi-Format Export</p>
+          </div>
+        </div>
+        <button onclick="closeReportModal()" class="text-text-secondary hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Controls & Export Action Bar -->
+      <div class="p-3 sm:p-4 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-text-secondary font-semibold uppercase tracking-wider">Test Run:</span>
+            <select id="reportRunSelect" onchange="loadReportPreview()" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+              <option value="">Select Test Run...</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-text-secondary font-semibold uppercase tracking-wider">Baseline (Diff):</span>
+            <select id="reportBaselineSelect" onchange="loadReportPreview()" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+              <option value="">None (Standalone)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Multi-Format Download & External Preview Actions -->
+        <div class="flex items-center gap-2 ml-auto">
+          <button onclick="downloadCurrentReport('html')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download standalone self-contained HTML report">
+            <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>HTML</span>
+          </button>
+
+          <button onclick="downloadCurrentReport('markdown')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download GitHub-flavored Markdown report">
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Markdown</span>
+          </button>
+
+          <button onclick="downloadCurrentReport('json')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download machine-readable JSON telemetry DTO">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>JSON</span>
+          </button>
+
+          <button onclick="openCurrentReportTab()" class="px-3 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-brand-primary font-medium text-xs transition-all flex items-center gap-1.5" title="Open full report in new browser tab / Print PDF">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <span>Open Tab</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Interactive Report Iframe Preview -->
+      <div class="flex-1 bg-black p-0 overflow-hidden relative min-h-[550px]">
+        <iframe id="reportPreviewIframe" class="w-full h-full min-h-[550px] border-0" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+
+
+</body>
+</html>

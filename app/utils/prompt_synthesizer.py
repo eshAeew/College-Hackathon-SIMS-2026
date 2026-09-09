@@ -1,99 +1,95 @@
-"""Structured prompt synthesis for the AI recommendation layer (Stage 19, sub-stage 01)."""
-import json
-from typing import Any, Dict
+"""Prompt synthesis and guardrail enforcement for the AI Recommendation Layer (Sub-Stage 19.01).
 
+PRIME DIRECTIVE:
+The deterministic execution and classification engines own the pass/fail and severity decisions.
+The LLM's sole responsibility is explaining the failure context and proposing actionable code fixes.
+The LLM is strictly prohibited from altering pass/fail verdicts or outputting free-form unstructured text.
+"""
+import json
 from app.models.schemas.ai_recommendation import SynthesizedPrompt
 from app.models.schemas.failure_analysis import FailureEvidence
 
-# The model must return exactly this shape; anything else is rejected by the caller.
-RECOMMENDATION_JSON_SCHEMA: Dict[str, Any] = {
+SYSTEM_INSTRUCTION = """You are an expert Backend API Quality and Resilience Engineer for API Sentinel.
+Your task is to analyze the provided diagnostic failure evidence and propose an exact root cause analysis and a concrete, ready-to-apply code fix.
+
+STRICT RULES:
+1. Never state whether the test passed or failed - that determination has already been made by the deterministic engine.
+2. Focus strictly on explaining why the failure happened and how to fix it in code (e.g. FastAPI / Pydantic / SQLAlchemy / Express / Spring).
+3. Return your response ONLY as valid JSON conforming to the schema below.
+4. Provide a concrete code_snippet illustrating the fix.
+
+JSON RESPONSE SCHEMA:
+{
+  "likely_cause": "<concise explanation of why the failure occurred>",
+  "severity": "<CRITICAL | HIGH | MEDIUM | LOW | INFO>",
+  "suggested_fix": "<step-by-step actionable remediation instructions>",
+  "code_snippet": "<python/fastapi or framework code snippet fixing the bug>",
+  "confidence_pct": <float between 0.0 and 100.0>,
+  "references": ["<relevant docs or RFC URLs>"]
+}
+"""
+
+RESPONSE_SCHEMA = {
     "type": "object",
     "required": ["likely_cause", "severity", "suggested_fix"],
     "properties": {
         "likely_cause": {"type": "string"},
-        "severity": {"type": "string", "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]},
+        "severity": {
+            "type": "string",
+            "enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW", "INFO"],
+        },
         "suggested_fix": {"type": "string"},
         "code_snippet": {"type": "string"},
         "confidence_pct": {"type": "number"},
+        "references": {"type": "array", "items": {"type": "string"}},
     },
 }
 
-SYSTEM_PROMPT = (
-    "You are an expert API Reliability and QA Engineer.\n"
-    "A deterministic test engine has ALREADY decided that this test failed; that verdict is "
-    "final and is not yours to revisit. Your only job is to explain the most likely underlying "
-    "cause and propose a concrete fix.\n"
-    "Rules:\n"
-    "1. Never state whether the test passed or failed.\n"
-    "2. Base every claim on the supplied evidence; do not invent endpoints, fields, or logs.\n"
-    "3. If the evidence is insufficient, say so in likely_cause and lower confidence_pct.\n"
-    "4. Output ONLY valid JSON matching the required schema. No prose, no markdown fences."
-)
-
-# Rough heuristic: English averages ~4 characters per token.
-CHARS_PER_TOKEN = 4
-
-
-def estimate_tokens(text: str) -> int:
-    """Approximate the token count of a prompt for cost control."""
-    return max(1, len(text) // CHARS_PER_TOKEN)
-
-
-def format_evidence_block(evidence: FailureEvidence) -> str:
-    """Render a FailureEvidence bundle as a compact, deterministic prompt block."""
-    req = evidence.request
-    res = evidence.response
-    lines = [
-        "EVIDENCE:",
-        f"- Test: {evidence.test_name}",
-        f"- Endpoint: {req.http_method} {req.url}",
-        f"- Expected Status: {evidence.expected_status if evidence.expected_status is not None else 'not specified'}",
-        f"- Received Status: {res.status_code if res.status_code is not None else 'no response'}",
-    ]
-    if res.network_error:
-        lines.append(f"- Network Error: {res.network_error}")
-    if res.latency_ms is not None:
-        budget = f" (budget {evidence.max_latency_ms}ms)" if evidence.max_latency_ms else ""
-        lines.append(f"- Latency: {res.latency_ms}ms{budget}")
-    if evidence.is_negative_test:
-        lines.append("- Test Type: NEGATIVE / adversarial input (server should reject with 4xx)")
-    if req.body is not None:
-        body = json.dumps(req.body) if isinstance(req.body, (dict, list)) else str(req.body)
-        lines.append(f"- Request Payload: {body[:600]}")
-    if res.body_snippet:
-        lines.append(f"- Response Body: {res.body_snippet[:800]}")
-    if res.content_type:
-        lines.append(f"- Response Content-Type: {res.content_type}")
-    if evidence.assertion_failures:
-        lines.append("- Failed Assertions:")
-        for failure in evidence.assertion_failures[:8]:
-            lines.append(
-                f"    * {failure.rule}: expected {failure.expected!r}, got {failure.actual!r}"
-                f" - {failure.message}"
-            )
-    lines.append(f"- Deterministic Classification: {evidence.root_cause.category.value}")
-    lines.append(f"- Classifier Summary: {evidence.root_cause.summary}")
-    lines.append(f"- Severity: {evidence.severity.value}")
-    history = evidence.history
-    if history.total_observations:
-        lines.append(
-            f"- History: failed {history.previous_failures} of {history.total_observations} "
-            f"observed runs ({history.failure_rate_pct}%, {history.persistence_rating})"
-        )
-    return "\n".join(lines)
-
 
 def synthesize_prompt(evidence: FailureEvidence) -> SynthesizedPrompt:
-    """Build the system/user prompt pair for a single failure evidence bundle."""
-    user_prompt = (
-        f"{format_evidence_block(evidence)}\n\n"
-        "TASK: Identify the most likely root cause and the concrete code-level fix. "
-        "Return JSON with keys: likely_cause, severity, suggested_fix, code_snippet, confidence_pct."
-    )
+    """Build a structured, token-efficient prompt bundle from a FailureEvidence package."""
+    assertions_text = "\n".join(
+        f"- Target: {a.target}, Path: {a.path or 'N/A'}, Operator: {a.operator}, Expected: {a.expected}, Actual: {a.actual} ({a.message})"
+        for a in evidence.assertion_failures
+    ) or "None (status or network failure)"
+
+    user_prompt = f"""DIAGNOSTIC EVIDENCE:
+Evidence ID: {evidence.evidence_id}
+Test Scenario: {evidence.test_name}
+Target URL: [{evidence.request.http_method}] {evidence.request.url}
+Is Adversarial / Negative Test: {evidence.is_negative_test}
+Expected Status Code: {evidence.expected_status or 'N/A'}
+Actual Status Code: {evidence.response.status_code or 'None (Connection Failed)'}
+Latency: {evidence.response.latency_ms or 0.0:.1f}ms (Max Allowed SLA: {evidence.max_latency_ms or 'N/A'}ms)
+Network Error: {evidence.response.network_error or 'None'}
+
+REQUEST DETAILS:
+Headers: {json.dumps(evidence.request.headers)}
+Query Params: {json.dumps(evidence.request.query_params)}
+Body Snippet: {evidence.request.body_snippet or 'None'}
+Reproducible cURL: {evidence.request.curl_command}
+
+RESPONSE DETAILS:
+Headers: {json.dumps(evidence.response.headers)}
+Body Snippet: {evidence.response.body_snippet or 'None'}
+
+DETERMINISTIC DIAGNOSIS:
+Root Cause Category: {evidence.root_cause.category.value}
+Diagnostic Summary: {evidence.root_cause.description}
+Historical Recurrence: {evidence.history.persistence_rating} ({evidence.history.failure_rate_pct}% failure rate over {evidence.history.total_observations} observations)
+
+FAILED ASSERTIONS:
+{assertions_text}
+
+Analyze this failure and return the structured JSON remediation card.
+"""
+    # Approximate token estimation: ~4 chars per token
+    token_est = (len(SYSTEM_INSTRUCTION) + len(user_prompt)) // 4
+
     return SynthesizedPrompt(
-        system_prompt=SYSTEM_PROMPT,
-        user_prompt=user_prompt,
+        system_prompt=SYSTEM_INSTRUCTION.strip(),
+        user_prompt=user_prompt.strip(),
+        response_schema=RESPONSE_SCHEMA,
+        estimated_tokens=token_est,
         evidence_id=evidence.evidence_id,
-        estimated_tokens=estimate_tokens(SYSTEM_PROMPT + user_prompt),
-        response_schema=RECOMMENDATION_JSON_SCHEMA,
     )

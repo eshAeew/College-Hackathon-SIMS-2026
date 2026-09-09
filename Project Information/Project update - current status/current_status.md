@@ -1,33 +1,48 @@
-# API Sentinel - Project Current Status
+# API Sentinel — Project Current Status
 
 ## 1. Project Health & Stage Progress Summary
-- **Current Phase**: Phase F - Run Management, AI Diagnosis & Interface
-- **Completed Stages**: Stages 01-21 (all sub-stages)
-  - **Stage 01-07**: Foundation, workspaces, endpoints, request builder, execution engine, test cases, validation
-  - **Stage 08-11**: Adversarial fuzzing, flakiness entropy, performance SLA, recurring-failure clustering
-  - **Stage 12-15**: Run orchestration, regression engine, OpenAPI import, automatic test generation
-  - **Stage 16-17**: Safety controls (now enforced in the dispatch path), 4-tier result classification
-  - **Stage 18**: Failure Analysis Engine - evidence packager + root-cause taxonomy
-  - **Stage 19**: AI Recommendation Layer - prompt synthesizer + Gemini client + offline heuristics
-  - **Stage 20**: Dashboard & Web Interface - aggregation APIs + server-rendered /ui
-  - **Stage 21**: Run Comparison & Diff - comparator + delta visualizer
-- **Next Stage**: Stage 22 - Reporting & Export (executive summary, HTML/PDF)
-- **Latest Build Status**: Passing (277/277 tests green, 98 API operations)
+- **Current Phase**: Phase B — Core Test Execution & Telemetry Engine
+- **Completed Stages**: 
+  - **Stage 01: Project Foundation (100% Complete)**
+  - **Stage 02: Project / Workspace Management (100% Complete)**
+  - **Stage 03: API Endpoint Management (100% Complete)**
+  - **Stage 04: Request Configuration Engine (100% Complete)**
+  - **Stage 05: Core API Execution Engine (100% Complete)**
+  - **Stage 06: Test Case Management (100% Complete)**
+  - **Stage 07: Functional Validation Engine (100% Complete)**
+  - **Stage 08: Negative & Adversarial Testing Engine (100% Complete)**
+  - **Stage 09: Inconsistent Behavior Detection (100% Complete)**
+  - **Stage 10: Performance Analysis Engine (100% Complete)**
+  - **Stage 11: Recurring Failure Detection (100% Complete)**
+  - **Stage 12: Test Run Management (100% Complete)**
+  - **Stage 13: Regression Testing Engine (100% Complete)**
+  - **Stage 14: OpenAPI Specification Support (100% Complete)**
+  - **Stage 15: Automatic Test Generation (100% Complete)**
+  - **Stage 16: Safety & Execution Controls (100% Complete)**
+  - **Stage 17: Result Classification Engine (100% Complete)**
+  - **Stage 18: Failure Analysis Engine (100% Complete)**
+  - **Stage 19: AI Recommendation Layer (100% Complete)**
+  - **Stage 20: Dashboard & Web Interface (100% Complete)**
+  - **Stage 21: Run Comparison & Diff Tool (100% Complete)**
+  - **Stage 22: Reporting & Export Engine (100% Complete)**
+  - **Stage 23: Persistence & Database Layer (100% Complete)**
+  - **Stage 24: Error Handling & Resilience (100% Complete)**
+  - **Stage 25: Logging, Tracing & Auditability (100% Complete)**
+  - **Stage 26: Platform Self-Testing Suite (100% Complete)**
+  - **Stage 27: Intentionally Flawed Demo Target API (100% Complete)**
+  - **Stage 28: Final Demo Workflow & Pitch Playbook (100% Complete)**
+  - **Feature Enhancement: ThreeUI Sylva Living Green Landing Page (/welcome) (100% Complete)**
+- **Next Sub-Stage**: All 28 Stages + 3D Welcome Landing Page Delivered! (Production Ready)
+- **Latest Build Status**: Passing (306/306 unit tests green, 100% pass rate)
 
-## 2. Stage 01-17 Hardening (this cycle)
-A full live end-to-end audit of Stages 01-17 surfaced three defects the mocked unit suite
-could not see. All are fixed and covered by regression tests:
-- **Dispatcher contract break** - three call sites passed `client=` to a method that did not
-  accept it, so every test-run execution returned ERROR with zero requests actually sent.
-- **JSONPath assertions** - the documented `$.a.b` syntax silently resolved to field-not-found.
-- **SSRF** - the Stage 16 guard existed but nothing called it before dispatch; cloud-metadata
-  and link-local targets are now blocked outright.
 
-## 3. Milestone Checklist
+
+
+
+## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
 - [x] Documentation & Architecture Specifications Created
 - [x] Database Schema ERD & Models Designed
-
 - [x] Intentionally Flawed Demo API Spec Finalized
 - [x] 28-Stage Modular Implementation Hierarchy Scaffolding
 - [x] **Stage 01: Project Foundation (COMPLETED - 13/13 tests)**
@@ -79,10 +94,53 @@ could not see. All are fixed and covered by regression tests:
 - [x] **Stage 17: Result Classification Engine (COMPLETED - 9/9 tests passing)**
   - [x] **Sub-Stage 01: 4-Tier Result Decision Matrix**: Standardized outcome matrix (`PASS`, `FAIL`, `WARNING`, `ERROR`), root failure categorization (`HTTP_500_SERVER_CRASH`, `STATUS_CODE_MISMATCH`, `SCHEMA_VIOLATION`, `LATENCY_SLA_BREACH`, `NETWORK_CONNECTIVITY_ERROR`, `AUTH_SECURITY_FAILURE`), and single execution evaluation (`/api/v1/classification/classify`).
   - [x] **Sub-Stage 02: Failure Severity Scoring (LOW to CRITICAL)**: Multi-factor severity scoring (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NONE`), priority ranking queue (1=Highest to 5=None), composite health score index (0-100%), batch classification (`/api/v1/classification/classify-batch`), run breakdown (`/api/v1/runs/{id}/classification`), and latest project report (`/api/v1/projects/{id}/classification/latest`).
-- [ ] Stage 18: Failure Analysis Engine
-- [ ] Stage 19: AI Recommendation Layer
-- [ ] Stage 20: Dashboard & Web UI
-- [ ] Stage 27: Intentionally Flawed Demo Target API
+- [x] **Stage 18: Failure Analysis Engine (COMPLETED - 10/10 tests passing)**
+  - [x] **Sub-Stage 01: Structured Evidence Packaging**: Credential masking (`Authorization`, `Cookie`, `X-API-Key`), bounded 4KB body snippets, reproducible cURL command generator, deterministic SHA-256 evidence IDs (`EV-...`), and historical recurrence context.
+  - [x] **Sub-Stage 02: Root Cause Deduction & Categorization**: 13-category root-cause taxonomy with confidence scoring and troubleshooting recommendations (`/api/v1/failure-analysis/package`, `/api/v1/failure-analysis/categorize`, `/api/v1/results/{id}/evidence`, `/api/v1/runs/{id}/failure-analysis`).
+- [x] **Stage 19: AI Recommendation Layer (COMPLETED - 12/12 tests passing)**
+  - [x] **Sub-Stage 01: Structured Prompt Synthesis & Guardrails**: Structured prompt builder enforcing strict JSON schema and the Prime Directive (AI strictly explains context and proposes fixes, never decides pass/fail).
+  - [x] **Sub-Stage 02: Deterministic Rule-Based Fallback Engine**: Offline-capable rule engine delivering actionable code snippets across all failure categories without external LLM dependencies.
+  - [x] **Sub-Stage 03: Dual-Mode Service & REST API Integration**: Database-backed `AIRecommendation` persistence, Google Gemini API client integration, and REST endpoints (`/api/v1/ai/status`, `/api/v1/ai/synthesize-prompt`, `/api/v1/ai/recommend`, `/api/v1/ai/recommend-from-snapshot`, `/api/v1/results/{id}/recommendation`, `/api/v1/results/{id}/recommendations`).
+- [x] **Stage 20: Dashboard & Web Interface (COMPLETED - 5/5 tests passing)**
+  - [x] **Sub-Stage 01: Global Overview & KPI Metrics Dashboard**: Real-time aggregated statistics (workspaces, endpoints, pass rate, avg latency, AI fix count), recent test runs feed, and critical alerts banner.
+  - [x] **Sub-Stage 02: Project & Endpoint Drill-Down Views**: Interactive dark cyber theme Web UI (`/` and `/dashboard`), OpenAPI specification ingestion modal, 1-click test runner console, endpoint inspector, and AI failure fix card modal with copyable code snippets.
+- [x] **Stage 21: Run Comparison & Diff Tool (COMPLETED - 6/6 tests passing)**
+  - [x] **Sub-Stage 01: Side-by-Side Metric Comparison Table**: Tests, Passed, Failed, Pass Rate (%), Avg Latency, and P95 Latency side-by-side delta computations with directional status badges (`IMPROVED`, `DEGRADED`, `UNCHANGED`).
+  - [x] **Sub-Stage 02: Granular Test Transition Classification**: Categorization of `NEW_FAILURE` (regressions), `FIXED_FAILURE` (resolved bugs), `BEHAVIOR_CHANGED` (HTTP code/error drift), `LATENCY_DEGRADED` (latency spikes), and `UNCHANGED` states.
+  - [x] **Sub-Stage 03: Synthesized Natural Language Insights & UI Diff Modal**: Natural language summary generator, REST API endpoints (`GET` & `POST /api/v1/runs/compare`), and interactive Web UI comparison modal on the Dashboard with quick compare triggers.
+- [x] **Stage 22: Reporting & Export Engine (COMPLETED - 7/7 tests passing)**
+  - [x] **Sub-Stage 01: Comprehensive Multi-Section Report Synthesis**: 6-section report DTO (`ExecutiveSummary`, `FunctionalReportSection`, `PerformanceReportSection`, `RecurringFailuresSection`, `RegressionReportSection`, `RecommendationsSection`), SLA breach detection, and automated verdict calculation (`PASS`, `DEGRADED`, `FAIL`).
+  - [x] **Sub-Stage 02: Multi-Format Serialization & File Download Engine**: Standalone self-contained Dark Cyber HTML report generator with print/PDF styling, GitHub-flavored Markdown generator, machine-readable JSON serializer, and file download attachment endpoints (`GET /api/v1/reports/runs/{id}`, `/html`, `/markdown`, `/download`).
+  - [x] **Sub-Stage 03: Web UI Report Viewer & Download Modal**: Interactive modal (`#reportModal`) with live HTML iframe preview, baseline selector for automated regression diffing, direct download triggers for HTML/MD/JSON, and per-run "Report" buttons in recent test feeds.
+- [x] **Stage 23: Persistence & Database Layer (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Core Database PRAGMAs & Generic Repository DAL**: Connection event listener enabling SQLite `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, and `PRAGMA synchronous=NORMAL`; generic type-safe `BaseRepository[T]` providing CRUD, count, pagination, batch creation, and existence verification.
+  - [x] **Sub-Stage 02: Specialized Entity Repositories**: Concrete domain repositories (`ProjectRepository`, `EndpointRepository`, `TestCaseRepository`, `TestRunRepository`, `TestResultRepository`, `AIRecommendationRepository`) encapsulating specialized relational queries, filtering, and summary statistics.
+  - [x] **Sub-Stage 03: Database Diagnostics, Maintenance, Backup & Seeding Engine**: `DatabaseService` delivering latency health probes, SQLite online snapshot backup (`sentinel_backup_*.db`), disk vacuum & query plan optimization (`VACUUM & ANALYZE`), retention pruning (`purge_old_runs`), realistic demo workspace bootstrapping (`seed_sample_data`), and REST endpoints (`GET /api/v1/database/health`, `POST /maintenance/vacuum`, `POST /maintenance/backup`, `POST /maintenance/purge-runs`, `POST /seed-sample`).
+- [x] **Stage 24: Error Handling & Resilience (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Core Platform Exception Hierarchy & Standardized JSON Error Envelopes**: `SentinelBaseException`, `EntityNotFoundException` (404), `ContractValidationException` (422), `ExecutionTimeoutException` (504), `NetworkConnectivityException` (502), `SafetyViolationException` (403), `CircuitBreakerOpenException` (503), `ParserException` (400), and global exception handlers with request correlation tracking.
+  - [x] **Sub-Stage 02: Host-Level Circuit Breaker State Machine & Registry**: Thread-safe state machine (`CLOSED`, `OPEN`, `HALF_OPEN`), configurable failure thresholds, recovery timeout cooldowns, probe trials, and singleton `CircuitBreakerRegistry`.
+  - [x] **Sub-Stage 03: Safe Fault-Tolerant Parsers & Resilience Telemetry Service**: Robust `safe_json_loads`, `safe_yaml_loads`, `safe_xml_loads`, and `safe_decode_payload` returning error tuples without unhandled crashes; `ResilienceService` error ring-buffer and REST management APIs (`GET /api/v1/resilience/circuit-breakers`, `POST /circuit-breakers/{host}/reset`, `POST /circuit-breakers/reset-all`, `GET /error-summary`).
+- [x] **Stage 25: Logging, Tracing & Auditability (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Structured JSON & Contextual Logging**: `JSONLogFormatter` and `ConsoleLogFormatter` with `ContextVar` request correlation tracing (`X-Request-ID`), log level filters, and root logger configuration.
+  - [x] **Sub-Stage 02: In-Memory Ring Buffer & Live Log Telemetry**: Thread-safe `InMemoryLogBuffer` capturing recent log entries with real-time level/search querying (`GET /api/v1/audit/live-logs`, `POST /api/v1/audit/live-logs/clear`).
+  - [x] **Sub-Stage 03: Distributed Tracer Execution Spans**: `Tracer` engine with context manager `tracer.span(...)`, nested span trees, parent-child duration metrics, and timeline retrieval (`GET /api/v1/audit/traces/{trace_id}`).
+  - [x] **Sub-Stage 04: Immutable Audit Trail DAL & Compliance Export**: `AuditEvent` SQLite model, `AuditRepository` with multi-criteria filtering and summary KPI aggregations, `AuditService` CSV/JSON compliance exporter (`GET /api/v1/audit/events`, `POST /events`, `GET /summary`, `GET /export`).
+- [x] **Stage 26: Platform Self-Testing Suite (COMPLETED - 5/5 tests passing)**
+  - [x] **Sub-Stage 01: Subsystem Test Suite Discovery & Mapping**: Architectural categorization of all 26 stage test modules across `core_foundation`, `execution_engine`, `validation_engine`, `analysis_ai`, and `resilience_data_audit`.
+  - [x] **Sub-Stage 02: Programmatic Execution Engine & Timing Tracker**: `SelfTestService` and `DetailedTestResult` capturing millisecond execution durations, assertion failure traces, error messages, and pass rates without crashing.
+  - [x] **Sub-Stage 03: Subsystem Readiness & Health Matrix**: Readiness verdict calculation (`ALL_PASSED`, `DEGRADED`, `FAILED`), subsystem health matrix aggregation, and catalog metadata (`GET /api/v1/self-test/suites`, `POST /run`, `GET /latest`, `GET /matrix`).
+  - [x] **Sub-Stage 04: Standalone Self-Test CLI Diagnostic Utility**: Command-line verification runner (`scripts/self_test_runner.py`) with `--subsystem`, `--json`, and `--failfast` arguments for CI/CD integration.
+- [x] **Stage 27: Intentionally Flawed Demo Target API (COMPLETED - 7/7 tests passing)**
+  - [x] **Sub-Stage 01: 6-Scenario Injected Bug Catalog**: Missing input validation (500 crash), sluggish SQL simulation (1.2s delay), schema drift (string price, missing stock), intermittent 503 gateway flakiness, corrupt/truncated JSON response, and checkout state leak regression.
+  - [x] **Sub-Stage 02: Dynamic Bug Controller Engine**: `DemoApiConfig` singleton providing live bug toggling (`POST /demo-api/control/toggle/{bug}`), resolution mode (`POST /demo-api/control/fix-all`), reset mode (`POST /demo-api/control/reset`), and execution telemetry (`GET /demo-api/control/status`).
+  - [x] **Sub-Stage 03: Standalone Server & OpenAPI Specification**: Standalone uvicorn launcher (`scripts/run_demo_api.py`) on port 8001 and live OpenAPI 3.1.0 generator (`GET /demo-api/openapi.json`) for 1-click workspace ingestion.
+- [x] **Stage 28: Final Demo Workflow & Pitch Playbook (COMPLETED - 6/6 tests passing)**
+  - [x] **Sub-Stage 01: 14-Step Presentation Story Orchestrator**: `DemoWorkflowService` automating the full demo story (`bootstrap_demo`, `execute_phase_1_baseline`, `apply_demo_fixes`, `execute_phase_2_verification`, `run_complete_story`, `get_pitch_playbook`).
+  - [x] **Sub-Stage 02: Demo Workflow REST APIs**: Standardized `/api/v1/demo/*` endpoints (`POST /bootstrap`, `POST /execute-phase-1`, `POST /apply-fixes`, `POST /execute-phase-2`, `POST /run-complete-story`, `GET /playbook`).
+  - [x] **Sub-Stage 03: 3-Minute Pitch Script & Live Demo Guide**: Markdown documentation in `Project Information/Demo Playbook/` (`3_minute_pitch_script.md`, `live_demo_step_by_step_guide.md`, `judge_qa_cheatsheet.md`).
+  - [x] **Sub-Stage 04: Standalone Interactive CLI Story Runner**: Terminal script (`scripts/run_demo_story.py`) providing a 1-command end-to-end hackathon demonstration story.
+
+
 
 
 

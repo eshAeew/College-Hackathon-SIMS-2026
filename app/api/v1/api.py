@@ -1,11 +1,10 @@
 """API v1 Router Hub with Enhanced Health & Diagnostics and Projects Router."""
 import time
-from fastapi import APIRouter
 import logging
-from sqlalchemy import text
-
+from fastapi import APIRouter
 from app.core.config import get_settings
 from app.core.database import engine
+from sqlalchemy import text
 from app.models.schemas.response import StandardResponse, HealthStatus, DatabaseHealth
 from app.api.v1.projects import router as projects_router
 from app.api.v1.endpoints import router as endpoints_router
@@ -22,15 +21,22 @@ from app.api.v1.regression import router as regression_router
 from app.api.v1.openapi import router as openapi_router
 from app.api.v1.test_generation import router as test_generation_router
 from app.api.v1.safety import router as safety_router
+from app.api.v1.classification import router as classification_router
 from app.api.v1.failure_analysis import router as failure_analysis_router
 from app.api.v1.ai_recommendations import router as ai_recommendations_router
-from app.api.v1.dashboard import router as dashboard_router
-from app.api.v1.run_comparison import router as run_comparison_router
-from app.api.v1.classification import router as classification_router
+from app.api.v1.run_comparison import comparison_router
+from app.api.v1.reports import router as reports_router
+from app.api.v1.database import router as database_router
+from app.api.v1.resilience import router as resilience_router
+from app.api.v1.audit import router as audit_router
+from app.api.v1.self_test import router as self_test_router
+from app.api.v1.demo_workflow import router as demo_workflow_router
+from app.web.routes import dashboard_api_router
+
+
 
 settings = get_settings()
 api_router = APIRouter()
-logger = logging.getLogger("app.api.health")
 
 # Server start timestamp recorded when module loads
 SERVER_START_TIME = time.time()
@@ -53,7 +59,7 @@ async def health_check():
             conn.execute(text("SELECT 1"))
     except Exception as exc:  # pragma: no cover - exercised via failure injection
         db_status = "unavailable"
-        logger.error(f"Health probe: database unreachable - {exc}")
+        logging.getLogger("app.api.v1.api").error(f"Health probe: database unreachable - {exc}")
     if settings.DATABASE_URL.startswith("sqlite"):
         db_engine = "SQLite 3"
     elif settings.DATABASE_URL.startswith("postgresql"):
@@ -91,16 +97,24 @@ api_router.include_router(adversarial_router)
 api_router.include_router(inconsistency_router)
 api_router.include_router(performance_router)
 api_router.include_router(recurring_failures_router)
+api_router.include_router(comparison_router)
 api_router.include_router(test_runs_router)
 api_router.include_router(regression_router)
 api_router.include_router(openapi_router)
 api_router.include_router(test_generation_router)
 api_router.include_router(safety_router)
+api_router.include_router(classification_router)
 api_router.include_router(failure_analysis_router)
 api_router.include_router(ai_recommendations_router)
-api_router.include_router(dashboard_router)
-api_router.include_router(run_comparison_router)
-api_router.include_router(classification_router)
+api_router.include_router(reports_router)
+api_router.include_router(database_router)
+api_router.include_router(resilience_router)
+api_router.include_router(audit_router)
+api_router.include_router(self_test_router)
+api_router.include_router(demo_workflow_router)
+api_router.include_router(dashboard_api_router)
+
+
 
 
 

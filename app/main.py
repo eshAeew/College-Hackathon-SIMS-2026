@@ -1,12 +1,9 @@
 """API Sentinel — FastAPI Main Entry Point."""
 import logging
-import mimetypes
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from pathlib import Path
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.openapi.docs import get_redoc_html
@@ -17,7 +14,6 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestCorrelationMiddleware
 from app.core.http_client import init_async_client, close_async_client
 from app.api.v1.api import api_router
-from app.web.routes import router as web_router
 from app.models.schemas.response import ErrorResponse, ErrorDetail
 
 settings = get_settings()
@@ -62,7 +58,7 @@ app.add_middleware(RequestCorrelationMiddleware)
 # viewer's cookies, so credentials are disabled unless explicit origins are configured.
 _cors_is_wildcard = "*" in settings.CORS_ORIGINS
 if _cors_is_wildcard and settings.CORS_ALLOW_CREDENTIALS:
-    logger.warning(
+    logging.getLogger("app.main").warning(
         "CORS_ORIGINS is '*' - disabling allow_credentials. "
         "Set explicit origins to enable credentialed cross-origin requests."
     )
@@ -75,36 +71,36 @@ app.add_middleware(
 )
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Format request validation errors into standard JSON error envelope."""
-    logger.warning(f"Validation failure on {request.method} {request.url.path}")
-    safe_errors = jsonable_encoder(exc.errors())
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=ErrorResponse(
-            success=False,
-            error=ErrorDetail(
-                code="VALIDATION_ERROR",
-                message="Request payload or parameter validation failed",
-                details=safe_errors
-            )
-        ).model_dump(mode="json")
-    )
+from app.core.exception_handlers import register_exception_handlers
+
+# 3. Register Global Structured Exception Handlers
+register_exception_handlers(app)
 
 
-@app.get("/", tags=["System"], summary="Root Health & Identity")
-async def root():
-    """Root endpoint verifying API Sentinel identity."""
-    return {
-        "name": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
-        "status": "active",
-        "documentation": "/docs",
-        "redoc": "/redoc",
-        "api_v1": settings.API_V1_PREFIX
-    }
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from app.web.routes import web_router
+from app.demo_target.routes import demo_target_router
+
+# Mount Static Assets
+STATIC_DIR = Path(__file__).parent / "web" / "static"
+INNER_GREEN_ASSETS_DIR = STATIC_DIR / "inner-green-assets"
+
+if INNER_GREEN_ASSETS_DIR.exists():
+    app.mount("/inner-green-assets", StaticFiles(directory=str(INNER_GREEN_ASSETS_DIR)), name="inner_green_assets")
+    app.mount("/landing-pages/inner-green-assets", StaticFiles(directory=str(INNER_GREEN_ASSETS_DIR)), name="landing_pages_inner_green_assets")
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# Mount Web Dashboard UI router (handles / and /dashboard and /welcome)
+app.include_router(web_router)
+
+# Mount API v1 router
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+# Mount Intentionally Flawed Demo Target API router
+app.include_router(demo_target_router)
 
 
 @app.get("/health", tags=["System"], summary="Liveness Health Probe")
@@ -123,21 +119,3 @@ async def custom_redoc_html():
         redoc_js_url="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js",
     )
 
-
-# Mount API v1 router
-app.include_router(api_router, prefix=settings.API_V1_PREFIX)
-
-# Mount the server-rendered web interface (Stage 20)
-app.include_router(web_router)
-
-# Windows lacks a registry entry for woff2, so the packaged Lexend face would otherwise be
-# served as application/octet-stream.
-mimetypes.add_type("font/woff2", ".woff2")
-
-# Packaged landing pages served byte-exact under the same /landing-pages/ contract the
-# ThreeUI frame uses, so the authored relative asset paths resolve unchanged.
-app.mount(
-    "/landing-pages",
-    StaticFiles(directory=str(Path(__file__).parent / "web" / "static" / "landing-pages")),
-    name="landing-pages",
-)

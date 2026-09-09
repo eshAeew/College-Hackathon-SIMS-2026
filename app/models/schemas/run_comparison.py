@@ -1,134 +1,117 @@
-"""Pydantic DTOs for side-by-side run comparison and delta visualization (Stage 21)."""
-from datetime import datetime, timezone
+"""Pydantic DTO schemas for Stage 21: Run Comparison & Diff Tool."""
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, Field
-
-
-class ChangeKind(str, Enum):
-    """How a single test changed between the baseline run and the current run."""
-    BROKEN = "BROKEN"                  # was passing, now failing
-    FIXED = "FIXED"                    # was failing, now passing
-    STILL_FAILING = "STILL_FAILING"
-    STILL_PASSING = "STILL_PASSING"
-    SLOWER = "SLOWER"                  # passing on both sides, but materially slower
-    FASTER = "FASTER"
-    ADDED = "ADDED"                    # only present in the current run
-    REMOVED = "REMOVED"                # only present in the baseline run
+from pydantic import BaseModel, Field, ConfigDict
 
 
-class BadgeTone(str, Enum):
-    """Visual tone used by the delta visualizer."""
-    POSITIVE = "POSITIVE"
-    NEGATIVE = "NEGATIVE"
-    NEUTRAL = "NEUTRAL"
-    WARNING = "WARNING"
-
-
-class ComparisonVerdict(str, Enum):
-    """Overall judgement of the current run against its baseline."""
+class DeltaStatus(str, Enum):
+    """Directional evaluation status of a metric delta."""
     IMPROVED = "IMPROVED"
-    CLEAN = "CLEAN"
     DEGRADED = "DEGRADED"
-    CRITICAL_REGRESSIONS_FOUND = "CRITICAL_REGRESSIONS_FOUND"
+    UNCHANGED = "UNCHANGED"
 
 
-class RunSnapshot(BaseModel):
-    """Headline metrics for one side of the comparison."""
-    run_id: int
-    name: str
-    status: str
-    total_tests: int = 0
-    passed_tests: int = 0
-    failed_tests: int = 0
-    warning_tests: int = 0
-    error_tests: int = 0
-    pass_rate_pct: float = 0.0
-    avg_latency_ms: float = 0.0
-    duration_ms: float = 0.0
-    executed_at: Optional[datetime] = None
+class DiffCategory(str, Enum):
+    """Categorization of individual test result transitions between runs."""
+    NEW_FAILURE = "NEW_FAILURE"            # Passed/Missing in base -> Failed in target (Regression)
+    FIXED_FAILURE = "FIXED_FAILURE"        # Failed in base -> Passed in target (Resolved bug)
+    BEHAVIOR_CHANGED = "BEHAVIOR_CHANGED"  # Status code or failure type changed
+    LATENCY_DEGRADED = "LATENCY_DEGRADED"  # Response latency increased past threshold
+    LATENCY_IMPROVED = "LATENCY_IMPROVED"  # Response latency decreased past threshold
+    UNCHANGED_PASS = "UNCHANGED_PASS"      # Passed in both runs
+    UNCHANGED_FAIL = "UNCHANGED_FAIL"      # Failed in both runs
+    NEW_TEST = "NEW_TEST"                  # Only present in target run
+    REMOVED_TEST = "REMOVED_TEST"          # Only present in base run
 
 
 class MetricDelta(BaseModel):
-    """Signed change in a single headline metric."""
-    metric: str
-    baseline: float
-    current: float
-    delta: float
-    delta_pct: Optional[float] = None
-    tone: BadgeTone = BadgeTone.NEUTRAL
+    """Side-by-side metric delta representation."""
+    metric_name: str
+    previous: float = Field(..., description="Value in previous/base run")
+    current: float = Field(..., description="Value in current/target run")
+    delta: float = Field(..., description="Absolute change (current - previous)")
+    delta_pct: float = Field(..., description="Percentage change ((current - previous) / previous * 100)")
+    status: DeltaStatus = Field(default=DeltaStatus.UNCHANGED, description="Evaluation status")
+    unit: str = Field(default="", description="Unit of measurement (e.g., ms, %, tests)")
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class TestChange(BaseModel):
-    """Per-test difference between the two runs."""
-    test_name: str
-    test_case_id: Optional[int] = None
-    endpoint_id: Optional[int] = None
-    change: ChangeKind
-    tone: BadgeTone = BadgeTone.NEUTRAL
-    badge: str = Field(default="", description="Short label for the visualizer")
-    baseline_status: Optional[str] = None
-    current_status: Optional[str] = None
-    baseline_code: Optional[int] = None
-    current_code: Optional[int] = None
-    baseline_latency_ms: Optional[float] = None
-    current_latency_ms: Optional[float] = None
-    latency_delta_pct: Optional[float] = None
-    detail: str = ""
+class RunComparisonMetrics(BaseModel):
+    """Aggregated side-by-side metrics table between two runs."""
+    total_tests: MetricDelta
+    passed_tests: MetricDelta
+    failed_tests: MetricDelta
+    pass_rate: MetricDelta
+    avg_latency: MetricDelta
+    p95_latency: MetricDelta
+
+    model_config = ConfigDict(from_attributes=True)
 
 
-class LatencyShift(BaseModel):
-    """Distribution movement across the two runs."""
-    baseline_avg_ms: float = 0.0
-    current_avg_ms: float = 0.0
-    delta_ms: float = 0.0
-    delta_pct: Optional[float] = None
-    baseline_max_ms: float = 0.0
-    current_max_ms: float = 0.0
-    tone: BadgeTone = BadgeTone.NEUTRAL
-    summary: str = ""
+class TestCaseDiffItem(BaseModel):
+    """Granular comparison record for a single test case across both runs."""
+    test_case_id: Optional[int] = Field(default=None, description="Test Case ID")
+    test_name: str = Field(..., description="Test scenario name")
+    http_method: str = Field(..., description="HTTP Method")
+    url: str = Field(..., description="Target endpoint URL")
+    
+    previous_status: Optional[str] = Field(default=None, description="Status in base run (e.g. PASS, FAIL, None)")
+    current_status: Optional[str] = Field(default=None, description="Status in target run (e.g. PASS, FAIL, None)")
+    
+    previous_status_code: Optional[int] = Field(default=None, description="HTTP status code in base run")
+    current_status_code: Optional[int] = Field(default=None, description="HTTP status code in target run")
+    
+    previous_latency_ms: Optional[float] = Field(default=None, description="Latency in base run")
+    current_latency_ms: Optional[float] = Field(default=None, description="Latency in target run")
+    latency_delta_ms: Optional[float] = Field(default=None, description="Latency change (current - previous)")
+    
+    category: DiffCategory = Field(..., description="Transition classification")
+    detail_message: str = Field(..., description="Human-readable explanation of the transition")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RunHeaderSummary(BaseModel):
+    """Header metadata for a compared TestRun."""
+    id: int
+    project_id: int
+    project_name: str
+    name: str
+    status: str
+    environment: str
+    total_tests: int
+    passed_tests: int
+    failed_tests: int
+    pass_rate_pct: float
+    avg_latency_ms: float
+    created_at: Optional[str] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RunComparisonRequest(BaseModel):
+    """Payload to request a comparison between two test runs."""
+    base_run_id: int = Field(..., description="Previous / baseline TestRun ID")
+    target_run_id: int = Field(..., description="Current / target TestRun ID")
+    latency_threshold_pct: float = Field(default=25.0, ge=1.0, description="Percentage threshold to flag latency drift")
+    min_latency_delta_ms: float = Field(default=50.0, ge=0.0, description="Minimum absolute ms delta required to flag latency drift")
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class RunComparisonReport(BaseModel):
-    """Complete side-by-side comparison of two runs."""
-    project_id: Optional[int] = None
-    baseline: RunSnapshot
-    current: RunSnapshot
-    metric_deltas: List[MetricDelta] = Field(default_factory=list)
-    changes: List[TestChange] = Field(default_factory=list)
-    latency_shift: LatencyShift = Field(default_factory=LatencyShift)
-    broken_count: int = 0
-    fixed_count: int = 0
-    slower_count: int = 0
-    faster_count: int = 0
-    added_count: int = 0
-    removed_count: int = 0
-    net_quality_delta_pct: float = Field(
-        default=0.0, description="Pass-rate movement: positive means improved"
-    )
-    verdict: ComparisonVerdict = ComparisonVerdict.CLEAN
-    headline: str = ""
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    """Complete execution delta and side-by-side comparison report."""
+    base_run: RunHeaderSummary = Field(..., description="Previous / base run metadata")
+    target_run: RunHeaderSummary = Field(..., description="Current / target run metadata")
+    metrics: RunComparisonMetrics = Field(..., description="Side-by-side metric comparison table")
+    insights: List[str] = Field(default_factory=list, description="Synthesized natural language bullet insights")
+    
+    new_failures_count: int = Field(default=0, ge=0, description="Count of new regressions")
+    fixed_failures_count: int = Field(default=0, ge=0, description="Count of resolved failures")
+    behavior_changed_count: int = Field(default=0, ge=0, description="Count of behavior changes")
+    latency_degraded_count: int = Field(default=0, ge=0, description="Count of latency regressions")
+    
+    diffs: List[TestCaseDiffItem] = Field(default_factory=list, description="Granular per-test diff items")
 
-
-class DeltaBadge(BaseModel):
-    """A single rendered badge for the visualizer strip."""
-    label: str
-    value: str
-    tone: BadgeTone
-    hint: str = ""
-
-
-class DeltaVisualization(BaseModel):
-    """View-model consumed by the run-comparison UI (sub-stage 21.02)."""
-    baseline_label: str
-    current_label: str
-    verdict: ComparisonVerdict
-    headline: str
-    badges: List[DeltaBadge] = Field(default_factory=list)
-    regressions: List[TestChange] = Field(default_factory=list)
-    improvements: List[TestChange] = Field(default_factory=list)
-    latency_shift: LatencyShift = Field(default_factory=LatencyShift)
-    pass_rate_series: Dict[str, float] = Field(default_factory=dict)
-    status_matrix: Dict[str, Any] = Field(default_factory=dict)
+    model_config = ConfigDict(from_attributes=True)

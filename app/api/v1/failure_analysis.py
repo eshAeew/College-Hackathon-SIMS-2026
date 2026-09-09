@@ -1,5 +1,6 @@
-"""Failure Analysis Engine API endpoints (Stage 18)."""
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+"""FastAPI Router for Failure Analysis Engine (Stage 18)."""
+import logging
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -13,63 +14,52 @@ from app.models.schemas.failure_analysis import (
 from app.models.schemas.response import StandardResponse
 from app.services.failure_analysis_service import FailureAnalysisService
 
-router = APIRouter(tags=["Failure Analysis Engine"])
+logger = logging.getLogger("app.api.v1.failure_analysis")
+router = APIRouter(prefix="", tags=["Failure Analysis Engine"])
 
 
 @router.post(
     "/failure-analysis/package",
     response_model=StandardResponse[FailureEvidence],
-    status_code=status.HTTP_200_OK,
-    summary="Package Failure Evidence",
-    description=(
-        "Transforms a raw execution snapshot into a self-contained diagnostic evidence "
-        "bundle: masked request/response detail, a cURL reproduction command, rule-based "
-        "root-cause categorization, severity, and historical recurrence context."
-    )
+    summary="Package ad-hoc failure evidence",
+    description="Builds a sanitized, self-contained diagnostic evidence bundle from execution telemetry."
 )
-def package_failure_evidence(req: PackageEvidenceRequest):
-    """Build a standardized FailureEvidence bundle from an ad-hoc execution snapshot."""
+def package_evidence(req: PackageEvidenceRequest):
+    """Package raw telemetry into a reproducible failure evidence bundle."""
     evidence = FailureAnalysisService.package_adhoc(req)
     return StandardResponse(
         success=True,
         data=evidence,
-        message=(
-            f"Packaged evidence {evidence.evidence_id}: "
-            f"{evidence.root_cause.category.value} ({evidence.severity.value})"
-        )
+        message="Failure evidence packaged successfully with credential masking and reproduction details."
     )
 
 
 @router.post(
     "/failure-analysis/categorize",
     response_model=StandardResponse[RootCauseAssessment],
-    status_code=status.HTTP_200_OK,
-    summary="Categorize Failure Root Cause",
-    description="Applies the deterministic failure taxonomy to raw execution signals."
+    summary="Categorize failure root cause",
+    description="Evaluates failure signals against the 13-category taxonomy with confidence scoring."
 )
 def categorize_failure(req: CategorizeFailureRequest):
-    """Assign a root-cause category, confidence, and remediation hint."""
+    """Classify failure signals into root-cause category and troubleshooting recommendation."""
     assessment = FailureAnalysisService.categorize(req)
     return StandardResponse(
         success=True,
         data=assessment,
-        message=f"Categorized as {assessment.category.value} ({assessment.confidence_pct}% confidence)"
+        message=f"Failure classified as {assessment.category.value} ({assessment.confidence_pct}% confidence)."
     )
 
 
 @router.get(
     "/results/{result_id}/evidence",
     response_model=StandardResponse[FailureEvidence],
-    summary="Evidence Bundle for a Stored Result",
-    description="Packages a persisted TestResult row into a diagnostic evidence bundle."
+    summary="Get failure evidence for a TestResult",
+    description="Builds a diagnostic evidence bundle from a persisted TestResult database row."
 )
-def get_result_evidence(
-    result_id: int = Path(..., ge=1, description="TestResult primary key"),
-    db: Session = Depends(get_db)
-):
-    """Return the evidence bundle for one stored execution result."""
+def get_result_evidence(result_id: int, db: Session = Depends(get_db)):
+    """Retrieve full diagnostic evidence for a specific test result."""
     evidence = FailureAnalysisService.package_from_result(db, result_id)
-    if evidence is None:
+    if not evidence:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TestResult #{result_id} not found."
@@ -77,26 +67,20 @@ def get_result_evidence(
     return StandardResponse(
         success=True,
         data=evidence,
-        message=f"Evidence {evidence.evidence_id} for '{evidence.test_name}'"
+        message="Test result failure evidence retrieved successfully."
     )
 
 
 @router.get(
     "/runs/{run_id}/failure-analysis",
     response_model=StandardResponse[RunFailureAnalysisReport],
-    summary="Run-Wide Failure Analysis",
-    description=(
-        "Packages every failing result in a run and summarizes the category and "
-        "severity distribution."
-    )
+    summary="Get failure analysis for a TestRun",
+    description="Aggregates and summarizes all failure evidence bundles across an entire test run."
 )
-def analyze_run_failures(
-    run_id: int = Path(..., ge=1, description="TestRun primary key"),
-    db: Session = Depends(get_db)
-):
-    """Return packaged evidence for all failures recorded in a run."""
+def get_run_failure_analysis(run_id: int, db: Session = Depends(get_db)):
+    """Summarize and package all failures encountered in a test run."""
     report = FailureAnalysisService.analyze_run(db, run_id)
-    if report is None:
+    if not report:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"TestRun #{run_id} not found."
@@ -104,5 +88,5 @@ def analyze_run_failures(
     return StandardResponse(
         success=True,
         data=report,
-        message=f"Analyzed {report.total_failures} failure(s) across {report.total_results} result(s)"
+        message=f"Analyzed {report.total_failures} failure(s) in TestRun #{run_id}."
     )

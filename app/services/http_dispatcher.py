@@ -44,16 +44,16 @@ class HttpDispatcherService:
         options: Optional[ExecutionOptions] = None,
         client: Optional[httpx.AsyncClient] = None
     ) -> ExecutionResultResponse:
-        """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse with high-precision telemetry.
+        """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse with high-precision telemetry."""
+        if options is None:
+            options = ExecutionOptions()
 
-        `options` falls back to standard ExecutionOptions when omitted. `client` lets callers
-        (benchmark loops, suite runners) reuse an already-open pooled AsyncClient.
-        """
         start_time = time.perf_counter()
         url_str = str(request.url)
         method_str = request.method
 
-        # Stage 16 enforcement: refuse to dispatch at unauthorized targets.
+        # Stage 16 enforcement: refuse to dispatch at unauthorized targets
+        # (cloud metadata endpoints, denied hosts) before any socket is opened.
         authorization = enforce_target_authorization(url_str)
         if authorization is not None and not authorization.is_authorized:
             logger.warning(f"BLOCKED [{method_str}] {url_str}: {authorization.message}")
@@ -63,11 +63,8 @@ class HttpDispatcherService:
                     "message": "Target host blocked by safety policy.",
                     "authorization_status": authorization.authorization_status.value,
                     "reason": authorization.message,
-                    "host": authorization.normalized_host
-                }
+                },
             )
-
-        options = options or ExecutionOptions()
 
         logger.info(f"Dispatching [{method_str}] {url_str} (timeout={options.timeout_seconds}s, redirects={options.follow_redirects})")
 
@@ -75,11 +72,13 @@ class HttpDispatcherService:
         timeout = httpx.Timeout(options.timeout_seconds, connect=min(5.0, options.timeout_seconds))
         request.extensions["timeout"] = timeout.as_dict()
 
-        # Select client: transient (SSL disabled) > caller-supplied pool > shared pool
+        # Select client based on SSL verification requirement
         active_client: httpx.AsyncClient
         is_transient_client = False
 
-        if not options.verify_ssl:
+        if client is not None:
+            active_client = client
+        elif not options.verify_ssl:
             # Create a dedicated non-verifying client if SSL verification is disabled
             active_client = httpx.AsyncClient(
                 verify=False,
@@ -87,8 +86,6 @@ class HttpDispatcherService:
                 follow_redirects=options.follow_redirects
             )
             is_transient_client = True
-        elif client is not None and not client.is_closed:
-            active_client = client
         else:
             active_client = get_async_client()
 

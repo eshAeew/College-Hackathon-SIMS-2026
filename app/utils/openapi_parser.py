@@ -27,6 +27,15 @@ def detect_spec_format_and_parse(content: str) -> Dict[str, Any]:
 
     cleaned = content.strip()
 
+    # Automatically strip markdown code fences if user copied with ```json / ```yaml / ```
+    if cleaned.startswith("```"):
+        lines = cleaned.splitlines()
+        if lines:
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        cleaned = "\n".join(lines).strip()
+
     # Try JSON parsing first if starts with {
     if cleaned.startswith("{") or cleaned.startswith("["):
         try:

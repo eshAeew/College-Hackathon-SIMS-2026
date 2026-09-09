@@ -1,89 +1,66 @@
-"""Pydantic DTOs for the AI Recommendation Layer (Stage 19)."""
-from datetime import datetime, timezone
+"""Pydantic schemas and DTOs for the AI Recommendation Layer (Stage 19)."""
 from enum import Enum
 from typing import Any, Dict, List, Optional
-
-from pydantic import BaseModel, ConfigDict, Field
-
-from app.models.schemas.failure_analysis import FailureEvidence, PackageEvidenceRequest
+from pydantic import BaseModel, Field
 
 
 class RecommendationSource(str, Enum):
-    """Which engine produced the recommendation."""
+    """The engine that produced a remediation card."""
     GEMINI_LLM = "GEMINI_LLM"
     RULE_BASED_HEURISTIC = "RULE_BASED_HEURISTIC"
 
 
 class RecommendationSeverity(str, Enum):
-    """Severity assigned to the recommended fix."""
+    """Impact severity rating of the underlying failure."""
     CRITICAL = "CRITICAL"
     HIGH = "HIGH"
     MEDIUM = "MEDIUM"
     LOW = "LOW"
+    INFO = "INFO"
 
 
 class SynthesizedPrompt(BaseModel):
-    """The exact prompt pair that would be sent to an LLM."""
-    system_prompt: str = Field(..., description="System role instruction enforcing JSON output")
-    user_prompt: str = Field(..., description="Formatted failure evidence context")
-    evidence_id: Optional[str] = Field(default=None)
-    estimated_tokens: int = Field(default=0, description="Rough token estimate for cost control")
-    response_schema: Dict[str, Any] = Field(
-        default_factory=dict, description="JSON schema the model must satisfy"
-    )
+    """Structured LLM prompt payload with guardrails and strict JSON contract."""
+    system_prompt: str = Field(..., description="System instructions and schema rules")
+    user_prompt: str = Field(..., description="Contextual prompt populated with diagnostic evidence")
+    response_schema: Dict[str, Any] = Field(..., description="Expected JSON Schema contract")
+    estimated_tokens: int = Field(..., ge=0, description="Approximate token count estimate")
+    evidence_id: str = Field(..., description="Associated diagnostic evidence ID")
 
 
 class FixRecommendation(BaseModel):
-    """Structured remediation card returned to the developer."""
-    evidence_id: Optional[str] = Field(default=None)
-    root_cause_category: Optional[str] = Field(default=None)
-    likely_cause: str = Field(..., description="Most probable underlying defect")
-    severity: RecommendationSeverity = Field(default=RecommendationSeverity.MEDIUM)
-    suggested_fix: str = Field(..., description="Concrete developer action")
-    code_snippet: Optional[str] = Field(default=None, description="Illustrative remediation code")
-    confidence_pct: float = Field(default=0.0, ge=0.0, le=100.0)
-    source: RecommendationSource = Field(default=RecommendationSource.RULE_BASED_HEURISTIC)
-    model_name: Optional[str] = Field(default=None)
-    references: List[str] = Field(default_factory=list)
-    generated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-
-class RecommendFromEvidenceRequest(BaseModel):
-    """Generate a recommendation from an already-packaged evidence bundle."""
-    evidence: FailureEvidence
-    persist: bool = Field(default=False, description="Store the recommendation in the database")
-    test_result_id: Optional[int] = Field(default=None, description="Result row to attach to")
-
-
-class RecommendFromSnapshotRequest(PackageEvidenceRequest):
-    """Package evidence and recommend a fix in a single call."""
-    persist: bool = Field(default=False)
-    test_result_id: Optional[int] = Field(default=None)
-
-
-class AIRecommendationResponse(BaseModel):
-    """Persisted recommendation record."""
-    id: int
-    test_result_id: Optional[int] = None
-    evidence_id: Optional[str] = None
-    root_cause_category: Optional[str] = None
-    likely_cause: str
-    severity: str
-    suggested_fix: str
-    code_snippet: Optional[str] = None
-    confidence_pct: float
-    source: str
-    model_name: Optional[str] = None
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
+    """Structured remediation proposal for a test failure."""
+    evidence_id: str = Field(..., description="Diagnostic evidence ID")
+    root_cause_category: Optional[str] = Field(default=None, description="Deterministic root cause category")
+    likely_cause: str = Field(..., description="Concise explanation of the underlying failure")
+    severity: RecommendationSeverity = Field(default=RecommendationSeverity.MEDIUM, description="Assessed severity")
+    suggested_fix: str = Field(..., description="Step-by-step remediation action plan")
+    code_snippet: Optional[str] = Field(default=None, description="Ready-to-apply code fix snippet")
+    confidence_pct: float = Field(default=80.0, ge=0.0, le=100.0, description="Confidence percentage")
+    source: RecommendationSource = Field(..., description="GEMINI_LLM or RULE_BASED_HEURISTIC")
+    model_name: Optional[str] = Field(default=None, description="LLM model name if answered by AI")
+    references: List[str] = Field(default_factory=list, description="Relevant documentation / RFC links")
 
 
 class AIEngineStatus(BaseModel):
-    """Reports which recommendation engine is currently active."""
-    ai_enabled: bool = Field(..., description="True when an LLM API key is configured")
-    active_engine: RecommendationSource
-    model_name: Optional[str] = None
-    sdk_available: bool = Field(default=False, description="True when the google-genai SDK is importable")
-    fallback_engine: RecommendationSource = RecommendationSource.RULE_BASED_HEURISTIC
-    message: str = ""
+    """Status probe for the AI Recommendation service."""
+    ai_enabled: bool = Field(..., description="True if external Gemini API key is configured")
+    active_engine: RecommendationSource = Field(..., description="Engine answering current requests")
+    model_name: Optional[str] = Field(default=None, description="Configured LLM model name")
+    sdk_available: bool = Field(..., description="True if google-genai SDK is importable")
+    message: str = Field(..., description="Human-readable operational status message")
+
+
+class GenerateRecommendationRequest(BaseModel):
+    """Request payload for generating remediation on an ad-hoc snapshot."""
+    test_name: str = Field(..., description="Name of the test scenario")
+    url: str = Field(..., description="Executed URL")
+    http_method: str = Field(default="GET", description="HTTP Method")
+    status_code: Optional[int] = Field(default=None, description="Status code received")
+    expected_status: Optional[int] = Field(default=None, description="Expected status code")
+    response_body: Optional[str] = Field(default=None, description="Response body snippet")
+    latency_ms: Optional[float] = Field(default=None, description="Latency in ms")
+    max_latency_ms: Optional[float] = Field(default=None, description="Max latency allowed in ms")
+    network_error: Optional[str] = Field(default=None, description="Network exception name")
+    is_negative_test: bool = Field(default=False, description="True if this was an adversarial test")
+    persist: bool = Field(default=False, description="Whether to persist recommendation to database")

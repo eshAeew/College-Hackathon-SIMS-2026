@@ -21,14 +21,15 @@
 | **Stage 15** | Automatic Test Generation | Tier 2 | `COMPLETED` | Combinatorial test generator (happy path, missing fields, type inversion, boundary, nulls), staging review area & bulk approval (7/7 tests OK) |
 | **Stage 16** | Safety & Execution Controls | Tier 1 | `COMPLETED` | Target host allowlist, localhost/RFC-1918 modes, destructive risk classifier & confirmation tokens (9/9 tests OK) |
 | **Stage 17** | Result Classification Engine | Tier 1 | `COMPLETED` | 4-tier decision matrix (PASS/FAIL/WARN/ERROR), severity scoring (LOW-CRITICAL), health index & prioritized queue (9/9 tests OK) |
-| **Stage 18** | Failure Analysis Engine | Tier 2 | `COMPLETED` | Evidence packager (masked headers, cURL repro, history context), 13-category root-cause taxonomy, run-wide analysis (17/17 tests OK) |
-| **Stage 19** | AI Recommendation Layer | Tier 3 | `COMPLETED` | Prompt synthesizer with enforced JSON contract, Gemini client, deterministic offline heuristic engine, persisted `AIRecommendation` records (5/5 tests OK) |
-| **Stage 20** | Dashboard & Web Interface | Tier 1 | `COMPLETED` | Global + project dashboards, endpoint inspector, result detail with AI card, server-rendered `/ui` (6/6 tests OK) |
-| **Stage 21** | Run Comparison & Diff Tool | Tier 2 | `COMPLETED` | Side-by-side comparator, broken/fixed/slower badges, latency shift, net quality delta, delta visualizer (13/13 tests OK) |
-| **Stage 22** | Reporting & Export | Tier 1 | `PLANNED` | Executive summary, standalone HTML/PDF export |
-| **Stage 23** | Persistence & Database Layer | Tier 1 | `PLANNED` | SQLAlchemy models, SQLite repos, migrations |
-| **Stage 24** | Error Handling & Resilience | Tier 1 | `PLANNED` | Global exception filters, network circuit breaker |
-| **Stage 25** | Logging, Tracing & Auditability | Tier 1 | `PLANNED` | Structured JSON logs, execution audit trails |
-| **Stage 26** | Platform Self-Testing Suite | Tier 1 | `PLANNED` | Pytest unit & integration test suites |
-| **Stage 27** | Intentionally Flawed Demo API | Tier 2 | `PLANNED` | Mock e-commerce service with 6 injected bugs |
-| **Stage 28** | Final Demo Workflow & Pitch | Tier 1 | `PLANNED` | 3-minute live presentation script & playbook |
+| **Stage 18** | Failure Analysis Engine | Tier 2 | `COMPLETED` | Evidence DTO packager, credential masking, cURL generator, 13-category root cause categorizer (10/10 tests OK) |
+| **Stage 19** | AI Recommendation Layer | Tier 3 | `COMPLETED` | Gemini prompt synthesizer, rule-based fallback engine, AIRecommendation entity & dual-mode API endpoints (12/12 tests OK) |
+| **Stage 20** | Dashboard & Web Interface | Tier 1 | `COMPLETED` | Dark cyber AI theme, KPI metrics, OpenAPI modal, test console & AI fix viewer (5/5 tests OK) |
+| **Stage 21** | Run Comparison & Diff Tool | Tier 2 | `COMPLETED` | Side-by-side run comparator, delta visualizer, natural language insights, diff modal (6/6 tests OK) |
+| **Stage 22** | Reporting & Export Engine | Tier 1 | `COMPLETED` | Executive summary, 6-section report DTOs, standalone Dark Cyber HTML, Markdown & JSON export engines, UI modal & download APIs (7/7 tests OK) |
+| **Stage 23** | Persistence & Database Layer | Tier 1 | `COMPLETED` | SQLite WAL/FK PRAGMAs, generic & concrete repositories DAL, DatabaseService (health/vacuum/backup/purge/seed), maintenance APIs (8/8 tests OK) |
+| **Stage 24** | Error Handling & Resilience | Tier 1 | `COMPLETED` | Core exception hierarchy, host circuit breaker state machine & registry, safe data/payload parsers, resilience service, global exception handlers, resilience APIs (8/8 tests OK) |
+| **Stage 25** | Logging, Tracing & Auditability | Tier 1 | `COMPLETED` | Structured JSON logs, in-memory log buffer, distributed Tracer execution spans, AuditEvent DAL & repository, compliance CSV/JSON exports, telemetry APIs (8/8 tests OK) |
+| **Stage 26** | Platform Self-Testing Suite | Tier 1 | `COMPLETED` | Programmatic SelfTestService, subsystem health & readiness matrix, detailed test result parser, self-test CLI runner, self-test REST router (5/5 tests OK) |
+| **Stage 27** | Intentionally Flawed Demo API | Tier 2 | `COMPLETED` | Mock Alpha Commerce store with 6 injected bugs (500 crash, slow query, schema drift, flaky 503, bad JSON, state leak), dynamic bug controller, standalone runner (7/7 tests OK) |
+
+| **Stage 28** | Final Demo Workflow & Pitch | Tier 1 | `COMPLETED` | 14-step demo story orchestrator, `/api/v1/demo/*` REST APIs, 3-min pitch script, live demo presenter guide, judge Q&A cheatsheet, CLI story runner (6/6 tests OK) |

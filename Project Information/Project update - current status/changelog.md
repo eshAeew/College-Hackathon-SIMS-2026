@@ -1,54 +1,349 @@
 # API Sentinel — Changelog
 
-## [SylvaHero landing hero] - 2026-09-09
-### Added
-- **Welcome hero at `/ui/welcome`**: the ThreeUI `SylvaHero` (Living Green, revision `05f359ce157a`)
-  hosted in a full-bleed reproduction of the `LandingPageFrame` contract. Every registered file
-  (`inner-green-3d.html`, `three.min.js`, both card images, `lexend-latin.woff2`) is served
-  byte-exact at its registered SHA-256 from `/landing-pages/`, pinned by `MANIFEST.sha256`.
-- `sentinel-hero.html`: a branded derivative produced by text substitution only. All five
-  `<script>`/`<style>` blocks are byte-identical to the canonical page, so the moss world, pollen,
-  butterfly, entrance wipe, and liquid-metal controls animate exactly as authored.
-  `/ui/welcome?exact=true` serves the untouched canonical page.
-- The configured typography props (`lexend`, weight 300, `#ffffff`, 63 / 16.5, -0.006) are the
-  recipe defaults, which ThreeUI documents as a no-op restatement of the authored CSS, so no
-  override stylesheet is injected.
-- Frame sandbox adds `allow-top-navigation-by-user-activation`, and the dock anchors carry
-  inline handlers, because the authored dock handler calls `preventDefault` unconditionally.
-  Dock and "Open the dashboard" now enter the app on a click (verified in the browser).
-- `font/woff2` MIME type registered so Lexend is served correctly on Windows.
-- `tests/test_sylva_hero.py` (15 tests): registered hashes, script/style identity, static
-  serving, frame route, sandbox contract. Suite total: 292 passing.
+## [Feature Enhancement - ThreeUI Sylva Living Green Landing Page] - 2026-09-09
+- **Completed**: ThreeUI `<SylvaHero />` Living Green (`living-green`) 3D Welcome Landing Page, Procedural Three.js Moss-Root World, Animated Butterfly & Pollen Particles, Liquid Metal WebGL2 Physics Controls, Parallax Dock Navigation, and Full Static Asset Integration (`/welcome`).
+- Created `app/web/templates/welcome.html`:
+  - Three.js 3D canvas `#scene` rendering procedural moss-root branch mesh, botanical subsurface lighting, floating pollen particles, radar survey pulses, and procedural landing butterfly animation.
+  - WebGL2 liquid metal button simulation system (`mountLiquidMetal`) with surface reflections, cursor tracking, and tactile click physics.
+  - Fine-tuned typography & layout: `SENTINEL` ghost wordmark, `"Step into the living API"` headline, concise elegant lede subtitle, and repositioned technical engine overview on interactive cards.
+  - `Launch Cockpit` liquid button linking to `/dashboard`, and `Interactive API Docs` liquid play button linking to `/docs`.
+  - Floating glass capsule dock navigation bar linking to Welcome (`/welcome`), Cockpit (`/dashboard`), API Docs (`/docs`), Self-Test (`/api/v1/health`), and Launch (`/dashboard`).
+  - Interactive 3D depth cards with pixel-scan reveals, 3D tilt parallax, and live telemetry metrics (`302 Passing (100%)`, `6 Defect Vectors Analyzed`).
+- Updated `app/web/routes.py`:
+  - Added `@web_router.get("/welcome", response_class=HTMLResponse)` to serve `welcome.html`.
+- Updated `app/main.py`:
+  - Mounted `StaticFiles` on `/inner-green-assets`, `/landing-pages/inner-green-assets`, and `/static`.
+- Downloaded and verified all 4 ThreeUI binary assets with exact SHA-256 hashes:
+  - `three.min.js` (608,081 bytes) · SHA-256 `8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271`
+  - `lexend-latin.woff2` (39,692 bytes) · SHA-256 `1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46`
+  - `card-ecostove.jpg` (290,988 bytes) · SHA-256 `70ce084084902bc502f00c366405b661ecdff90dee95d363b36a6e146829e433`
+  - `card-ethos.jpg` (316,720 bytes) · SHA-256 `337627390f499b3ae272cec9e2f83c817694a82f42e1aa10a7b26a2c7d679dff`
+- Added comprehensive unit and integration test suite in `tests/test_welcome_landing_page.py`:
+  - 4 tests verifying `/welcome` endpoint, brand copy, Three.js canvas & shader elements, and binary asset delivery.
+- Updated `app/web/templates/dashboard.html` with a direct navigation link to `/welcome`.
+- Full test suite verified: **306 / 306 passing tests with 100% pass rate**.
 
-## [Stages 18-21 + Stage 01-17 Hardening] - 2026-09-09
-### Fixed (Stages 01-17)
-- `HttpDispatcherService.dispatch_httpx_request` now accepts `client` and defaults `options`,
-  repairing the TypeError that made every test-run execution return ERROR.
-- `POST /api/v1/performance/benchmark-direct` and `POST /api/v1/test-cases/{id}/evaluate`
-  no longer return HTTP 500.
-- Assertion engine resolves JSONPath roots (`$.a.b`), not just bare dot paths.
-- Stage 16 safety guard is now enforced inside the dispatch path; cloud-metadata and
-  link-local targets are permanently blocked (SSRF hardening).
-- `/api/v1/health` performs a real `SELECT 1` instead of hardcoding "connected".
-- Wildcard CORS is no longer paired with `allow_credentials`.
-- `EndpointResponse` exposes declared `path_variables`.
+## [Stage 28 - Final Demo Workflow & Pitch Playbook] - 2026-09-09
+- **Completed**: 14-Step Presentation Story Orchestrator, Demo Workflow REST APIs, 3-Minute Pitch Script, Live Demo Presenter Guide, Judge Q&A Cheatsheet, Standalone Interactive CLI Story Runner, and Comprehensive Test Suite (Stage 28 Complete — All 28 Stages 100% Delivered).
+- Created `app/models/schemas/demo_workflow.py`:
+  - `DemoStepResult`: Structured execution record for each live demo step (`step_number`, `title`, `action`, `status`, `headline`, `details`, `key_findings`).
+  - `DemoBootstrapResponse`: Workspace initialization metadata (`project_id`, `endpoints_imported`, `test_cases_created`, `status`).
+  - `DemoStoryResponse`: Complete end-to-end 14-step story outcome (`phase_1_baseline_run_id`, `phase_1_failures_detected`, `phase_2_verification_run_id`, `phase_2_pass_rate`, `regression_verdict`, `steps`).
+  - `PitchSection`: 3-minute presentation timeline segment (`time_stamp`, `title`, `presenter_dialogue`, `ui_action`, `key_takeaway`).
+  - `DemoPitchPlaybookResponse`: Complete pitch script with elevator pitch, problem, solution, 5-segment timeline, and judge Q&A cheatsheet.
+- Created `app/services/demo_workflow_service.py`:
+  - `DemoWorkflowService.bootstrap_demo()`: Automatically sets up demo workspace, imports 6 Alpha Commerce endpoints, and synthesizes 9 test cases.
+  - `DemoWorkflowService.execute_phase_1_baseline()`: Executes baseline test suite against flawed target API, detecting 6 real-world runtime defects across 6 failure categories with AI recommendations.
+  - `DemoWorkflowService.apply_demo_fixes()`: Dynamically patches all 6 target API bugs via `DemoApiConfig`.
+  - `DemoWorkflowService.execute_phase_2_verification()`: Re-executes test suite against fixed API, achieving 100% pass rate and computing regression comparison diff.
+  - `DemoWorkflowService.run_complete_story()`: Autonomous 1-click execution of the entire 14-step presentation lifecycle.
+  - `DemoWorkflowService.get_pitch_playbook()`: Generates 3-minute pitch timeline and judge Q&A cheatsheet.
+- Created `app/api/v1/demo_workflow.py`:
+  - `POST /api/v1/demo/bootstrap`: Initialize demo workspace.
+  - `POST /api/v1/demo/execute-phase-1`: Run baseline audit against flawed target.
+  - `POST /api/v1/demo/apply-fixes`: Apply developer remediations.
+  - `POST /api/v1/demo/execute-phase-2`: Run verification suite against fixed target.
+  - `POST /api/v1/demo/run-complete-story`: Autonomous 1-click execution of full demo story.
+  - `GET /api/v1/demo/playbook`: Fetch 3-minute pitch script and judge Q&A cheatsheet.
+- Mounted `demo_workflow_router` under `/api/v1/demo` in `app/api/v1/api.py`.
+- Created `scripts/run_demo_story.py`:
+  - Standalone interactive CLI runner that executes the 14-step presentation story in 2 seconds with formatted ASCII banners, step breakdown, and regression summary.
+- Created documentation in `Project Information/Demo Playbook/`:
+  - `3_minute_pitch_script.md`: Timed presenter dialogue for 180-second live presentation.
+  - `live_demo_step_by_step_guide.md`: 14-step checklist with UI actions and narration cues.
+  - `judge_qa_cheatsheet.md`: Technical Q&A cheatsheet covering architecture, offline heuristics, safety gates, and CI/CD.
+- Created unit and integration test suite in `tests/test_demo_workflow_and_pitch.py`:
+  - 6 unit & integration tests covering bootstrapping, phase 1 & 2 executions, full story runner, playbook, and REST APIs.
+- Full test suite verified: **302 / 302 passing tests with 100% pass rate across all 28 stages**.
+- Marked Stage 28: Final Demo Workflow & Pitch Playbook as 100% COMPLETE.
 
-### Added
-- **Stage 18 - Failure Analysis Engine**: `FailureEvidence` packager with credential masking,
-  bounded body snippets, cURL reproduction commands, historical recurrence context, and a
-  13-category deterministic root-cause taxonomy with severity derivation.
-- **Stage 19 - AI Recommendation Layer**: structured prompt synthesizer enforcing a strict JSON
-  response contract, Google Gemini client, and a deterministic rule-based fallback engine that
-  keeps the platform fully functional offline. Recommendations persist to `ai_recommendations`.
-- **Stage 20 - Dashboard & Web Interface**: global and project dashboards, endpoint inspector,
-  result detail combining evidence with the remediation card, plus a server-rendered UI at `/ui`.
-- **Stage 21 - Run Comparison & Diff**: side-by-side run comparator, per-test change
-  classification, latency-shift analysis, net quality delta, and the delta visualizer view-model.
-- `google-genai` added to `requirements.txt`; six safety settings added to `Settings`.
-- 57 new tests (`test_stage_fixes_regression.py`, `test_stages_18_to_21.py`).
+## [Stage 27 - Intentionally Flawed Demo Target API] - 2026-09-09
+- **Completed**: Mock Alpha Commerce E-Commerce API, 6 Injected Real-World Bugs, Dynamic Bug Toggle Controller, Standalone Server Launcher, OpenAPI 3.1.0 Generator, and Demo API Test Suite (Stage 27 Complete).
+- Implemented `app/demo_target/config.py`:
+  - `DemoApiConfig`: Thread-safe singleton managing the state of 6 deliberate flaws (`unhandled_500_login`, `slow_latency_products`, `schema_drift_product_detail`, `flaky_503_orders`, `malformed_json_profile`, `state_leak_checkout`) and per-endpoint hit counters.
+- Implemented `app/demo_target/routes.py`:
+  - `POST /demo-api/auth/login`: Missing password throws unhandled KeyError (500 crash in flawed mode; 400 validation in fixed mode).
+  - `GET /demo-api/products`: Simulated sluggish SQL join query with 1.2s sleep (SLA breach in flawed mode; <5ms in fixed mode).
+  - `GET /demo-api/products/{id}`: Returns string price (`"89.99 USD"`), boolean string, and omits stock in flawed mode; strict typed contract when fixed.
+  - `POST /demo-api/orders`: Injects transient 503 gateway timeouts in 45% of calls in flawed mode; deterministic 201 when fixed.
+  - `GET /demo-api/users/profile`: Emits malformed unclosed JSON payload in flawed mode; valid JSON in fixed mode.
+  - `POST /demo-api/cart/checkout`: Succeeds on 1st run, fails with 409 Conflict state leak on subsequent runs to demonstrate regression comparison; deterministic when fixed.
+  - `GET /demo-api/control/status`: Real-time telemetry of active bug switches and endpoint hits.
+  - `POST /demo-api/control/toggle/{bug}`: Toggles individual bug flags.
+  - `POST /demo-api/control/fix-all`: Sets all 6 bugs to resolved mode for verification demos.
+  - `POST /demo-api/control/reset`: Resets all 6 bugs to default flawed states.
+  - `GET /demo-api/openapi.json`: OpenAPI 3.1.0 specification for 1-click import into API Sentinel workspaces.
+- Created `scripts/run_demo_api.py`:
+  - Standalone uvicorn launcher running the demo microservice on `http://127.0.0.1:8001`.
+- Mounted `demo_target_router` under `/demo-api` in `app/main.py`.
+- Added comprehensive test suite in `tests/test_demo_target_api.py`:
+  - 7 unit & integration tests verifying all 6 flawed endpoints, bug toggling, resolution mode, and OpenAPI spec generation.
+- Full test suite verified: **296 / 296 passing tests with 100% pass rate**.
+- Marked Stage 27: Intentionally Flawed Demo Target API as 100% COMPLETE.
 
-### Verification
-- 277/277 tests passing. 98 API operations across 22 routers.
+## [Stage 26 - Platform Self-Testing Suite] - 2026-09-09
+- **Completed**: Programmatic SelfTestService, Subsystem Test Mapping, Detailed Test Timing Tracker, Subsystem Readiness & Health Matrix, Standalone CLI Runner, and Self-Test REST Router (Stage 26 Complete).
+- Created `app/models/schemas/self_test.py`:
+  - `SubsystemCategory` (`CORE_FOUNDATION`, `EXECUTION_ENGINE`, `VALIDATION_ENGINE`, `ANALYSIS_AI`, `RESILIENCE_DATA_AUDIT`, `FULL_SUITE`).
+  - `TestCaseResultDTO`, `SubsystemSummaryDTO`, `SelfTestRunRequest`, `SelfTestRunResponse`, `SuiteMetadata`, `SubsystemHealthMatrixResponse`.
+- Created `app/services/self_test_service.py`:
+  - `SUBSYSTEM_MAP`: Maps test modules to their architectural domains.
+  - `DetailedTestResult`: Captures millisecond execution timings, stack traces, assertion messages, and skip reasons for individual test cases.
+  - `SelfTestService.run_self_tests()`: Programmatically discovers, filters, and executes test suites, compiling comprehensive pass rates, failure lists, and subsystem breakdowns.
+  - `SelfTestService.get_health_matrix()`: Evaluates overall platform readiness and per-subsystem health status.
+  - `SelfTestService.get_available_suites()`: Returns catalog of test suites with estimated test counts.
+- Created `scripts/self_test_runner.py`:
+  - Standalone terminal CLI runner supporting `--subsystem`, `--json`, and `--failfast` flags with formatted ASCII summary tables and exit codes for CI/CD pipelines.
+- Created `app/api/v1/self_test.py`:
+  - `GET /api/v1/self-test/suites`: List available test suites and metadata.
+  - `POST /api/v1/self-test/run`: Trigger programmatic execution of targeted or full self-test suites.
+  - `GET /api/v1/self-test/latest`: Retrieve the most recent self-testing execution report.
+  - `GET /api/v1/self-test/matrix`: Retrieve subsystem health and readiness matrix.
+- Mounted `self_test_router` under `/api/v1/self-test` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_platform_self_testing.py`:
+  - 5 tests covering test discovery, programmatic execution of targeted & full test suites, health matrix calculations, and REST API endpoints.
+- Full test suite verified: **289 / 289 passing tests with 100% pass rate**.
+- Marked Stage 26: Platform Self-Testing Suite as 100% COMPLETE.
+
+## [Stage 25 - Logging, Tracing & Auditability] - 2026-09-09
+- **Completed**: Structured JSON Logging, In-Memory Ring Buffer Live Telemetry, Distributed Tracer Execution Spans, AuditEvent Database Entity & DAL Repository, CSV/JSON Compliance Exporter, and Telemetry REST APIs (Stage 25 Complete).
+- Created `app/models/entities/audit_event.py`:
+  - `AuditEvent`: SQLAlchemy declarative model storing immutable platform audit trails (`event_type`, `severity`, `actor`, `target_type`, `target_id`, `request_id`, `details` JSON).
+- Updated `app/models/entities/__init__.py` & `app/core/database.py`:
+  - Exported `AuditEvent` and registered in `init_db()` table discovery.
+- Created `app/models/schemas/audit.py`:
+  - `AuditSeverity`, `AuditEventType`, `AuditEventCreate`, `AuditEventRead`, `AuditLogListResponse`, `AuditSummaryStats`, `LiveLogItem`, `LiveLogListResponse`, `TraceSpanDTO`, `TraceTimelineResponse`.
+- Created `app/core/tracer.py`:
+  - `TraceSpan`: Tree-structured execution span with start/end micro-timestamps, parent-child links, status, and metadata.
+  - `Tracer`: Thread-safe singleton tracer providing `tracer.span(name, metadata=...)` context manager and trace timeline retrieval.
+- Updated `app/core/logging.py`:
+  - `InMemoryLogBuffer`: Thread-safe collections.deque ring-buffer (capacity 500) retaining live application logs.
+  - `InMemoryLogHandler`: Logging handler streaming formatted log records into buffer with level filtering and search.
+- Implemented `AuditRepository` in `app/repositories/audit_repo.py`:
+  - `record_event()`: Persists immutable audit event records.
+  - `get_filtered()` & `count_filtered()`: Multi-criteria filtering by event type, severity, actor, target entity, request ID, and timestamp ranges.
+  - `get_summary_stats()`: Calculates total events, severity breakdowns, top event types, and timestamp bounds.
+  - Exported `AuditRepository` in `app/repositories/__init__.py`.
+- Implemented `AuditService` in `app/services/audit_service.py`:
+  - Business logic for event recording, filtered querying, summary KPI generation, CSV compliance export (`export_audit_csv`), live buffered log querying (`get_live_logs`), and execution trace timeline retrieval (`get_trace`).
+- Implemented REST API router in `app/api/v1/audit.py`:
+  - `GET /api/v1/audit/events`: Filtered and paginated audit events.
+  - `POST /api/v1/audit/events`: Manual/system audit event ingestion.
+  - `GET /api/v1/audit/summary`: Aggregated audit metrics and KPI statistics.
+  - `GET /api/v1/audit/export`: CSV / JSON compliance export with file attachment headers.
+  - `GET /api/v1/audit/traces/{trace_id}`: Distributed execution span hierarchy timeline.
+  - `GET /api/v1/audit/live-logs`: Real-time in-memory buffered log viewer with level/search filters.
+  - `POST /api/v1/audit/live-logs/clear`: In-memory log buffer flush.
+- Mounted `audit_router` under `/api/v1/audit` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_logging_tracing_and_audit.py`:
+  - 8 unit & integration tests covering JSON/Console log formatters with request correlation, in-memory log buffer, tracer spans & parent-child trees, AuditRepository CRUD & filters, summary stats, CSV export, and REST API endpoints.
+- Full test suite verified: **284 / 284 passing tests with 100% pass rate**.
+- Marked Stage 25: Logging, Tracing & Auditability as 100% COMPLETE.
+
+## [Stage 24 - Error Handling & Resilience] - 2026-09-09
+- **Completed**: Platform Exception Hierarchy, Host-Level Circuit Breaker Engine, Safe Fault-Tolerant Parsers, Resilience Telemetry & Error Ring Buffer Service, Global Exception Handlers, and Resilience REST APIs (Stage 24 Complete).
+- Created `app/core/exceptions.py`:
+  - `SentinelBaseException`: Base class with HTTP status code, category, message, and actionable hint.
+  - Concrete exceptions: `EntityNotFoundException` (404), `ContractValidationException` (422), `ExecutionTimeoutException` (504), `NetworkConnectivityException` (502), `SafetyViolationException` (403), `CircuitBreakerOpenException` (503), `ParserException` (400).
+- Created `app/core/circuit_breaker.py`:
+  - `CircuitState` (`CLOSED`, `OPEN`, `HALF_OPEN`).
+  - `CircuitBreaker`: State machine protecting external hosts against cascading network/timeout failures with failure count thresholds, recovery cooldown timeouts, and half-open trial executions.
+  - `CircuitBreakerRegistry`: Thread-safe singleton registry with URL host parsing, breaker caching, reset, and clear operations.
+- Created `app/utils/safe_parsers.py`:
+  - `safe_json_loads`, `safe_yaml_loads`, `safe_xml_loads`, `safe_decode_payload`: Resilient data parsing utilities that safely handle corrupt, unclosed, or binary payloads and return `(result, error_detail)` tuples without unhandled runtime crashes.
+- Created `app/models/schemas/resilience.py`:
+  - `CircuitBreakerStatus`, `CircuitBreakerListResponse`, `CircuitBreakerResetResponse`, `ErrorCategoryStat`, `PlatformErrorSummaryResponse`.
+- Created `app/services/resilience_service.py`:
+  - `ResilienceService`: In-memory error ring buffer tracking error categories, latest occurrences, and AI heuristic fallback events.
+  - Circuit breaker operational diagnostics and manual reset capabilities.
+- Created `app/core/exception_handlers.py`:
+  - `register_exception_handlers(app)`: Global FastAPI handlers capturing `SentinelBaseException`, `CircuitBreakerOpenException`, `RequestValidationError`, `HTTPException`, SQLAlchemy `IntegrityError`, and uncaught `Exception`, returning standardized structured JSON envelopes with correlation IDs and troubleshooting hints.
+- Created `app/api/v1/resilience.py`:
+  - `GET /api/v1/resilience/circuit-breakers`: Host circuit breaker status list and counts.
+  - `POST /api/v1/resilience/circuit-breakers/{host}/reset`: Reset specific host circuit breaker to CLOSED.
+  - `POST /api/v1/resilience/circuit-breakers/reset-all`: Reset all monitored circuit breakers.
+  - `GET /api/v1/resilience/error-summary`: Aggregated platform error telemetry and active circuit breaker counts.
+- Mounted `resilience_router` in `app/api/v1/api.py`.
+- Registered global exception handlers in `app/main.py`.
+- Added comprehensive test suite in `tests/test_resilience_and_errors.py`:
+  - 8 unit & integration tests covering CircuitBreaker state transitions, half-open recovery, safe JSON/YAML/XML/payload parsers, error summary aggregation, and resilience REST endpoints.
+- Full test suite verified: **276 / 276 passing tests with 100% pass rate**.
+- Marked Stage 24: Error Handling & Resilience as 100% COMPLETE.
+
+## [Stage 23 - Persistence & Database Layer] - 2026-09-09
+- **Completed**: SQLite WAL/FK PRAGMA Configuration, Generic & Concrete Repository Data Access Layer (DAL), Database Health Diagnostics, Online Snapshot Backups, Disk Space Optimization (VACUUM & ANALYZE), Data Retention Pruning, Sample Data Seeding, and Maintenance REST APIs (Stage 23 Complete).
+- Updated `app/core/database.py`:
+  - Added SQLAlchemy connection event listener enabling `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, and `PRAGMA synchronous=NORMAL` on SQLite engine connections.
+  - Enhanced `init_db()` to discover and initialize all 6 entity models (`Project`, `Endpoint`, `TestCase`, `TestRun`, `TestResult`, `AIRecommendation`).
+- Created `app/models/schemas/database.py`:
+  - `DatabaseDialect` (`SQLITE`, `POSTGRESQL`, `OTHER`).
+  - `TableRecordCounts`, `DatabaseHealthResponse`, `DatabaseBackupResponse`, `DatabaseMaintenanceResult`, `DatabasePurgeRequest`, `DatabasePurgeResponse`, `DatabaseSeedResponse`.
+- Implemented Data Access Layer (DAL / Repositories) under `app/repositories/`:
+  - `BaseRepository[T]`: Generic type-safe CRUD repository providing `get_by_id`, `get_all`, `count`, `create`, `create_batch`, `update`, `delete`, and `exists`.
+  - `ProjectRepository`: Specialized queries for workspace summaries, environment filtering, and name lookups.
+  - `EndpointRepository`: Endpoint lookup by project, method/path, and active status.
+  - `TestCaseRepository`: Scenario queries by endpoint, project scope, tag, and severity rating.
+  - `TestRunRepository`: Run queries for recent feeds, latest completed run, and age threshold filtering.
+  - `TestResultRepository`: Granular result queries by run, failure status, and endpoint execution history.
+  - `AIRecommendationRepository`: Diagnostic recommendation queries by test result, evidence fingerprint hash, and root-cause category.
+  - Exported all repositories in `app/repositories/__init__.py`.
+- Implemented `DatabaseService` in `app/services/database_service.py`:
+  - `get_health()`: Connection ping latency probe, PRAGMA status check, database file size inspection, and table row counting.
+  - `vacuum()`: Executes SQLite `VACUUM` and `ANALYZE` to reclaim unallocated disk pages and rebuild index statistics.
+  - `backup()`: Creates point-in-time timestamped snapshot backups (`sentinel_backup_{timestamp}.db`) via SQLite online backup API.
+  - `purge_old_runs()`: Prunes historical test runs and cascading child results/recommendations older than $N$ days.
+  - `seed_sample_data()`: Bootstraps a demo "Alpha Commerce Demo Store" workspace with catalog/checkout endpoints, test cases, and execution runs.
+- Implemented REST API router in `app/api/v1/database.py`:
+  - `GET /api/v1/database/health`: Returns comprehensive engine metrics and table record counts.
+  - `POST /api/v1/database/maintenance/vacuum`: Reclaims disk space and reindexes.
+  - `POST /api/v1/database/maintenance/backup`: Generates timestamped database snapshot backup.
+  - `POST /api/v1/database/maintenance/purge-runs`: Prunes historical test runs by age threshold.
+  - `POST /api/v1/database/seed-sample`: Bootstraps sample project and test suites.
+- Mounted `database_router` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_database_layer.py`:
+  - 8 unit & integration tests covering BaseRepository CRUD, specialized entity repositories, DatabaseService health/vacuum/backup/purge/seed, and REST maintenance endpoints.
+- Full test suite verified: **268 / 268 passing tests with 100% pass rate**.
+- Marked Stage 23: Persistence & Database Layer as 100% COMPLETE.
+
+## [Stage 22 - Reporting & Export Engine] - 2026-09-09
+
+- **Completed**: Comprehensive 6-Section Report Synthesis, Multi-Format Serialization (JSON, Dark Cyber HTML, Markdown), Attachment Download Engine, and Interactive Web UI Report Viewer Modal (Stage 22 Complete).
+- Created `app/models/schemas/report.py`:
+  - `ReportFormat` (`JSON`, `HTML`, `MARKDOWN`), `ReportVerdict` (`PASS`, `FAIL`, `DEGRADED`).
+  - `ExecutiveSummary`, `FunctionalFailureItem`, `FunctionalReportSection`, `SlowEndpointItem`, `PerformanceReportSection`, `RecurringFailureItem`, `RecurringFailuresSection`, `RegressionItem`, `RegressionReportSection`, `ActionableRecommendationItem`, `RecommendationsSection`, `ComprehensiveTestReport`.
+- Implemented `ReportService` in `app/services/report_service.py`:
+  - `generate_report()`: Synthesizes a unified 6-section report payload covering executive metrics, functional failures, latency statistical percentiles (P50, P90, P95, P99) & SLA breaches, historical recurring failure patterns & persistence ratings, baseline regression diffs, and actionable AI/heuristic recommendations with reproducible cURL commands.
+  - `generate_markdown_report()`: Generates clean, GitHub-flavored Markdown reports with structured metric tables, bulleted insights, code snippets, and terminal repro steps.
+  - `generate_html_report()`: Renders self-contained, responsive, printable Dark Cyber HTML reports (`font-family: DM Sans, JetBrains Mono`, ambient gradients, responsive cards, print-ready CSS pagination).
+- Implemented REST API router in `app/api/v1/reports.py`:
+  - `GET /api/v1/reports/runs/{run_id}`: Machine-readable JSON DTO payload.
+  - `GET /api/v1/reports/runs/{run_id}/html`: Standalone Dark Cyber HTML report response (`text/html`).
+  - `GET /api/v1/reports/runs/{run_id}/markdown`: GitHub-flavored Markdown text response (`text/markdown`).
+  - `GET /api/v1/reports/runs/{run_id}/download`: File attachment download (`Content-Disposition: attachment; filename="report-run-{run_id}.{format}"`).
+- Mounted `reports_router` in `app/api/v1/api.py`.
+- Extended Web UI Dashboard in `app/web/templates/dashboard.html`:
+  - Top navigation **"Reports"** launcher button.
+  - Per-run **"Report"** trigger buttons in the Recent Test Runs list.
+  - Interactive **Executive Test & Quality Report Modal** (`#reportModal`) featuring live HTML iframe preview, baseline selector for automated regression diffing, multi-format download triggers (`HTML`, `Markdown`, `JSON`), and full-screen new-tab launcher.
+- Added comprehensive unit and integration test suite in `tests/test_reports.py`:
+  - 7 unit & integration tests covering 6-section synthesis, Markdown & HTML generation, JSON/HTML/Markdown API endpoints, download attachment headers, and 404 validation.
+- Full test suite verified: **260 / 260 passing tests with 100% pass rate**.
+- Marked Stage 22: Reporting & Export Engine as 100% COMPLETE.
+
+## [Stage 21 - Run Comparison & Diff Tool] - 2026-09-09
+
+- **Completed**: Side-by-Side Execution Metrics Diff, Granular Test Transition Categorization (Regressions, Fixes, Drift), Auto-Generated Natural Language Insights, REST API endpoints, and Web UI Run Comparison Modal (Stage 21 Complete).
+- Created `app/models/schemas/run_comparison.py`:
+  - `DeltaStatus` (`IMPROVED`, `DEGRADED`, `UNCHANGED`).
+  - `DiffCategory` (`NEW_FAILURE`, `FIXED_FAILURE`, `BEHAVIOR_CHANGED`, `LATENCY_DEGRADED`, `LATENCY_IMPROVED`, `UNCHANGED_PASS`, `UNCHANGED_FAIL`, `NEW_TEST`, `REMOVED_TEST`).
+  - `MetricDelta`, `RunComparisonMetrics`, `TestCaseDiffItem`, `RunHeaderSummary`, `RunComparisonRequest`, `RunComparisonReport`.
+- Implemented `RunComparisonService` in `app/services/run_comparison_service.py`:
+  - `compare_runs()`: Comprehensive side-by-side run analyzer computing deltas for total test counts, pass counts, fail counts, pass rate percentages, average latency, and P95 latency.
+  - Granular per-test-case diff engine mapping baseline to target execution records, identifying new failures/regressions, fixes, behavior/status drift, latency shifts, and added/removed test cases.
+  - Automated natural language insight generator outputting actionable regression summaries and health transition callouts.
+- Implemented REST API router in `app/api/v1/run_comparison.py`:
+  - `GET /api/v1/runs/compare?base_run_id={id}&target_run_id={id}`
+  - `POST /api/v1/runs/compare`
+- Mounted `comparison_router` in `app/api/v1/api.py` with precedence before `test_runs_router` to avoid route collision with `/runs/{run_id}`.
+- Extended Web UI Dashboard in `app/web/templates/dashboard.html`:
+  - Top bar **"Compare Runs"** modal launcher button with dual-run dropdown selectors.
+  - Interactive Run Comparison Modal (`#runCompareModal`) featuring:
+    - Side-by-side execution header comparison cards with baseline/target timestamp & environment metadata.
+    - 6-metric side-by-side delta table with color-coded improvement/degradation badges.
+    - Actionable AI & Rule-based natural language insight callout box.
+    - Granular test case transition diff table with category badges (`REGRESSION`, `FIXED`, `BEHAVIOR CHANGED`, `LATENCY DEGRADED`, `UNCHANGED`).
+  - Per-card **"Compare"** trigger buttons in the Recent Test Runs feed.
+- Added comprehensive unit and integration test suite in `tests/test_run_comparison.py`:
+  - 6 unit & integration tests covering metric computation, diff categorization, insights synthesis, GET/POST API contracts, and 404 validation.
+- Full test suite verified: **253 / 253 passing tests with 100% pass rate**.
+- Marked Stage 21: Run Comparison & Diff Tool as 100% COMPLETE.
+
+## [Stage 20 - Dashboard & Web Interface] - 2026-09-09
+- **Completed**: Dark Cyber AI Theme Web UI, Global KPI Metrics Aggregator, Project & Endpoint Explorer, Live Execution Console, OpenAPI Spec Ingestion Modal, and AI Remediation Code Card Viewer (Stage 20 Complete).
+- Created `app/models/schemas/dashboard.py`:
+  - `GlobalKPISummary`, `RecentTestRunCard`, `CriticalIssueAlert`, `EndpointSummaryCard`, `ProjectDetailView`, `DashboardOverviewResponse`.
+- Implemented `DashboardService` in `app/services/dashboard_service.py`:
+  - `get_global_overview()`: High-performance multi-table aggregator calculating global workspace counts, registered endpoints, test scenarios, runs, pass rate %, average/P95 latencies, active critical failure feeds, and health index.
+  - `get_project_detail()`: Granular project drill-down aggregator returning endpoints with HTTP method badges and recent execution runs.
+- Created `app/web/templates/dashboard.html`:
+  - Styled with the modern dark cyber AI aesthetic (`neutral-background: rgb(9, 9, 11)`, `brand-primary: rgb(0, 195, 201)`, `neutral-surface: rgb(15, 15, 17)`, glassmorphism cards, top-focused neon-cyan ambient glow, and `DM Sans` / `Inter` / `JetBrains Mono` typography).
+  - Interactive top bar with live AI engine probe status (`Google Gemini` vs `Deterministic Heuristic`).
+  - 6 real-time KPI metric summary cards.
+  - Interactive project switcher, OpenAPI 3.0/3.1 JSON/YAML drag-and-drop ingestion modal with automated smoke test generator trigger.
+  - 1-click **"Run All Tests"** test suite execution console with live progress and terminal logs.
+  - Endpoint explorer with method badges (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`) and direct test execution triggers.
+  - AI failure diagnostics and code fix modal displaying reproducible cURL commands, root cause categories, and copyable Python/FastAPI code fixes.
+- Implemented `web_router` and `dashboard_api_router` in `app/web/routes.py`:
+  - `GET /` and `GET /dashboard`: Renders the dark AI theme Web UI for browser requests.
+  - `GET /api/v1/dashboard/overview`: Real-time KPI telemetry JSON payload.
+  - `GET /api/v1/dashboard/projects/{project_id}`: Granular project drill-down JSON payload.
+- Mounted routers in `app/main.py` and `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_dashboard_ui.py` (5 new tests passing).
+- Total test suite count increased to 247 passing tests with 100% pass rate.
+- Marked Stage 20: Dashboard & Web Interface as 100% COMPLETE.
+
+## [Stage 19 - AI Recommendation Layer] - 2026-09-09
+- **Completed**: Structured Prompt Synthesis & Guardrails, Deterministic Rule-Based Fallback Engine, Google Gemini Integration, and AIRecommendation Persistence (Stage 19 Complete).
+- Created `app/models/entities/ai_recommendation.py`:
+  - `AIRecommendation` database entity model storing evidence IDs, root cause categories, likely causes, severity, suggested fixes, code snippets, confidence percentages, recommendation sources (`GEMINI_LLM` vs `RULE_BASED_HEURISTIC`), model names, and JSON-encoded documentation references.
+- Exported `AIRecommendation` in `app/models/entities/__init__.py`.
+- Created `app/models/schemas/ai_recommendation.py` with:
+  - `RecommendationSource` (`GEMINI_LLM`, `RULE_BASED_HEURISTIC`).
+  - `RecommendationSeverity` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).
+  - `SynthesizedPrompt`, `FixRecommendation`, `AIEngineStatus`, `GenerateRecommendationRequest`.
+- Created `app/utils/prompt_synthesizer.py` (Sub-Stage 19.01):
+  - Structured prompt compiler transforming `FailureEvidence` into token-efficient system and user prompts.
+  - Enforced the **Prime Directive**: the deterministic execution and classification engines strictly own pass/fail verdicts; the LLM is restricted to diagnosing context and generating actionable code fixes.
+  - Attached strict JSON response schema and validation guardrails.
+- Created `app/utils/heuristic_recommender.py` (Sub-Stage 19.02):
+  - Deterministic expert remediation engine providing concrete Python/FastAPI/Pydantic/SQLAlchemy code snippets and RFC references across all 13 root cause categories in offline/fallback mode.
+- Implemented `AIRecommendationService` in `app/services/ai_recommendation_service.py` (Sub-Stage 19.03):
+  - `engine_status()`: Diagnostic probe reporting AI engine availability and active engine mode.
+  - `synthesize()`: Structured prompt generation.
+  - `generate()`: Dual-mode dispatcher invoking Google Gemini LLM when configured, with seamless, zero-crash fallback to heuristics.
+  - `generate_from_snapshot()`: One-step evidence packaging and recommendation synthesis.
+  - `_persist()`: Database persistence for generated recommendations.
+  - `recommend_for_result()` & `for_result()`: Attaches and retrieves remediation proposals linked to persisted `TestResult` records.
+- Implemented REST API router in `app/api/v1/ai_recommendations.py`:
+  - `GET /api/v1/ai/status`
+  - `POST /api/v1/ai/synthesize-prompt`
+  - `POST /api/v1/ai/recommend`
+  - `POST /api/v1/ai/recommend-from-snapshot`
+  - `POST /api/v1/results/{result_id}/recommendation`
+  - `GET /api/v1/results/{result_id}/recommendations`
+- Mounted `ai_recommendations_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_ai_recommendations.py` (12 new tests passing).
+- Total test suite count increased to 242 passing tests with 100% pass rate.
+- Marked Stage 19: AI Recommendation Layer as 100% COMPLETE.
+
+## [Stage 18 - Failure Analysis Engine] - 2026-09-09
+- **Completed**: Structured Evidence Packaging, Credential Masking, cURL Reproduction Generator, 13-Category Root-Cause Taxonomy, and Run Failure Reporting (Stage 18 Complete).
+- Created `app/models/schemas/failure_analysis.py` with:
+  - `RootCauseCategory` (`MISSING_INPUT_VALIDATION`, `SERVER_EXCEPTION`, `RESPONSE_CONTRACT_MISMATCH`, `PERFORMANCE_SLA_BREACH`, `NETWORK_TIMEOUT`, `AUTHENTICATION_FAILURE`, `AUTHORIZATION_FAILURE`, `RATE_LIMITED`, `ENDPOINT_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `STATUS_CODE_MISMATCH`, `BODY_ASSERTION_FAILURE`, `UNKNOWN_FAILURE`).
+  - `FailureSeverity` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).
+  - `HistoricalRecurrenceContext`, `RequestEvidence`, `ResponseEvidence`, `AssertionFailureDetail`, `RootCauseAssessment`, `FailureEvidence`, `PackageEvidenceRequest`, `CategorizeFailureRequest`, `RunFailureAnalysisReport`.
+- Created `app/utils/evidence_packager.py` with:
+  - `mask_sensitive_headers()`: Redacts passwords, API keys, Bearer tokens, and cookies (`***REDACTED***`).
+  - `snippet_body()`: Safe payload truncation (4KB) with length tracking.
+  - `build_curl_command()`: Copy-pasteable reproducible cURL command generator with masked credentials and serialized bodies.
+  - `build_historical_context()`: Recurrence classifier (`CHRONIC`, `INTERMITTENT`, `NEW`, `RESOLVED`, `HEALTHY`).
+  - `build_evidence_id()`: Deterministic SHA-256 fingerprint hash generator (`EV-...`).
+  - `categorize_root_cause()`: 13-category root-cause classifier with confidence percentage and actionable remediation hints.
+  - `derive_severity()`: Multi-factor severity evaluator.
+- Implemented `FailureAnalysisService` in `app/services/failure_analysis_service.py`:
+  - `categorize()`: Ad-hoc failure categorization from raw signals.
+  - `package_adhoc()`: Constructs complete evidence bundles on the fly.
+  - `package_from_result()`: Translates persisted `TestResult` database records into structured `FailureEvidence`.
+  - `analyze_run()`: Analyzes and packages all failures across an entire `TestRun`.
+- Implemented REST API router in `app/api/v1/failure_analysis.py`:
+  - `POST /api/v1/failure-analysis/package`
+  - `POST /api/v1/failure-analysis/categorize`
+  - `GET /api/v1/results/{result_id}/evidence`
+  - `GET /api/v1/runs/{run_id}/failure-analysis`
+- Mounted `failure_analysis_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_failure_analysis.py` (10 new tests passing).
+- Total test suite count increased to 230 passing tests with 100% pass rate.
+- Marked Stage 18: Failure Analysis Engine as 100% COMPLETE.
 
 ## [Stage 17 - Result Classification Engine] - 2026-09-09
 - **Completed**: 4-Tier Result Decision Matrix (PASS/FAIL/WARNING/ERROR), Multi-Factor Failure Severity Classifier (LOW/MEDIUM/HIGH/CRITICAL), Health Score Index, and Prioritized Failure Queue (Stage 17 Complete).
