@@ -5,9 +5,11 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
 from fastapi.openapi.docs import get_redoc_html
 
 from app.core.config import get_settings
+from app.core.database import init_db
 from app.core.logging import setup_logging
 from app.core.middleware import RequestCorrelationMiddleware
 from app.api.v1.api import api_router
@@ -27,6 +29,8 @@ async def lifespan(app: FastAPI):
         f"Starting {settings.PROJECT_NAME} v{settings.VERSION} "
         f"[Env: {settings.ENVIRONMENT}, Debug: {settings.DEBUG}]"
     )
+    # Initialize SQLite database schema
+    init_db()
     yield
     logger.info(f"Shutting down {settings.PROJECT_NAME} cleanly...")
 
@@ -57,7 +61,8 @@ app.add_middleware(
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Format request validation errors into standard JSON error envelope."""
-    logger.warning(f"Validation failure on {request.method} {request.url.path}: {exc.errors()}")
+    logger.warning(f"Validation failure on {request.method} {request.url.path}")
+    safe_errors = jsonable_encoder(exc.errors())
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=ErrorResponse(
@@ -65,7 +70,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             error=ErrorDetail(
                 code="VALIDATION_ERROR",
                 message="Request payload or parameter validation failed",
-                details=exc.errors()
+                details=safe_errors
             )
         ).model_dump(mode="json")
     )

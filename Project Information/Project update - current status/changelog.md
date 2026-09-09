@@ -1,5 +1,15 @@
 # API Sentinel — Changelog
 
+## [Stage 02 - Sub-Stage 01] - 2026-09-09
+- **Completed**: Project & Workspace CRUD Operations.
+- Created `app/core/database.py` with SQLAlchemy engine, `SessionLocal`, `Base`, and `get_db` dependency.
+- Created `Project` entity model in `app/models/entities/project.py`.
+- Created Pydantic request/response schemas in `app/models/schemas/project.py`.
+- Implemented `ProjectService` business logic in `app/services/project_service.py`.
+- Implemented `/api/v1/projects` REST endpoints (`POST`, `GET`, `GET /{id}`, `PUT /{id}`, `DELETE /{id}`).
+- Added unit & database integration test suite in `tests/test_projects.py` (7 tests passing).
+- Total test count increased to 21 with 100% pass rate.
+
 ## [Stage 01 - Sub-Stage 03] - 2026-09-09
 - **Completed**: Structured Logging & Health Check Probe.
 - Implemented `JSONLogFormatter` and `ConsoleLogFormatter` with context variable Request-ID support in `app/core/logging.py`.

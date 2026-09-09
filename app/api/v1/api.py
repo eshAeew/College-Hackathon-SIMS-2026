@@ -1,8 +1,9 @@
-"""API v1 Router Hub with Enhanced Health & Diagnostics."""
+"""API v1 Router Hub with Enhanced Health & Diagnostics and Projects Router."""
 import time
 from fastapi import APIRouter
 from app.core.config import get_settings
 from app.models.schemas.response import StandardResponse, HealthStatus, DatabaseHealth
+from app.api.v1.projects import router as projects_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -47,3 +48,7 @@ async def health_check():
         data=health_data,
         message="API Sentinel backend is operational and healthy"
     )
+
+
+# Mount Sub-Routers
+api_router.include_router(projects_router)
