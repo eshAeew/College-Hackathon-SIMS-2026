@@ -19,13 +19,18 @@ class TestWelcomeLandingPage(unittest.TestCase):
         # Verify brand identity and fine-tuned copy
         content = response.text
         self.assertIn("API Sentinel", content)
-        self.assertIn("Autonomous Quality.", content)
-        self.assertIn("Zero Guesswork.", content)
+        self.assertIn("Step into", content)
+        self.assertIn("the living API", content)
         self.assertIn("SENTINEL", content)
         self.assertIn("Launch Cockpit", content)
         self.assertIn("302 Passing", content)
         self.assertIn("6 Dimensions", content)
-        self.assertIn("AI Diagnoses. Rules Verify.", content)
+        self.assertIn("Autonomous Quality", content)
+        self.assertIn("Zero Regression", content)
+        self.assertIn("OpenAPI ingestion, combinatorial tests", content)
+        self.assertIn("Cockpit", content)
+        self.assertIn("API Docs", content)
+        self.assertIn("Self-Test", content)
 
     def test_welcome_page_threejs_and_shader_elements(self):
         """Test that Three.js canvas and liquid metal shaders are properly embedded."""

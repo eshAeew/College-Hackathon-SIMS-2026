@@ -245,9 +245,9 @@
 
   .lede{
     position:absolute; z-index:4;
-    left:calc(520 * var(--u)); top:calc(196 * var(--u));
-    width:calc(208 * var(--u));
-    font-size:calc(16.5 * var(--u)); line-height:calc(22 * var(--u));
+    left:calc(510 * var(--u)); top:calc(202 * var(--u));
+    width:calc(250 * var(--u));
+    font-size:calc(15.5 * var(--u)); line-height:calc(22 * var(--u));
     font-weight:300; color:var(--ink-soft);
   }
 
@@ -428,6 +428,12 @@
   .card--about h2{ top:calc(177 * var(--u)); width:calc(142 * var(--u)); }
   .card--stove .label{ top:calc(45 * var(--u)); }
   .card--stove h2{ top:calc(70 * var(--u)); }
+  .card .card-desc{
+    position:absolute; left:calc(38 * var(--u)); right:calc(38 * var(--u));
+    top:calc(234 * var(--u));
+    font-size:calc(11.5 * var(--u)); line-height:calc(15.5 * var(--u));
+    font-weight:300; color:var(--card-label);
+  }
   /* Both cards carry a plate. The Field Note reads downward — label, title,
      then the photograph — so its window sits at the foot of the card; the
      Ethos card reads the other way up, so its window is at the head and the
@@ -705,6 +711,12 @@
     .card--about figure{ left:auto; right:calc(16 * var(--u)); top:calc(16 * var(--u)); width:calc(224 * var(--u)); height:calc(218 * var(--u)); }
     .card .knob{ right:calc(24 * var(--u)); bottom:calc(24 * var(--u)); }
     .card--stove .knob{ right:calc(30 * var(--u)); bottom:calc(30 * var(--u)); }
+    .card--about .card-desc{
+      top:calc(185 * var(--u));
+      width:calc(420 * var(--u));
+      font-size:calc(13 * var(--u));
+      line-height:calc(17 * var(--u));
+    }
 
     .scroll{ left:calc(702 * var(--u)); top:calc(470 * var(--u)); }
     .ghost{ font-size:calc(184 * var(--u)); letter-spacing:calc(14 * var(--u)); bottom:calc(660 * var(--u)); left:calc(-10 * var(--u)); }
@@ -718,35 +730,40 @@
 
   <div class="dock-wrap">
     <nav class="dock par-dock" style="--pd:5" data-spec aria-label="Primary">
-      <a class="dock-item dock-mark" data-dock data-spec data-burst href="#" style="--d:120ms" aria-label="Sylva — home">
-        <svg viewBox="0 0 22 24" aria-hidden="true">
-          <path d="M11 1.3c-2.1 0-3.95 1.2-4.75 2.95C3.95 4.55 2.3 6.25 2.3 8.35c0 2.3 1.9 4.2 4.3 4.2h8.8c2.4 0 4.3-1.9 4.3-4.2 0-2.1-1.65-3.8-4-4.1C14.95 2.5 13.1 1.3 11 1.3Z"/>
-          <path d="M9.6 12.55h2.8v4.2c1.35.3 2.45 1.15 3.15 2.4-1.35.4-2.4.15-3.15-.4v4.15H9.6v-4.15c-.75.55-1.8.8-3.15.4.7-1.25 1.8-2.1 3.15-2.4v-4.2Z"/>
+      <a class="dock-item dock-mark" data-dock data-spec data-burst href="/welcome" style="--d:120ms" aria-label="API Sentinel — Home">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+          <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm-2 15l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
         </svg>
       </a>
-      <a class="dock-item is-active" data-dock data-spec data-burst href="#" style="--d:180ms">
+      <a class="dock-item is-active" data-dock data-spec data-burst href="/welcome" style="--d:180ms">
         <span class="glyph" aria-hidden="true">
           <svg viewBox="0 0 16 16"><path d="M8 14V9"/><path d="M8 9c0-2.4 1.7-4.3 4-4.3.2 2.6-1.6 4.6-4 4.3Z"/><path d="M8 10.5C7.9 8.4 6.4 6.8 4.4 6.8 4.3 8.9 5.9 10.6 8 10.5Z"/></svg>
         </span>
-        <span>Grove</span>
+        <span>Welcome</span>
       </a>
-      <a class="dock-item" data-dock data-spec data-burst href="#" style="--d:230ms">
+      <a class="dock-item" data-dock data-spec data-burst href="/dashboard" style="--d:230ms">
         <span class="glyph" aria-hidden="true">
-          <svg viewBox="0 0 16 16"><path d="M1.6 12.4c2.4-3.4 4.3-5.1 5.7-5.1 2 0 3 3.6 5 3.6 1.1 0 1.9-.5 2.4-1.4"/><path d="M4.3 6.2C5.5 4.4 6.6 3.5 7.6 3.5c1.5 0 2.2 2.4 3.7 2.4"/></svg>
+          <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
         </span>
-        <span>Habitats</span>
+        <span>Cockpit</span>
       </a>
-      <a class="dock-item" data-dock data-spec data-burst href="#" style="--d:280ms">
+      <a class="dock-item" data-dock data-spec data-burst href="/docs" style="--d:280ms">
         <span class="glyph" aria-hidden="true">
           <svg viewBox="0 0 16 16"><path d="M4 2.4h5.3L12 5.1v8.5H4z"/><path d="M9.2 2.4V5h2.7"/><path d="M6 8.4h4M6 10.8h2.8"/></svg>
         </span>
-        <span>Journal</span>
+        <span>API Docs</span>
       </a>
-      <a class="dock-item dock-item--enter" data-dock data-spec data-burst href="#" style="--d:330ms">
+      <a class="dock-item" data-dock data-spec data-burst href="/api/v1/health" style="--d:330ms" target="_blank">
+        <span class="glyph" aria-hidden="true">
+          <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 3 10 2-5h3"/></svg>
+        </span>
+        <span>Self-Test</span>
+      </a>
+      <a class="dock-item dock-item--enter" data-dock data-spec data-burst href="/dashboard" style="--d:380ms">
         <span class="glyph" aria-hidden="true">
           <svg viewBox="0 0 16 16"><path d="M6.6 2.5h5.1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6.6"/><path d="M2.6 8h6.6"/><path d="m7 5.6 2.4 2.4L7 10.4"/></svg>
         </span>
-        <span>Enter</span>
+        <span>Launch</span>
       </a>
     </nav>
   </div>
@@ -767,15 +784,16 @@
         <span class="portal-media"><img src="/inner-green-assets/card-ethos.jpg" alt="API Sentinel Core Architecture" loading="eager" decoding="async"></span>
         <canvas class="pixel-reveal" aria-hidden="true"></canvas>
       </figure>
-      <p class="label">Our Directive</p>
-      <h2>AI Diagnoses. Rules Verify.</h2>
+      <p class="label">Core Engine</p>
+      <h2>Autonomous Quality</h2>
+      <p class="card-desc">OpenAPI ingestion, combinatorial tests, AI root-cause diagnostics, and closed-loop regression diffing.</p>
     </article>
 
     <!-- the About knob rides *outside* the card: the card has to stay a plain
          painted box under #scene, so anything that must sit in front of the
          moss lives here instead, sharing the card's parallax origin -->
     <span class="knob-float" style="--pd:10; --pr:2.2">
-      <button class="knob knob--about mask-circle" style="--d:1100ms" aria-label="Read about Sylva">
+      <button class="knob knob--about mask-circle" style="--d:1100ms" aria-label="API Sentinel Architecture">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 21v-7"/><path d="M12 14c0-3.3 2.4-6 5.5-6 .3 3.6-2.2 6.4-5.5 6Z"/>
           <path d="M12 16c-.1-2.9-2.2-5.2-4.9-5.2C6.8 13.7 9 16 12 16Z"/>
@@ -784,11 +802,11 @@
     </span>
 
     <h1 class="headline" style="--pd:18; --pr:1.2">
-      <span><i style="--d:260ms">Autonomous Quality.</i></span>
-      <span><i style="--d:360ms">Zero Guesswork.</i></span>
+      <span><i style="--d:260ms">Step into</i></span>
+      <span><i style="--d:360ms">the living API</i></span>
     </h1>
 
-    <p class="lede mask" style="--d:480ms; --pd:14; --pr:1">API Sentinel automates end-to-end API quality: OpenAPI ingestion, combinatorial tests, AI root-cause diagnostics, and closed-loop regression diffing.</p>
+    <p class="lede mask" style="--d:480ms; --pd:14; --pr:1">Autonomous quality engineering, real-time telemetry capture, and self-healing AI diagnostics for modern APIs.</p>
 
     <div class="pill-clip">
       <div class="pill mask" style="--d:600ms; --pd:15; --pr:1.4">

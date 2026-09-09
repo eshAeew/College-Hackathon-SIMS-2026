@@ -5,8 +5,9 @@
 - Created `app/web/templates/welcome.html`:
   - Three.js 3D canvas `#scene` rendering procedural moss-root branch mesh, botanical subsurface lighting, floating pollen particles, radar survey pulses, and procedural landing butterfly animation.
   - WebGL2 liquid metal button simulation system (`mountLiquidMetal`) with surface reflections, cursor tracking, and tactile click physics.
-  - Fine-tuned branding: `SENTINEL` ghost wordmark, `Autonomous Quality. Zero Guesswork.` headline, `Launch Cockpit` liquid button linking to `/dashboard`, and `Interactive API Docs` liquid play button linking to `/docs`.
-  - Floating glass capsule dock navigation bar linking to Welcome, Cockpit, API Docs, Self-Test, and Launch.
+  - Fine-tuned typography & layout: `SENTINEL` ghost wordmark, `"Step into the living API"` headline, concise elegant lede subtitle, and repositioned technical engine overview on interactive cards.
+  - `Launch Cockpit` liquid button linking to `/dashboard`, and `Interactive API Docs` liquid play button linking to `/docs`.
+  - Floating glass capsule dock navigation bar linking to Welcome (`/welcome`), Cockpit (`/dashboard`), API Docs (`/docs`), Self-Test (`/api/v1/health`), and Launch (`/dashboard`).
   - Interactive 3D depth cards with pixel-scan reveals, 3D tilt parallax, and live telemetry metrics (`302 Passing (100%)`, `6 Defect Vectors Analyzed`).
 - Updated `app/web/routes.py`:
   - Added `@web_router.get("/welcome", response_class=HTMLResponse)` to serve `welcome.html`.
