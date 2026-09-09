@@ -1,5 +1,32 @@
 # API Sentinel — Changelog
 
+## [Stage 21 - Run Comparison & Diff Tool] - 2026-09-09
+- **Completed**: Side-by-Side Execution Metrics Diff, Granular Test Transition Categorization (Regressions, Fixes, Drift), Auto-Generated Natural Language Insights, REST API endpoints, and Web UI Run Comparison Modal (Stage 21 Complete).
+- Created `app/models/schemas/run_comparison.py`:
+  - `DeltaStatus` (`IMPROVED`, `DEGRADED`, `UNCHANGED`).
+  - `DiffCategory` (`NEW_FAILURE`, `FIXED_FAILURE`, `BEHAVIOR_CHANGED`, `LATENCY_DEGRADED`, `LATENCY_IMPROVED`, `UNCHANGED_PASS`, `UNCHANGED_FAIL`, `NEW_TEST`, `REMOVED_TEST`).
+  - `MetricDelta`, `RunComparisonMetrics`, `TestCaseDiffItem`, `RunHeaderSummary`, `RunComparisonRequest`, `RunComparisonReport`.
+- Implemented `RunComparisonService` in `app/services/run_comparison_service.py`:
+  - `compare_runs()`: Comprehensive side-by-side run analyzer computing deltas for total test counts, pass counts, fail counts, pass rate percentages, average latency, and P95 latency.
+  - Granular per-test-case diff engine mapping baseline to target execution records, identifying new failures/regressions, fixes, behavior/status drift, latency shifts, and added/removed test cases.
+  - Automated natural language insight generator outputting actionable regression summaries and health transition callouts.
+- Implemented REST API router in `app/api/v1/run_comparison.py`:
+  - `GET /api/v1/runs/compare?base_run_id={id}&target_run_id={id}`
+  - `POST /api/v1/runs/compare`
+- Mounted `comparison_router` in `app/api/v1/api.py` with precedence before `test_runs_router` to avoid route collision with `/runs/{run_id}`.
+- Extended Web UI Dashboard in `app/web/templates/dashboard.html`:
+  - Top bar **"Compare Runs"** modal launcher button with dual-run dropdown selectors.
+  - Interactive Run Comparison Modal (`#runCompareModal`) featuring:
+    - Side-by-side execution header comparison cards with baseline/target timestamp & environment metadata.
+    - 6-metric side-by-side delta table with color-coded improvement/degradation badges.
+    - Actionable AI & Rule-based natural language insight callout box.
+    - Granular test case transition diff table with category badges (`REGRESSION`, `FIXED`, `BEHAVIOR CHANGED`, `LATENCY DEGRADED`, `UNCHANGED`).
+  - Per-card **"Compare"** trigger buttons in the Recent Test Runs feed.
+- Added comprehensive unit and integration test suite in `tests/test_run_comparison.py`:
+  - 6 unit & integration tests covering metric computation, diff categorization, insights synthesis, GET/POST API contracts, and 404 validation.
+- Full test suite verified: **253 / 253 passing tests with 100% pass rate**.
+- Marked Stage 21: Run Comparison & Diff Tool as 100% COMPLETE.
+
 ## [Stage 20 - Dashboard & Web Interface] - 2026-09-09
 - **Completed**: Dark Cyber AI Theme Web UI, Global KPI Metrics Aggregator, Project & Endpoint Explorer, Live Execution Console, OpenAPI Spec Ingestion Modal, and AI Remediation Code Card Viewer (Stage 20 Complete).
 - Created `app/models/schemas/dashboard.py`:

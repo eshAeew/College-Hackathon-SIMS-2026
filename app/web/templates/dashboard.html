@@ -90,6 +90,11 @@
       </div>
 
       <!-- Quick Action Buttons -->
+      <button onclick="openRunCompareModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+        <span>Compare Runs</span>
+      </button>
+
       <button onclick="openOpenApiModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
         <span>Import OpenAPI</span>
@@ -536,6 +541,190 @@
       }).join("");
     }
 
+
+    // Stage 21: Run Comparison Functions
+    function openRunCompareModal(preselectedTargetId) {
+      const modal = document.getElementById("runCompareModal");
+      const baseSel = document.getElementById("compareBaseRunSelect");
+      const targetSel = document.getElementById("compareTargetRunSelect");
+
+      baseSel.innerHTML = '<option value="">Select Base Run...</option>';
+      targetSel.innerHTML = '<option value="">Select Target Run...</option>';
+
+      if (globalOverviewData && globalOverviewData.recent_runs && globalOverviewData.recent_runs.length > 0) {
+        globalOverviewData.recent_runs.forEach((r, idx) => {
+          const opt1 = document.createElement("option");
+          opt1.value = r.id;
+          opt1.innerText = `Run #${r.id} - ${r.name} (${r.passed_tests}/${r.total_tests} pass, ${r.pass_rate_pct}%)`;
+          baseSel.appendChild(opt1);
+
+          const opt2 = document.createElement("option");
+          opt2.value = r.id;
+          opt2.innerText = `Run #${r.id} - ${r.name} (${r.passed_tests}/${r.total_tests} pass, ${r.pass_rate_pct}%)`;
+          targetSel.appendChild(opt2);
+        });
+
+        // Smart selection
+        if (preselectedTargetId) {
+          targetSel.value = preselectedTargetId;
+          const targetIdx = globalOverviewData.recent_runs.findIndex(r => r.id === preselectedTargetId);
+          if (targetIdx !== -1 && targetIdx + 1 < globalOverviewData.recent_runs.length) {
+            baseSel.value = globalOverviewData.recent_runs[targetIdx + 1].id;
+          } else if (globalOverviewData.recent_runs.length > 1) {
+            baseSel.value = globalOverviewData.recent_runs[globalOverviewData.recent_runs.length - 1].id;
+          }
+        } else if (globalOverviewData.recent_runs.length >= 2) {
+          targetSel.value = globalOverviewData.recent_runs[0].id;
+          baseSel.value = globalOverviewData.recent_runs[1].id;
+        }
+      }
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+
+      if (baseSel.value && targetSel.value && baseSel.value !== targetSel.value) {
+        executeRunComparison();
+      }
+    }
+
+    function closeRunCompareModal() {
+      const modal = document.getElementById("runCompareModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    async function executeRunComparison() {
+      const baseId = document.getElementById("compareBaseRunSelect").value;
+      const targetId = document.getElementById("compareTargetRunSelect").value;
+      const container = document.getElementById("compareReportContainer");
+
+      if (!baseId || !targetId) {
+        container.innerHTML = '<div class="p-8 text-center text-text-secondary">Please select both a Base Run and a Target Run.</div>';
+        return;
+      }
+      if (baseId === targetId) {
+        container.innerHTML = '<div class="p-8 text-center text-amber-400">Base Run and Target Run are identical. Please select two distinct runs to view deltas.</div>';
+        return;
+      }
+
+      container.innerHTML = '<div class="p-12 text-center text-text-secondary"><svg class="w-8 h-8 mx-auto mb-2 text-brand-primary animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>Computing side-by-side run delta analysis...</div>';
+
+      try {
+        const res = await fetch(`/api/v1/runs/compare?base_run_id=${baseId}&target_run_id=${targetId}`);
+        const json = await res.json();
+        if (res.ok) {
+          renderRunComparisonReport(json.data);
+        } else {
+          container.innerHTML = `<div class="p-8 text-center text-rose-400">Comparison failed: ${json.detail || json.message}</div>`;
+        }
+      } catch (err) {
+        container.innerHTML = `<div class="p-8 text-center text-rose-400">Network error during comparison: ${err.message}</div>`;
+      }
+    }
+
+    function renderRunComparisonReport(report) {
+      const container = document.getElementById("compareReportContainer");
+      const m = report.metrics;
+
+      function renderDeltaBadge(deltaObj, isLowerBetter = false) {
+        const d = deltaObj.delta;
+        if (d === 0) return '<span class="text-text-secondary font-mono">0</span>';
+        
+        let isGood = isLowerBetter ? (d < 0) : (d > 0);
+        let colorClass = isGood ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" : "text-rose-400 bg-rose-500/10 border-rose-500/20";
+        let sign = d > 0 ? "+" : "";
+        return `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono border ${colorClass}">${sign}${d}${deltaObj.unit ? ' ' + deltaObj.unit : ''}</span>`;
+      }
+
+      let insightsHtml = report.insights.map(ins => `
+        <li class="flex items-start gap-2 text-white/90">
+          <span class="text-brand-primary mt-0.5">•</span>
+          <span>${ins}</span>
+        </li>
+      `).join("");
+
+      let diffRowsHtml = report.diffs.map(d => {
+        let badgeClass = "bg-blue-500/10 text-blue-400 border-blue-500/20";
+        if (d.category === "NEW_FAILURE") badgeClass = "bg-rose-500/20 text-rose-300 border-rose-500/40 font-bold";
+        if (d.category === "FIXED_FAILURE") badgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold";
+        if (d.category === "BEHAVIOR_CHANGED") badgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/40 font-bold";
+        if (d.category === "LATENCY_DEGRADED") badgeClass = "bg-purple-500/20 text-purple-300 border-purple-500/40";
+
+        return `
+          <tr class="hover:bg-white/[0.02] border-b border-white/5 font-mono">
+            <td class="p-3 text-white font-medium">${d.test_name}</td>
+            <td class="p-3 text-text-secondary">[${d.http_method}] ${d.url}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] uppercase border ${badgeClass}">${d.category.replace('_', ' ')}</span>
+            </td>
+            <td class="p-3 text-white/80">${d.previous_status || '—'} ${d.previous_status_code ? `(${d.previous_status_code})` : ''}</td>
+            <td class="p-3 text-white/80">${d.current_status || '—'} ${d.current_status_code ? `(${d.current_status_code})` : ''}</td>
+            <td class="p-3 text-text-secondary">${d.latency_delta_ms !== null ? (d.latency_delta_ms > 0 ? `+${d.latency_delta_ms}ms` : `${d.latency_delta_ms}ms`) : '—'}</td>
+          </tr>
+        `;
+      }).join("");
+
+      container.innerHTML = `
+        <!-- Metrics Comparison Table -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div class="p-3 bg-white/[0.02] border-b border-white/10 font-semibold text-white flex items-center justify-between">
+            <span>Side-by-Side Metric Comparison</span>
+            <span class="text-text-secondary font-mono text-[11px] font-normal">Run #${report.base_run.id} vs Run #${report.target_run.id}</span>
+          </div>
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-white/10 text-text-secondary text-[10px] uppercase font-mono">
+                <th class="p-3">Metric</th>
+                <th class="p-3">Previous (Run #${report.base_run.id})</th>
+                <th class="p-3">Current (Run #${report.target_run.id})</th>
+                <th class="p-3">Delta</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-white/5 font-mono">
+              <tr><td class="p-3 text-white">Total Tests</td><td class="p-3 text-white/80">${m.total_tests.previous}</td><td class="p-3 text-white/80">${m.total_tests.current}</td><td class="p-3">${renderDeltaBadge(m.total_tests)}</td></tr>
+              <tr><td class="p-3 text-white">Passed</td><td class="p-3 text-emerald-400">${m.passed_tests.previous}</td><td class="p-3 text-emerald-400">${m.passed_tests.current}</td><td class="p-3">${renderDeltaBadge(m.passed_tests)}</td></tr>
+              <tr><td class="p-3 text-white">Failed</td><td class="p-3 text-rose-400">${m.failed_tests.previous}</td><td class="p-3 text-rose-400">${m.failed_tests.current}</td><td class="p-3">${renderDeltaBadge(m.failed_tests, true)}</td></tr>
+              <tr><td class="p-3 text-white">Avg Latency</td><td class="p-3 text-white/80">${m.avg_latency.previous}ms</td><td class="p-3 text-white/80">${m.avg_latency.current}ms</td><td class="p-3">${renderDeltaBadge(m.avg_latency, true)}</td></tr>
+              <tr><td class="p-3 text-white">Success Rate</td><td class="p-3 text-white/80">${m.pass_rate.previous}%</td><td class="p-3 text-white/80">${m.pass_rate.current}%</td><td class="p-3">${renderDeltaBadge(m.pass_rate)}</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Synthesized Summary Insights -->
+        <div class="bg-white/5 border border-white/10 rounded-xl p-4 space-y-2">
+          <h4 class="font-semibold text-brand-primary uppercase tracking-wider text-[11px]">Synthesized Executive Insights</h4>
+          <ul class="space-y-1">
+            ${insightsHtml}
+          </ul>
+        </div>
+
+        <!-- Granular Test Transitions Table -->
+        <div class="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+          <div class="p-3 bg-white/[0.02] border-b border-white/10 font-semibold text-white flex items-center justify-between">
+            <span>Granular Test Transitions (${report.diffs.length} tests)</span>
+            <span class="text-text-secondary text-[11px] font-mono">${report.new_failures_count} regressions • ${report.fixed_failures_count} fixes</span>
+          </div>
+          <div class="max-h-[300px] overflow-y-auto custom-scrollbar">
+            <table class="w-full text-left">
+              <thead>
+                <tr class="border-b border-white/10 text-text-secondary text-[10px] uppercase font-mono">
+                  <th class="p-3">Test Case</th>
+                  <th class="p-3">Endpoint</th>
+                  <th class="p-3">Category</th>
+                  <th class="p-3">Prev Status</th>
+                  <th class="p-3">Curr Status</th>
+                  <th class="p-3">Latency Delta</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${diffRowsHtml}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
     function renderRecentRuns(runs) {
       const container = document.getElementById("recentRunsList");
       if (!runs || runs.length === 0) {
@@ -559,7 +748,12 @@
                 ${r.passed_tests}/${r.total_tests} passed (${r.pass_rate_pct}%) • ${r.duration_ms ? r.duration_ms.toFixed(1) + 'ms' : '0ms'}
               </div>
             </div>
-            <span class="text-[10px] text-white/40 font-mono">Run #${r.id}</span>
+            <div class="flex items-center gap-2">
+              <button onclick="openRunCompareModal(${r.id})" class="px-2 py-1 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[10px] text-brand-primary font-mono transition-all" title="Compare this run">
+                Compare
+              </button>
+              <span class="text-[10px] text-white/40 font-mono">#${r.id}</span>
+            </div>
           </div>
         `;
       }).join("");
@@ -761,5 +955,53 @@
       }
     }
   </script>
+
+  <!-- Run Comparison & Diff Modal (Stage 21) -->
+  <div id="runCompareModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-7 h-7 rounded-lg bg-brand-primary/20 text-brand-primary flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight">Run Comparison & Diff Tool</h3>
+            <p class="text-xs text-text-secondary font-mono">Stage 21 — Side-by-Side Execution Delta Analysis</p>
+          </div>
+        </div>
+        <button onclick="closeRunCompareModal()" class="text-text-secondary hover:text-white p-1 rounded-lg hover:bg-white/10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Selector Bar -->
+      <div class="p-4 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center gap-4 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="text-text-secondary font-semibold uppercase tracking-wider">Base Run (Previous):</span>
+          <select id="compareBaseRunSelect" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+            <option value="">Select Base Run...</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span class="text-text-secondary font-semibold uppercase tracking-wider">Target Run (Current):</span>
+          <select id="compareTargetRunSelect" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+            <option value="">Select Target Run...</option>
+          </select>
+        </div>
+
+        <button onclick="executeRunComparison()" id="compareActionBtn" class="ml-auto px-4 py-1.5 rounded-lg bg-brand-primary hover:bg-cyan-400 text-black font-semibold text-xs transition-all shadow-glow-cyan">
+          Analyze Diff
+        </button>
+      </div>
+
+      <!-- Report View Body -->
+      <div id="compareReportContainer" class="p-6 overflow-y-auto custom-scrollbar space-y-6 text-xs">
+        <div class="p-12 text-center text-text-secondary">Select a Base Run and Target Run above to view side-by-side metrics and regressions.</div>
+      </div>
+    </div>
+  </div>
+
 </body>
 </html>

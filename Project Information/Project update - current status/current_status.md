@@ -23,8 +23,9 @@
   - **Stage 18: Failure Analysis Engine (100% Complete)**
   - **Stage 19: AI Recommendation Layer (100% Complete)**
   - **Stage 20: Dashboard & Web Interface (100% Complete)**
-- **Next Sub-Stage**: Stage 21: Run Comparison & Diff Tool
-- **Latest Build Status**: Passing (247/247 unit tests green, 100% pass rate)
+  - **Stage 21: Run Comparison & Diff Tool (100% Complete)**
+- **Next Sub-Stage**: Stage 22: Reporting & Export
+- **Latest Build Status**: Passing (253/253 unit tests green, 100% pass rate)
 
 
 
@@ -93,7 +94,11 @@
 - [x] **Stage 20: Dashboard & Web Interface (COMPLETED - 5/5 tests passing)**
   - [x] **Sub-Stage 01: Global Overview & KPI Metrics Dashboard**: Real-time aggregated statistics (workspaces, endpoints, pass rate, avg latency, AI fix count), recent test runs feed, and critical alerts banner.
   - [x] **Sub-Stage 02: Project & Endpoint Drill-Down Views**: Interactive dark cyber theme Web UI (`/` and `/dashboard`), OpenAPI specification ingestion modal, 1-click test runner console, endpoint inspector, and AI failure fix card modal with copyable code snippets.
-- [ ] Stage 21: Run Comparison & Diff Tool
+- [x] **Stage 21: Run Comparison & Diff Tool (COMPLETED - 6/6 tests passing)**
+  - [x] **Sub-Stage 01: Side-by-Side Metric Comparison Table**: Tests, Passed, Failed, Pass Rate (%), Avg Latency, and P95 Latency side-by-side delta computations with directional status badges (`IMPROVED`, `DEGRADED`, `UNCHANGED`).
+  - [x] **Sub-Stage 02: Granular Test Transition Classification**: Categorization of `NEW_FAILURE` (regressions), `FIXED_FAILURE` (resolved bugs), `BEHAVIOR_CHANGED` (HTTP code/error drift), `LATENCY_DEGRADED` (latency spikes), and `UNCHANGED` states.
+  - [x] **Sub-Stage 03: Synthesized Natural Language Insights & UI Diff Modal**: Natural language summary generator, REST API endpoints (`GET` & `POST /api/v1/runs/compare`), and interactive Web UI comparison modal on the Dashboard with quick compare triggers.
+- [ ] Stage 22: Reporting & Export
 - [ ] Stage 27: Intentionally Flawed Demo Target API
 
 
