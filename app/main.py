@@ -69,10 +69,23 @@ from app.core.exception_handlers import register_exception_handlers
 register_exception_handlers(app)
 
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
 from app.web.routes import web_router
 from app.demo_target.routes import demo_target_router
 
-# Mount Web Dashboard UI router (handles / and /dashboard)
+# Mount Static Assets
+STATIC_DIR = Path(__file__).parent / "web" / "static"
+INNER_GREEN_ASSETS_DIR = STATIC_DIR / "inner-green-assets"
+
+if INNER_GREEN_ASSETS_DIR.exists():
+    app.mount("/inner-green-assets", StaticFiles(directory=str(INNER_GREEN_ASSETS_DIR)), name="inner_green_assets")
+    app.mount("/landing-pages/inner-green-assets", StaticFiles(directory=str(INNER_GREEN_ASSETS_DIR)), name="landing_pages_inner_green_assets")
+
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# Mount Web Dashboard UI router (handles / and /dashboard and /welcome)
 app.include_router(web_router)
 
 # Mount API v1 router

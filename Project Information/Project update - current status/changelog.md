@@ -1,5 +1,27 @@
 # API Sentinel — Changelog
 
+## [Feature Enhancement - ThreeUI Sylva Living Green Landing Page] - 2026-09-09
+- **Completed**: ThreeUI `<SylvaHero />` Living Green (`living-green`) 3D Welcome Landing Page, Procedural Three.js Moss-Root World, Animated Butterfly & Pollen Particles, Liquid Metal WebGL2 Physics Controls, Parallax Dock Navigation, and Full Static Asset Integration (`/welcome`).
+- Created `app/web/templates/welcome.html`:
+  - Three.js 3D canvas `#scene` rendering procedural moss-root branch mesh, botanical subsurface lighting, floating pollen particles, radar survey pulses, and procedural landing butterfly animation.
+  - WebGL2 liquid metal button simulation system (`mountLiquidMetal`) with surface reflections, cursor tracking, and tactile click physics.
+  - Fine-tuned branding: `SENTINEL` ghost wordmark, `Autonomous Quality. Zero Guesswork.` headline, `Launch Cockpit` liquid button linking to `/dashboard`, and `Interactive API Docs` liquid play button linking to `/docs`.
+  - Floating glass capsule dock navigation bar linking to Welcome, Cockpit, API Docs, Self-Test, and Launch.
+  - Interactive 3D depth cards with pixel-scan reveals, 3D tilt parallax, and live telemetry metrics (`302 Passing (100%)`, `6 Defect Vectors Analyzed`).
+- Updated `app/web/routes.py`:
+  - Added `@web_router.get("/welcome", response_class=HTMLResponse)` to serve `welcome.html`.
+- Updated `app/main.py`:
+  - Mounted `StaticFiles` on `/inner-green-assets`, `/landing-pages/inner-green-assets`, and `/static`.
+- Downloaded and verified all 4 ThreeUI binary assets with exact SHA-256 hashes:
+  - `three.min.js` (608,081 bytes) · SHA-256 `8a5f7249903b54d30f79f708699d2fed2d6a1d0741a4cd41377d1f01bb5a2271`
+  - `lexend-latin.woff2` (39,692 bytes) · SHA-256 `1ec8f6ee2750554b4bc59ff0b507d316a82a7ba37e0e5bebc41d3bd9b9faad46`
+  - `card-ecostove.jpg` (290,988 bytes) · SHA-256 `70ce084084902bc502f00c366405b661ecdff90dee95d363b36a6e146829e433`
+  - `card-ethos.jpg` (316,720 bytes) · SHA-256 `337627390f499b3ae272cec9e2f83c817694a82f42e1aa10a7b26a2c7d679dff`
+- Added comprehensive unit and integration test suite in `tests/test_welcome_landing_page.py`:
+  - 4 tests verifying `/welcome` endpoint, brand copy, Three.js canvas & shader elements, and binary asset delivery.
+- Updated `app/web/templates/dashboard.html` with a direct navigation link to `/welcome`.
+- Full test suite verified: **306 / 306 passing tests with 100% pass rate**.
+
 ## [Stage 28 - Final Demo Workflow & Pitch Playbook] - 2026-09-09
 - **Completed**: 14-Step Presentation Story Orchestrator, Demo Workflow REST APIs, 3-Minute Pitch Script, Live Demo Presenter Guide, Judge Q&A Cheatsheet, Standalone Interactive CLI Story Runner, and Comprehensive Test Suite (Stage 28 Complete — All 28 Stages 100% Delivered).
 - Created `app/models/schemas/demo_workflow.py`:

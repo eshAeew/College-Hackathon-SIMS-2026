@@ -18,6 +18,19 @@ web_router = APIRouter(tags=["Web Dashboard"])
 dashboard_api_router = APIRouter(prefix="/dashboard", tags=["Dashboard Aggregator"])
 
 TEMPLATE_PATH = Path(__file__).parent / "templates" / "dashboard.html"
+WELCOME_TEMPLATE_PATH = Path(__file__).parent / "templates" / "welcome.html"
+
+
+@web_router.get("/welcome", response_class=HTMLResponse, summary="Serve Welcome Landing Page")
+async def render_welcome(request: Request):
+    """Render the ThreeUI Sylva Living Green landing page for API Sentinel."""
+    if not WELCOME_TEMPLATE_PATH.exists():
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Welcome HTML template not found on server."
+        )
+    html_content = WELCOME_TEMPLATE_PATH.read_text(encoding="utf-8")
+    return HTMLResponse(content=html_content, status_code=200)
 
 
 @web_router.get("/", summary="Serve Web Dashboard UI or Root Identity")
