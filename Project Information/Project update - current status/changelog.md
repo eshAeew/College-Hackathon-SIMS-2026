@@ -1,5 +1,40 @@
 # API Sentinel — Changelog
 
+## [Stage 25 - Logging, Tracing & Auditability] - 2026-09-09
+- **Completed**: Structured JSON Logging, In-Memory Ring Buffer Live Telemetry, Distributed Tracer Execution Spans, AuditEvent Database Entity & DAL Repository, CSV/JSON Compliance Exporter, and Telemetry REST APIs (Stage 25 Complete).
+- Created `app/models/entities/audit_event.py`:
+  - `AuditEvent`: SQLAlchemy declarative model storing immutable platform audit trails (`event_type`, `severity`, `actor`, `target_type`, `target_id`, `request_id`, `details` JSON).
+- Updated `app/models/entities/__init__.py` & `app/core/database.py`:
+  - Exported `AuditEvent` and registered in `init_db()` table discovery.
+- Created `app/models/schemas/audit.py`:
+  - `AuditSeverity`, `AuditEventType`, `AuditEventCreate`, `AuditEventRead`, `AuditLogListResponse`, `AuditSummaryStats`, `LiveLogItem`, `LiveLogListResponse`, `TraceSpanDTO`, `TraceTimelineResponse`.
+- Created `app/core/tracer.py`:
+  - `TraceSpan`: Tree-structured execution span with start/end micro-timestamps, parent-child links, status, and metadata.
+  - `Tracer`: Thread-safe singleton tracer providing `tracer.span(name, metadata=...)` context manager and trace timeline retrieval.
+- Updated `app/core/logging.py`:
+  - `InMemoryLogBuffer`: Thread-safe collections.deque ring-buffer (capacity 500) retaining live application logs.
+  - `InMemoryLogHandler`: Logging handler streaming formatted log records into buffer with level filtering and search.
+- Implemented `AuditRepository` in `app/repositories/audit_repo.py`:
+  - `record_event()`: Persists immutable audit event records.
+  - `get_filtered()` & `count_filtered()`: Multi-criteria filtering by event type, severity, actor, target entity, request ID, and timestamp ranges.
+  - `get_summary_stats()`: Calculates total events, severity breakdowns, top event types, and timestamp bounds.
+  - Exported `AuditRepository` in `app/repositories/__init__.py`.
+- Implemented `AuditService` in `app/services/audit_service.py`:
+  - Business logic for event recording, filtered querying, summary KPI generation, CSV compliance export (`export_audit_csv`), live buffered log querying (`get_live_logs`), and execution trace timeline retrieval (`get_trace`).
+- Implemented REST API router in `app/api/v1/audit.py`:
+  - `GET /api/v1/audit/events`: Filtered and paginated audit events.
+  - `POST /api/v1/audit/events`: Manual/system audit event ingestion.
+  - `GET /api/v1/audit/summary`: Aggregated audit metrics and KPI statistics.
+  - `GET /api/v1/audit/export`: CSV / JSON compliance export with file attachment headers.
+  - `GET /api/v1/audit/traces/{trace_id}`: Distributed execution span hierarchy timeline.
+  - `GET /api/v1/audit/live-logs`: Real-time in-memory buffered log viewer with level/search filters.
+  - `POST /api/v1/audit/live-logs/clear`: In-memory log buffer flush.
+- Mounted `audit_router` under `/api/v1/audit` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_logging_tracing_and_audit.py`:
+  - 8 unit & integration tests covering JSON/Console log formatters with request correlation, in-memory log buffer, tracer spans & parent-child trees, AuditRepository CRUD & filters, summary stats, CSV export, and REST API endpoints.
+- Full test suite verified: **284 / 284 passing tests with 100% pass rate**.
+- Marked Stage 25: Logging, Tracing & Auditability as 100% COMPLETE.
+
 ## [Stage 24 - Error Handling & Resilience] - 2026-09-09
 - **Completed**: Platform Exception Hierarchy, Host-Level Circuit Breaker Engine, Safe Fault-Tolerant Parsers, Resilience Telemetry & Error Ring Buffer Service, Global Exception Handlers, and Resilience REST APIs (Stage 24 Complete).
 - Created `app/core/exceptions.py`:

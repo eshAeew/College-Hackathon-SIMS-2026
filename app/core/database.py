@@ -59,6 +59,7 @@ def init_db() -> None:
         import app.models.entities.test_run  # noqa: F401
         import app.models.entities.test_result  # noqa: F401
         import app.models.entities.ai_recommendation  # noqa: F401
+        import app.models.entities.audit_event  # noqa: F401
 
         Base.metadata.create_all(bind=engine)
         logger.info(f"Database schema initialized successfully [{settings.DATABASE_URL.split('@')[-1]}]")

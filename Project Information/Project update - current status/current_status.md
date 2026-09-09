@@ -27,8 +27,9 @@
   - **Stage 22: Reporting & Export Engine (100% Complete)**
   - **Stage 23: Persistence & Database Layer (100% Complete)**
   - **Stage 24: Error Handling & Resilience (100% Complete)**
-- **Next Sub-Stage**: Stage 25: Logging, Tracing & Auditability (or Stage 27: Demo Target API)
-- **Latest Build Status**: Passing (276/276 unit tests green, 100% pass rate)
+  - **Stage 25: Logging, Tracing & Auditability (100% Complete)**
+- **Next Sub-Stage**: Stage 26: Platform Self-Testing Suite (or Stage 27: Demo Target API)
+- **Latest Build Status**: Passing (284/284 unit tests green, 100% pass rate)
 
 
 
@@ -115,7 +116,11 @@
   - [x] **Sub-Stage 01: Core Platform Exception Hierarchy & Standardized JSON Error Envelopes**: `SentinelBaseException`, `EntityNotFoundException` (404), `ContractValidationException` (422), `ExecutionTimeoutException` (504), `NetworkConnectivityException` (502), `SafetyViolationException` (403), `CircuitBreakerOpenException` (503), `ParserException` (400), and global exception handlers with request correlation tracking.
   - [x] **Sub-Stage 02: Host-Level Circuit Breaker State Machine & Registry**: Thread-safe state machine (`CLOSED`, `OPEN`, `HALF_OPEN`), configurable failure thresholds, recovery timeout cooldowns, probe trials, and singleton `CircuitBreakerRegistry`.
   - [x] **Sub-Stage 03: Safe Fault-Tolerant Parsers & Resilience Telemetry Service**: Robust `safe_json_loads`, `safe_yaml_loads`, `safe_xml_loads`, and `safe_decode_payload` returning error tuples without unhandled crashes; `ResilienceService` error ring-buffer and REST management APIs (`GET /api/v1/resilience/circuit-breakers`, `POST /circuit-breakers/{host}/reset`, `POST /circuit-breakers/reset-all`, `GET /error-summary`).
-- [ ] Stage 25: Logging, Tracing & Auditability
+- [x] **Stage 25: Logging, Tracing & Auditability (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Structured JSON & Contextual Logging**: `JSONLogFormatter` and `ConsoleLogFormatter` with `ContextVar` request correlation tracing (`X-Request-ID`), log level filters, and root logger configuration.
+  - [x] **Sub-Stage 02: In-Memory Ring Buffer & Live Log Telemetry**: Thread-safe `InMemoryLogBuffer` capturing recent log entries with real-time level/search querying (`GET /api/v1/audit/live-logs`, `POST /api/v1/audit/live-logs/clear`).
+  - [x] **Sub-Stage 03: Distributed Tracer Execution Spans**: `Tracer` engine with context manager `tracer.span(...)`, nested span trees, parent-child duration metrics, and timeline retrieval (`GET /api/v1/audit/traces/{trace_id}`).
+  - [x] **Sub-Stage 04: Immutable Audit Trail DAL & Compliance Export**: `AuditEvent` SQLite model, `AuditRepository` with multi-criteria filtering and summary KPI aggregations, `AuditService` CSV/JSON compliance exporter (`GET /api/v1/audit/events`, `POST /events`, `GET /summary`, `GET /export`).
 - [ ] Stage 26: Platform Self-Testing Suite
 - [ ] Stage 27: Intentionally Flawed Demo Target API
 - [ ] Stage 28: Final Demo Workflow & Pitch

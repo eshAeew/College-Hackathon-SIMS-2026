@@ -28,8 +28,8 @@
 | **Stage 22** | Reporting & Export Engine | Tier 1 | `COMPLETED` | Executive summary, 6-section report DTOs, standalone Dark Cyber HTML, Markdown & JSON export engines, UI modal & download APIs (7/7 tests OK) |
 | **Stage 23** | Persistence & Database Layer | Tier 1 | `COMPLETED` | SQLite WAL/FK PRAGMAs, generic & concrete repositories DAL, DatabaseService (health/vacuum/backup/purge/seed), maintenance APIs (8/8 tests OK) |
 | **Stage 24** | Error Handling & Resilience | Tier 1 | `COMPLETED` | Core exception hierarchy, host circuit breaker state machine & registry, safe data/payload parsers, resilience service, global exception handlers, resilience APIs (8/8 tests OK) |
+| **Stage 25** | Logging, Tracing & Auditability | Tier 1 | `COMPLETED` | Structured JSON logs, in-memory log buffer, distributed Tracer execution spans, AuditEvent DAL & repository, compliance CSV/JSON exports, telemetry APIs (8/8 tests OK) |
 
-| **Stage 25** | Logging, Tracing & Auditability | Tier 1 | `PLANNED` | Structured JSON logs, execution audit trails |
 | **Stage 26** | Platform Self-Testing Suite | Tier 1 | `PLANNED` | Pytest unit & integration test suites |
 | **Stage 27** | Intentionally Flawed Demo API | Tier 2 | `PLANNED` | Mock e-commerce service with 6 injected bugs |
 | **Stage 28** | Final Demo Workflow & Pitch | Tier 1 | `PLANNED` | 3-minute live presentation script & playbook |
