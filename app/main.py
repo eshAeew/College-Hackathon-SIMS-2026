@@ -1,9 +1,12 @@
 """API Sentinel — FastAPI Main Entry Point."""
 import logging
+import mimetypes
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
 from fastapi.exceptions import RequestValidationError
 from fastapi.encoders import jsonable_encoder
 from fastapi.openapi.docs import get_redoc_html
@@ -126,3 +129,15 @@ app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 # Mount the server-rendered web interface (Stage 20)
 app.include_router(web_router)
+
+# Windows lacks a registry entry for woff2, so the packaged Lexend face would otherwise be
+# served as application/octet-stream.
+mimetypes.add_type("font/woff2", ".woff2")
+
+# Packaged landing pages served byte-exact under the same /landing-pages/ contract the
+# ThreeUI frame uses, so the authored relative asset paths resolve unchanged.
+app.mount(
+    "/landing-pages",
+    StaticFiles(directory=str(Path(__file__).parent / "web" / "static" / "landing-pages")),
+    name="landing-pages",
+)

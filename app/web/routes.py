@@ -118,3 +118,31 @@ def ui_compare(
             "version": settings.VERSION,
         },
     )
+
+
+SYLVA_HERO_CANONICAL = "/landing-pages/inner-green-3d.html"
+SYLVA_HERO_BRANDED = "/landing-pages/sentinel-hero.html"
+# ThreeUI URL_FRAME_SANDBOX plus allow-top-navigation-by-user-activation: the catalog frame
+# never leaves the preview, but a landing hero must be able to enter the app on a click.
+SYLVA_FRAME_SANDBOX = (
+    "allow-downloads allow-forms allow-modals allow-popups allow-same-origin allow-scripts "
+    "allow-top-navigation-by-user-activation"
+)
+
+
+@router.get("/ui/welcome", response_class=HTMLResponse, name="ui_welcome")
+def ui_welcome(
+    request: Request,
+    exact: bool = Query(default=False, description="Serve the untouched canonical Sylva page"),
+):
+    """Full-bleed SylvaHero (Living Green) hero hosted in the ThreeUI frame contract."""
+    return templates.TemplateResponse(
+        request=request,
+        name="hero.html",
+        context={
+            "title": "Welcome",
+            "src": SYLVA_HERO_CANONICAL if exact else SYLVA_HERO_BRANDED,
+            "sandbox": SYLVA_FRAME_SANDBOX,
+            "version": settings.VERSION,
+        },
+    )

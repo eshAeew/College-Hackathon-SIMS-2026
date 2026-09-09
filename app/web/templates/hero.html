@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{{ title }} - API Sentinel</title>
+  <style>
+    /* Host chrome only. The hero itself is the packaged ThreeUI document inside the frame. */
+    html, body { margin: 0; height: 100%; background: #080808; overflow: hidden; }
+    .shader-frame { position: fixed; inset: 0; }
+    .threeui-background { position: relative; isolation: isolate; background: #030304; }
+    .landing-page-frame { position: absolute; inset: 0; overflow: hidden; background: #080808; pointer-events: auto; }
+    .landing-page-frame > iframe {
+      position: absolute; inset: 0; display: block; width: 100%; height: 100%;
+      border: 0; background: #080808;
+    }
+    .frame-exit {
+      position: fixed; top: 14px; right: 16px; z-index: 5;
+      font: 12px/1 ui-sans-serif, system-ui, sans-serif;
+      color: rgba(255,255,255,.55); text-decoration: none; letter-spacing: .04em;
+    }
+    .frame-exit:hover { color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="shader-frame">
+    <div class="threeui-background landing-page-frame" data-state="loading">
+      <iframe
+        title="API Sentinel — Into the living API"
+        src="{{ src }}"
+        sandbox="{{ sandbox }}"
+        loading="eager"
+        onload="this.parentElement.dataset.state=&quot;ready&quot;"></iframe>
+    </div>
+  </div>
+  <a class="frame-exit" href="/ui">skip to dashboard &rarr;</a>
+</body>
+</html>

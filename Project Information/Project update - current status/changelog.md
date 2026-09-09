@@ -1,5 +1,25 @@
 # API Sentinel — Changelog
 
+## [SylvaHero landing hero] - 2026-09-09
+### Added
+- **Welcome hero at `/ui/welcome`**: the ThreeUI `SylvaHero` (Living Green, revision `05f359ce157a`)
+  hosted in a full-bleed reproduction of the `LandingPageFrame` contract. Every registered file
+  (`inner-green-3d.html`, `three.min.js`, both card images, `lexend-latin.woff2`) is served
+  byte-exact at its registered SHA-256 from `/landing-pages/`, pinned by `MANIFEST.sha256`.
+- `sentinel-hero.html`: a branded derivative produced by text substitution only. All five
+  `<script>`/`<style>` blocks are byte-identical to the canonical page, so the moss world, pollen,
+  butterfly, entrance wipe, and liquid-metal controls animate exactly as authored.
+  `/ui/welcome?exact=true` serves the untouched canonical page.
+- The configured typography props (`lexend`, weight 300, `#ffffff`, 63 / 16.5, -0.006) are the
+  recipe defaults, which ThreeUI documents as a no-op restatement of the authored CSS, so no
+  override stylesheet is injected.
+- Frame sandbox adds `allow-top-navigation-by-user-activation`, and the dock anchors carry
+  inline handlers, because the authored dock handler calls `preventDefault` unconditionally.
+  Dock and "Open the dashboard" now enter the app on a click (verified in the browser).
+- `font/woff2` MIME type registered so Lexend is served correctly on Windows.
+- `tests/test_sylva_hero.py` (15 tests): registered hashes, script/style identity, static
+  serving, frame route, sandbox contract. Suite total: 292 passing.
+
 ## [Stages 18-21 + Stage 01-17 Hardening] - 2026-09-09
 ### Fixed (Stages 01-17)
 - `HttpDispatcherService.dispatch_httpx_request` now accepts `client` and defaults `options`,
