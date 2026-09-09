@@ -90,10 +90,16 @@
       </div>
 
       <!-- Quick Action Buttons -->
+      <button onclick="openReportModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5" title="Generate and export comprehensive quality reports">
+        <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        <span>Reports</span>
+      </button>
+
       <button onclick="openRunCompareModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
         <span>Compare Runs</span>
       </button>
+
 
       <button onclick="openOpenApiModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
@@ -756,7 +762,101 @@
       `;
     }
 
+    // Report Modal & Export Controller (Stage 22)
+    let currentReportRunId = null;
+
+    function openReportModal(preselectedRunId) {
+      const modal = document.getElementById("reportModal");
+      const runSel = document.getElementById("reportRunSelect");
+      const baseSel = document.getElementById("reportBaselineSelect");
+
+      runSel.innerHTML = '<option value="">Select Test Run...</option>';
+      baseSel.innerHTML = '<option value="">None (Standalone)</option>';
+
+      if (globalOverviewData && globalOverviewData.recent_runs && globalOverviewData.recent_runs.length > 0) {
+        globalOverviewData.recent_runs.forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r.id;
+          opt.innerText = `Run #${r.id} - ${r.name} (${r.passed_tests}/${r.total_tests} passed, ${r.pass_rate_pct}%)`;
+          runSel.appendChild(opt);
+
+          const baseOpt = document.createElement("option");
+          baseOpt.value = r.id;
+          baseOpt.innerText = `Run #${r.id} - ${r.name}`;
+          baseSel.appendChild(baseOpt);
+        });
+
+        if (preselectedRunId) {
+          runSel.value = preselectedRunId;
+          currentReportRunId = preselectedRunId;
+        } else {
+          runSel.value = globalOverviewData.recent_runs[0].id;
+          currentReportRunId = globalOverviewData.recent_runs[0].id;
+        }
+      }
+
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      loadReportPreview();
+    }
+
+    function closeReportModal() {
+      const modal = document.getElementById("reportModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    }
+
+    function loadReportPreview() {
+      const runId = document.getElementById("reportRunSelect").value;
+      const baseId = document.getElementById("reportBaselineSelect").value;
+      const iframe = document.getElementById("reportPreviewIframe");
+
+      if (!runId) {
+        iframe.srcdoc = '<body style="background:#09090b;color:#94a3b8;font-family:sans-serif;text-align:center;padding:60px 20px;"><div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">No Run Selected</div><div>Select a test run to synthesize and preview the comprehensive report.</div></body>';
+        return;
+      }
+
+      currentReportRunId = runId;
+      let url = `/api/v1/reports/runs/${runId}/html`;
+      if (baseId && baseId !== runId) {
+        url += `?baseline_run_id=${baseId}`;
+      }
+      iframe.src = url;
+    }
+
+    function downloadCurrentReport(format) {
+      if (!currentReportRunId) {
+        const sel = document.getElementById("reportRunSelect");
+        if (sel && sel.value) currentReportRunId = sel.value;
+      }
+      if (!currentReportRunId) {
+        alert("Please select a test run first.");
+        return;
+      }
+      const baseId = document.getElementById("reportBaselineSelect").value;
+      let url = `/api/v1/reports/runs/${currentReportRunId}/download?format=${format}`;
+      if (baseId && baseId !== currentReportRunId) {
+        url += `&baseline_run_id=${baseId}`;
+      }
+      window.open(url, "_blank");
+    }
+
+    function openCurrentReportTab() {
+      if (!currentReportRunId) {
+        const sel = document.getElementById("reportRunSelect");
+        if (sel && sel.value) currentReportRunId = sel.value;
+      }
+      if (!currentReportRunId) return;
+      const baseId = document.getElementById("reportBaselineSelect").value;
+      let url = `/api/v1/reports/runs/${currentReportRunId}/html`;
+      if (baseId && baseId !== currentReportRunId) {
+        url += `?baseline_run_id=${baseId}`;
+      }
+      window.open(url, "_blank");
+    }
+
     function renderRecentRuns(runs) {
+
       const container = document.getElementById("recentRunsList");
       if (!runs || runs.length === 0) {
         container.innerHTML = `<div class="p-6 text-center text-text-secondary text-sm">No test runs recorded yet.</div>`;
@@ -780,7 +880,11 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
-              <button onclick="openRunCompareModal(${r.id})" class="px-2 py-1 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[10px] text-brand-primary font-mono transition-all" title="Compare this run">
+              <button onclick="openReportModal(${r.id})" class="px-2 py-1 rounded bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-[10px] text-brand-primary font-mono transition-all flex items-center gap-1" title="Generate Executive Report">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Report
+              </button>
+              <button onclick="openRunCompareModal(${r.id})" class="px-2 py-1 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-[10px] text-white/80 hover:text-white font-mono transition-all" title="Compare this run">
                 Compare
               </button>
               <span class="text-[10px] text-white/40 font-mono">#${r.id}</span>
@@ -1200,6 +1304,75 @@
       </div>
     </div>
   </div>
+
+  <!-- Comprehensive Test & Quality Report Modal (Stage 22) -->
+  <div id="reportModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-[rgb(15,15,18)] border border-white/15 rounded-2xl max-w-6xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Modal Header -->
+      <div class="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-white/[0.02]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-brand-primary/20 text-brand-primary flex items-center justify-center shadow-glow-cyan">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+          </div>
+          <div>
+            <h3 class="text-base font-semibold text-white tracking-tight">Executive Test & Quality Report</h3>
+            <p class="text-xs text-text-secondary font-mono">Stage 22 — Comprehensive 6-Section Synthesis & Multi-Format Export</p>
+          </div>
+        </div>
+        <button onclick="closeReportModal()" class="text-text-secondary hover:text-white p-1.5 rounded-lg hover:bg-white/10 transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Controls & Export Action Bar -->
+      <div class="p-3 sm:p-4 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="flex items-center gap-2">
+            <span class="text-text-secondary font-semibold uppercase tracking-wider">Test Run:</span>
+            <select id="reportRunSelect" onchange="loadReportPreview()" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+              <option value="">Select Test Run...</option>
+            </select>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="text-text-secondary font-semibold uppercase tracking-wider">Baseline (Diff):</span>
+            <select id="reportBaselineSelect" onchange="loadReportPreview()" class="bg-black/60 border border-white/15 rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-brand-primary">
+              <option value="">None (Standalone)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Multi-Format Download & External Preview Actions -->
+        <div class="flex items-center gap-2 ml-auto">
+          <button onclick="downloadCurrentReport('html')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download standalone self-contained HTML report">
+            <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>HTML</span>
+          </button>
+
+          <button onclick="downloadCurrentReport('markdown')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download GitHub-flavored Markdown report">
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>Markdown</span>
+          </button>
+
+          <button onclick="downloadCurrentReport('json')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download machine-readable JSON telemetry DTO">
+            <svg class="w-3.5 h-3.5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            <span>JSON</span>
+          </button>
+
+          <button onclick="openCurrentReportTab()" class="px-3 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-brand-primary font-medium text-xs transition-all flex items-center gap-1.5" title="Open full report in new browser tab / Print PDF">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <span>Open Tab</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Interactive Report Iframe Preview -->
+      <div class="flex-1 bg-black p-0 overflow-hidden relative min-h-[550px]">
+        <iframe id="reportPreviewIframe" class="w-full h-full min-h-[550px] border-0" src="about:blank"></iframe>
+      </div>
+    </div>
+  </div>
+
 
 </body>
 </html>

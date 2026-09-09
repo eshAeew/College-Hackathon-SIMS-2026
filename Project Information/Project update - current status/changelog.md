@@ -1,6 +1,31 @@
 # API Sentinel — Changelog
 
+## [Stage 22 - Reporting & Export Engine] - 2026-09-09
+- **Completed**: Comprehensive 6-Section Report Synthesis, Multi-Format Serialization (JSON, Dark Cyber HTML, Markdown), Attachment Download Engine, and Interactive Web UI Report Viewer Modal (Stage 22 Complete).
+- Created `app/models/schemas/report.py`:
+  - `ReportFormat` (`JSON`, `HTML`, `MARKDOWN`), `ReportVerdict` (`PASS`, `FAIL`, `DEGRADED`).
+  - `ExecutiveSummary`, `FunctionalFailureItem`, `FunctionalReportSection`, `SlowEndpointItem`, `PerformanceReportSection`, `RecurringFailureItem`, `RecurringFailuresSection`, `RegressionItem`, `RegressionReportSection`, `ActionableRecommendationItem`, `RecommendationsSection`, `ComprehensiveTestReport`.
+- Implemented `ReportService` in `app/services/report_service.py`:
+  - `generate_report()`: Synthesizes a unified 6-section report payload covering executive metrics, functional failures, latency statistical percentiles (P50, P90, P95, P99) & SLA breaches, historical recurring failure patterns & persistence ratings, baseline regression diffs, and actionable AI/heuristic recommendations with reproducible cURL commands.
+  - `generate_markdown_report()`: Generates clean, GitHub-flavored Markdown reports with structured metric tables, bulleted insights, code snippets, and terminal repro steps.
+  - `generate_html_report()`: Renders self-contained, responsive, printable Dark Cyber HTML reports (`font-family: DM Sans, JetBrains Mono`, ambient gradients, responsive cards, print-ready CSS pagination).
+- Implemented REST API router in `app/api/v1/reports.py`:
+  - `GET /api/v1/reports/runs/{run_id}`: Machine-readable JSON DTO payload.
+  - `GET /api/v1/reports/runs/{run_id}/html`: Standalone Dark Cyber HTML report response (`text/html`).
+  - `GET /api/v1/reports/runs/{run_id}/markdown`: GitHub-flavored Markdown text response (`text/markdown`).
+  - `GET /api/v1/reports/runs/{run_id}/download`: File attachment download (`Content-Disposition: attachment; filename="report-run-{run_id}.{format}"`).
+- Mounted `reports_router` in `app/api/v1/api.py`.
+- Extended Web UI Dashboard in `app/web/templates/dashboard.html`:
+  - Top navigation **"Reports"** launcher button.
+  - Per-run **"Report"** trigger buttons in the Recent Test Runs list.
+  - Interactive **Executive Test & Quality Report Modal** (`#reportModal`) featuring live HTML iframe preview, baseline selector for automated regression diffing, multi-format download triggers (`HTML`, `Markdown`, `JSON`), and full-screen new-tab launcher.
+- Added comprehensive unit and integration test suite in `tests/test_reports.py`:
+  - 7 unit & integration tests covering 6-section synthesis, Markdown & HTML generation, JSON/HTML/Markdown API endpoints, download attachment headers, and 404 validation.
+- Full test suite verified: **260 / 260 passing tests with 100% pass rate**.
+- Marked Stage 22: Reporting & Export Engine as 100% COMPLETE.
+
 ## [Stage 21 - Run Comparison & Diff Tool] - 2026-09-09
+
 - **Completed**: Side-by-Side Execution Metrics Diff, Granular Test Transition Categorization (Regressions, Fixes, Drift), Auto-Generated Natural Language Insights, REST API endpoints, and Web UI Run Comparison Modal (Stage 21 Complete).
 - Created `app/models/schemas/run_comparison.py`:
   - `DeltaStatus` (`IMPROVED`, `DEGRADED`, `UNCHANGED`).
