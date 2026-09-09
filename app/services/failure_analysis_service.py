@@ -5,6 +5,8 @@ from typing import Dict, List, Optional
 
 from sqlalchemy.orm import Session
 
+from app.models.entities.endpoint import Endpoint
+from app.models.entities.test_case import TestCase
 from app.models.entities.test_result import TestResult
 from app.models.entities.test_run import TestRun
 from app.models.schemas.failure_analysis import (
@@ -115,6 +117,27 @@ class FailureAnalysisService:
         network_error = evidence_blob.get("exception") or evidence_blob.get("network_error")
         expected_status = evidence_blob.get("expected_status")
         max_latency = evidence_blob.get("max_latency_ms")
+
+        # The run orchestrator does not persist the expectation that was evaluated, so recover
+        # it from the owning TestCase assertions (then the Endpoint) before categorizing.
+        # Without this the categorizer has no budget to compare against and returns UNKNOWN.
+        test_case = None
+        if result.test_case_id is not None:
+            test_case = db.query(TestCase).filter(TestCase.id == result.test_case_id).first()
+        if test_case is not None:
+            assertions = test_case.assertions or {}
+            if expected_status is None:
+                expected_status = assertions.get("expected_status")
+            if max_latency is None:
+                max_latency = assertions.get("max_latency_ms")
+            if not evidence_blob.get("is_negative_test"):
+                evidence_blob["is_negative_test"] = "negative" in [
+                    str(t).lower() for t in (test_case.tags or [])
+                ]
+        if (expected_status is None or max_latency is None) and result.endpoint_id is not None:
+            endpoint = db.query(Endpoint).filter(Endpoint.id == result.endpoint_id).first()
+            if endpoint is not None and expected_status is None:
+                expected_status = endpoint.expected_status
 
         # Recurrence context: how often has this same test failed historically?
         previous = 0
