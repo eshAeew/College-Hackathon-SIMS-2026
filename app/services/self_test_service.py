@@ -77,7 +77,7 @@ SUBSYSTEM_MAP: Dict[str, Dict[str, Any]] = {
     },
     "resilience_data_audit": {
         "name": "Resilience, Reports, Database & Auditability",
-        "description": "Reports engine, database DAL, circuit breakers, error handlers, audit trail, landing page, and regression fixes.",
+        "description": "Reports engine, database DAL, circuit breakers, error handlers, audit trail, landing page, regression fixes, demo sandbox, and live workflow.",
         "files": [
             "test_reports.py",
             "test_database_layer.py",
@@ -86,6 +86,8 @@ SUBSYSTEM_MAP: Dict[str, Dict[str, Any]] = {
             "test_dashboard_ui.py",
             "test_welcome_landing_page.py",
             "test_stage_fixes_regression.py",
+            "test_demo_target_api.py",
+            "test_demo_workflow_and_pitch.py",
         ],
     },
 }
