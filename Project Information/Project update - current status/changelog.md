@@ -1,5 +1,29 @@
 # API Sentinel — Changelog
 
+## [Stage 20 - Dashboard & Web Interface] - 2026-09-09
+- **Completed**: Dark Cyber AI Theme Web UI, Global KPI Metrics Aggregator, Project & Endpoint Explorer, Live Execution Console, OpenAPI Spec Ingestion Modal, and AI Remediation Code Card Viewer (Stage 20 Complete).
+- Created `app/models/schemas/dashboard.py`:
+  - `GlobalKPISummary`, `RecentTestRunCard`, `CriticalIssueAlert`, `EndpointSummaryCard`, `ProjectDetailView`, `DashboardOverviewResponse`.
+- Implemented `DashboardService` in `app/services/dashboard_service.py`:
+  - `get_global_overview()`: High-performance multi-table aggregator calculating global workspace counts, registered endpoints, test scenarios, runs, pass rate %, average/P95 latencies, active critical failure feeds, and health index.
+  - `get_project_detail()`: Granular project drill-down aggregator returning endpoints with HTTP method badges and recent execution runs.
+- Created `app/web/templates/dashboard.html`:
+  - Styled with the modern dark cyber AI aesthetic (`neutral-background: rgb(9, 9, 11)`, `brand-primary: rgb(0, 195, 201)`, `neutral-surface: rgb(15, 15, 17)`, glassmorphism cards, top-focused neon-cyan ambient glow, and `DM Sans` / `Inter` / `JetBrains Mono` typography).
+  - Interactive top bar with live AI engine probe status (`Google Gemini` vs `Deterministic Heuristic`).
+  - 6 real-time KPI metric summary cards.
+  - Interactive project switcher, OpenAPI 3.0/3.1 JSON/YAML drag-and-drop ingestion modal with automated smoke test generator trigger.
+  - 1-click **"Run All Tests"** test suite execution console with live progress and terminal logs.
+  - Endpoint explorer with method badges (`GET`, `POST`, `PUT`, `DELETE`, `PATCH`) and direct test execution triggers.
+  - AI failure diagnostics and code fix modal displaying reproducible cURL commands, root cause categories, and copyable Python/FastAPI code fixes.
+- Implemented `web_router` and `dashboard_api_router` in `app/web/routes.py`:
+  - `GET /` and `GET /dashboard`: Renders the dark AI theme Web UI for browser requests.
+  - `GET /api/v1/dashboard/overview`: Real-time KPI telemetry JSON payload.
+  - `GET /api/v1/dashboard/projects/{project_id}`: Granular project drill-down JSON payload.
+- Mounted routers in `app/main.py` and `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_dashboard_ui.py` (5 new tests passing).
+- Total test suite count increased to 247 passing tests with 100% pass rate.
+- Marked Stage 20: Dashboard & Web Interface as 100% COMPLETE.
+
 ## [Stage 19 - AI Recommendation Layer] - 2026-09-09
 - **Completed**: Structured Prompt Synthesis & Guardrails, Deterministic Rule-Based Fallback Engine, Google Gemini Integration, and AIRecommendation Persistence (Stage 19 Complete).
 - Created `app/models/entities/ai_recommendation.py`:

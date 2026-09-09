@@ -81,18 +81,13 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
-@app.get("/", tags=["System"], summary="Root Health & Identity")
-async def root():
-    """Root endpoint verifying API Sentinel identity."""
-    return {
-        "name": settings.PROJECT_NAME,
-        "version": settings.VERSION,
-        "environment": settings.ENVIRONMENT,
-        "status": "active",
-        "documentation": "/docs",
-        "redoc": "/redoc",
-        "api_v1": settings.API_V1_PREFIX
-    }
+from app.web.routes import web_router
+
+# Mount Web Dashboard UI router (handles / and /dashboard)
+app.include_router(web_router)
+
+# Mount API v1 router
+app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/health", tags=["System"], summary="Liveness Health Probe")
@@ -111,6 +106,3 @@ async def custom_redoc_html():
         redoc_js_url="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js",
     )
 
-
-# Mount API v1 router
-app.include_router(api_router, prefix=settings.API_V1_PREFIX)

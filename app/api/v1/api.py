@@ -21,6 +21,7 @@ from app.api.v1.safety import router as safety_router
 from app.api.v1.classification import router as classification_router
 from app.api.v1.failure_analysis import router as failure_analysis_router
 from app.api.v1.ai_recommendations import router as ai_recommendations_router
+from app.web.routes import dashboard_api_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -86,6 +87,7 @@ api_router.include_router(safety_router)
 api_router.include_router(classification_router)
 api_router.include_router(failure_analysis_router)
 api_router.include_router(ai_recommendations_router)
+api_router.include_router(dashboard_api_router)
 
 
 
