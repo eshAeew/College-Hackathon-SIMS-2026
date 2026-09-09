@@ -2,6 +2,7 @@
 import json
 from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, DateTime
+from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 
@@ -18,6 +19,9 @@ class Project(Base):
     
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
+
+    # Relationships
+    endpoints = relationship("Endpoint", back_populates="project", cascade="all, delete-orphan")
 
     @property
     def global_headers(self) -> dict:

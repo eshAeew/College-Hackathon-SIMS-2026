@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from app.core.config import get_settings
 from app.models.schemas.response import StandardResponse, HealthStatus, DatabaseHealth
 from app.api.v1.projects import router as projects_router
+from app.api.v1.endpoints import router as endpoints_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -52,3 +53,4 @@ async def health_check():
 
 # Mount Sub-Routers
 api_router.include_router(projects_router)
+api_router.include_router(endpoints_router)

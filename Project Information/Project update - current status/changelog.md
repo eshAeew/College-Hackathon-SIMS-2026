@@ -1,5 +1,23 @@
 # API Sentinel — Changelog
 
+## [Stage 03 - Sub-Stage 01] - 2026-09-09
+- **Completed**: Endpoint Registration & CRUD Operations.
+- Created `Endpoint` entity model in `app/models/entities/endpoint.py` with cascade foreign key to `Project` and JSON serializers for headers, query params, path params, and body schema.
+- Added `endpoints` relationship to `Project` model in `app/models/entities/project.py`.
+- Created Pydantic DTOs in `app/models/schemas/endpoint.py` (`HTTPMethod`, `EndpointBase`, `EndpointCreate`, `EndpointUpdate`, `EndpointDuplicate`, `EndpointResponse`) with `/` path validation and HTTP method validation.
+- Implemented `EndpointService` in `app/services/endpoint_service.py` supporting creation, pagination, query filtering by `is_active`, updates, deletion, duplication/cloning, and active state toggle.
+- Updated `ProjectService.get_project_summary` to dynamically calculate `total_endpoints` from the database.
+- Implemented REST router in `app/api/v1/endpoints.py` with routes:
+  - `POST /api/v1/projects/{project_id}/endpoints`
+  - `GET /api/v1/projects/{project_id}/endpoints`
+  - `GET /api/v1/endpoints/{endpoint_id}`
+  - `PUT /api/v1/endpoints/{endpoint_id}`
+  - `DELETE /api/v1/endpoints/{endpoint_id}`
+  - `POST /api/v1/endpoints/{endpoint_id}/duplicate`
+  - `PATCH /api/v1/endpoints/{endpoint_id}/toggle-active`
+- Added comprehensive unit and integration test suite in `tests/test_endpoints.py` (14 new tests passing).
+- Total test count increased to 37 with 100% pass rate.
+
 ## [Stage 02 - Sub-Stage 02] - 2026-09-09
 - **Completed**: Workspace Metadata & Summary Stats.
 - Created `ProjectSummaryResponse` and `EnvironmentPreset` schemas in `app/models/schemas/project.py`.

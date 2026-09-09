@@ -7,9 +7,9 @@ Allow registration of HTTP endpoints supporting GET, POST, PUT, PATCH, DELETE me
 FastAPI router at `/api/v1/projects/{id}/endpoints`.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Define `EndpointCreate`, `EndpointUpdate`, `EndpointResponse` models.
-- [ ] Validate HTTP method enum and URL path structure (e.g. `/api/v1/users/{id}`).
-- [ ] Implement endpoint duplication and enable/disable toggle endpoints.
+- [x] Define `EndpointCreate`, `EndpointUpdate`, `EndpointResponse` models.
+- [x] Validate HTTP method enum and URL path structure (e.g. `/api/v1/users/{id}`).
+- [x] Implement endpoint duplication and enable/disable toggle endpoints.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ FastAPI router at `/api/v1/projects/{id}/endpoints`.
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Endpoints can be added, updated, cloned, and listed under specific projects.**

@@ -37,6 +37,7 @@ def init_db() -> None:
     try:
         # Import all entity models so metadata discovers them
         import app.models.entities.project  # noqa: F401
+        import app.models.entities.endpoint  # noqa: F401
         Base.metadata.create_all(bind=engine)
         logger.info(f"Database schema initialized successfully [{settings.DATABASE_URL.split('@')[-1]}]")
     except Exception as exc:

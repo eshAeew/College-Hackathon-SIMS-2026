@@ -4,6 +4,7 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.entities.project import Project
+from app.models.entities.endpoint import Endpoint
 from app.models.schemas.project import ProjectCreate, ProjectUpdate, ProjectSummaryResponse, EnvironmentPreset
 
 logger = logging.getLogger("app.services.project")
@@ -76,8 +77,8 @@ class ProjectService:
             EnvironmentPreset(name="production", base_url=project.base_url.replace("localhost", "api"), is_active=(project.environment == "production")),
         ]
 
-        # In later stages (03, 06, 12), these will dynamically count from Endpoint, TestCase, and TestRun tables
-        total_endpoints = 0
+        # Dynamically count from Endpoint table (Stage 03)
+        total_endpoints = db.query(Endpoint).filter(Endpoint.project_id == project.id).count()
         total_test_cases = 0
         total_test_runs = 0
         health_score = 100.0
