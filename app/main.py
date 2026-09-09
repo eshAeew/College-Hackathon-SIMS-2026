@@ -70,13 +70,16 @@ register_exception_handlers(app)
 
 
 from app.web.routes import web_router
-
+from app.demo_target.routes import demo_target_router
 
 # Mount Web Dashboard UI router (handles / and /dashboard)
 app.include_router(web_router)
 
 # Mount API v1 router
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+# Mount Intentionally Flawed Demo Target API router
+app.include_router(demo_target_router)
 
 
 @app.get("/health", tags=["System"], summary="Liveness Health Probe")

@@ -29,8 +29,9 @@
   - **Stage 24: Error Handling & Resilience (100% Complete)**
   - **Stage 25: Logging, Tracing & Auditability (100% Complete)**
   - **Stage 26: Platform Self-Testing Suite (100% Complete)**
-- **Next Sub-Stage**: Stage 27: Intentionally Flawed Demo Target API (or Stage 28: Final Demo Workflow & Pitch)
-- **Latest Build Status**: Passing (289/289 unit tests green, 100% pass rate)
+  - **Stage 27: Intentionally Flawed Demo Target API (100% Complete)**
+- **Next Sub-Stage**: Stage 28: Final Demo Workflow & Pitch
+- **Latest Build Status**: Passing (296/296 unit tests green, 100% pass rate)
 
 
 
@@ -127,7 +128,10 @@
   - [x] **Sub-Stage 02: Programmatic Execution Engine & Timing Tracker**: `SelfTestService` and `DetailedTestResult` capturing millisecond execution durations, assertion failure traces, error messages, and pass rates without crashing.
   - [x] **Sub-Stage 03: Subsystem Readiness & Health Matrix**: Readiness verdict calculation (`ALL_PASSED`, `DEGRADED`, `FAILED`), subsystem health matrix aggregation, and catalog metadata (`GET /api/v1/self-test/suites`, `POST /run`, `GET /latest`, `GET /matrix`).
   - [x] **Sub-Stage 04: Standalone Self-Test CLI Diagnostic Utility**: Command-line verification runner (`scripts/self_test_runner.py`) with `--subsystem`, `--json`, and `--failfast` arguments for CI/CD integration.
-- [ ] Stage 27: Intentionally Flawed Demo Target API
+- [x] **Stage 27: Intentionally Flawed Demo Target API (COMPLETED - 7/7 tests passing)**
+  - [x] **Sub-Stage 01: 6-Scenario Injected Bug Catalog**: Missing input validation (500 crash), sluggish SQL simulation (1.2s delay), schema drift (string price, missing stock), intermittent 503 gateway flakiness, corrupt/truncated JSON response, and checkout state leak regression.
+  - [x] **Sub-Stage 02: Dynamic Bug Controller Engine**: `DemoApiConfig` singleton providing live bug toggling (`POST /demo-api/control/toggle/{bug}`), resolution mode (`POST /demo-api/control/fix-all`), reset mode (`POST /demo-api/control/reset`), and execution telemetry (`GET /demo-api/control/status`).
+  - [x] **Sub-Stage 03: Standalone Server & OpenAPI Specification**: Standalone uvicorn launcher (`scripts/run_demo_api.py`) on port 8001 and live OpenAPI 3.1.0 generator (`GET /demo-api/openapi.json`) for 1-click workspace ingestion.
 - [ ] Stage 28: Final Demo Workflow & Pitch
 
 

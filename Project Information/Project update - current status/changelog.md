@@ -1,5 +1,29 @@
 # API Sentinel — Changelog
 
+## [Stage 27 - Intentionally Flawed Demo Target API] - 2026-09-09
+- **Completed**: Mock Alpha Commerce E-Commerce API, 6 Injected Real-World Bugs, Dynamic Bug Toggle Controller, Standalone Server Launcher, OpenAPI 3.1.0 Generator, and Demo API Test Suite (Stage 27 Complete).
+- Implemented `app/demo_target/config.py`:
+  - `DemoApiConfig`: Thread-safe singleton managing the state of 6 deliberate flaws (`unhandled_500_login`, `slow_latency_products`, `schema_drift_product_detail`, `flaky_503_orders`, `malformed_json_profile`, `state_leak_checkout`) and per-endpoint hit counters.
+- Implemented `app/demo_target/routes.py`:
+  - `POST /demo-api/auth/login`: Missing password throws unhandled KeyError (500 crash in flawed mode; 400 validation in fixed mode).
+  - `GET /demo-api/products`: Simulated sluggish SQL join query with 1.2s sleep (SLA breach in flawed mode; <5ms in fixed mode).
+  - `GET /demo-api/products/{id}`: Returns string price (`"89.99 USD"`), boolean string, and omits stock in flawed mode; strict typed contract when fixed.
+  - `POST /demo-api/orders`: Injects transient 503 gateway timeouts in 45% of calls in flawed mode; deterministic 201 when fixed.
+  - `GET /demo-api/users/profile`: Emits malformed unclosed JSON payload in flawed mode; valid JSON in fixed mode.
+  - `POST /demo-api/cart/checkout`: Succeeds on 1st run, fails with 409 Conflict state leak on subsequent runs to demonstrate regression comparison; deterministic when fixed.
+  - `GET /demo-api/control/status`: Real-time telemetry of active bug switches and endpoint hits.
+  - `POST /demo-api/control/toggle/{bug}`: Toggles individual bug flags.
+  - `POST /demo-api/control/fix-all`: Sets all 6 bugs to resolved mode for verification demos.
+  - `POST /demo-api/control/reset`: Resets all 6 bugs to default flawed states.
+  - `GET /demo-api/openapi.json`: OpenAPI 3.1.0 specification for 1-click import into API Sentinel workspaces.
+- Created `scripts/run_demo_api.py`:
+  - Standalone uvicorn launcher running the demo microservice on `http://127.0.0.1:8001`.
+- Mounted `demo_target_router` under `/demo-api` in `app/main.py`.
+- Added comprehensive test suite in `tests/test_demo_target_api.py`:
+  - 7 unit & integration tests verifying all 6 flawed endpoints, bug toggling, resolution mode, and OpenAPI spec generation.
+- Full test suite verified: **296 / 296 passing tests with 100% pass rate**.
+- Marked Stage 27: Intentionally Flawed Demo Target API as 100% COMPLETE.
+
 ## [Stage 26 - Platform Self-Testing Suite] - 2026-09-09
 - **Completed**: Programmatic SelfTestService, Subsystem Test Mapping, Detailed Test Timing Tracker, Subsystem Readiness & Health Matrix, Standalone CLI Runner, and Self-Test REST Router (Stage 26 Complete).
 - Created `app/models/schemas/self_test.py`:
