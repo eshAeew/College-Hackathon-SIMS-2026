@@ -942,12 +942,22 @@
         alert("Please select or create a target workspace first.");
         return;
       }
-      const content = document.getElementById("openApiContent").value.trim();
+      let content = document.getElementById("openApiContent").value.trim();
       const autoGen = document.getElementById("generateSmokeTestsCheck").checked;
       if (!content) {
         alert("Please paste OpenAPI/Swagger JSON or YAML content.");
         return;
       }
+
+      // Automatically strip markdown backticks if user copied ```json / ```yaml
+      if (content.startsWith("```")) {
+        const lines = content.split("\n");
+        if (lines.length > 1) {
+          const endIdx = lines[lines.length - 1].trim().startsWith("```") ? lines.length - 1 : lines.length;
+          content = lines.slice(1, endIdx).join("\n").trim();
+        }
+      }
+
       const btn = document.getElementById("importSpecSubmitBtn");
       btn.disabled = true;
       btn.innerText = "Ingesting...";
@@ -970,10 +980,13 @@
           currentProjectId = targetProjId;
           fetchDashboardOverview();
         } else {
-          logToTerminal("[OPENAPI_ERROR]", `Import failed: ${json.detail || json.message}`);
+          const errMsg = json.detail || json.message || "Invalid specification format";
+          logToTerminal("[OPENAPI_ERROR]", `Import failed: ${errMsg}`);
+          alert(`OpenAPI Import Failed: ${errMsg}`);
         }
       } catch (err) {
         logToTerminal("[OPENAPI_ERROR]", `Ingestion network error: ${err.message}`);
+        alert(`OpenAPI Import Network Error: ${err.message}`);
       } finally {
         btn.disabled = false;
         btn.innerText = "Import & Generate";
