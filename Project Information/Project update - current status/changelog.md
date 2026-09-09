@@ -1,5 +1,22 @@
 # API Sentinel — Changelog
 
+## [Stage 07 - Sub-Stage 01] - 2026-09-09
+- **Completed**: Status Code Matching, MIME Type Normalization, and Payload Syntax Validation.
+- Created `app/utils/protocol_validator.py` with:
+  - `validate_status_code()`: Evaluates actual HTTP status codes against exact integers (`200`), lists (`[200, 201]`), class ranges (`2xx`, `4xx`), and numeric intervals (`200-299`).
+  - `normalize_content_type()` & `validate_content_type()`: Strips MIME parameters (e.g., `charset=utf-8`), resolves common aliases (`json`, `xml`, `text`), and supports structured JSON suffixes (`application/problem+json`).
+  - `validate_payload_syntax()`: Defensive payload parsing for JSON, XML (with XXE protection), plain text, and binary formats.
+- Created Pydantic DTO schemas in `app/models/schemas/validation.py` (`ValidationCheckResult`, `StatusValidationRequest`, `ContentTypeValidationRequest`, `PayloadSyntaxValidationRequest`, `ProtocolValidationRequest`, `ProtocolValidationReport`).
+- Implemented `ValidationService` in `app/services/validation_service.py` providing granular assertion checkers and composite protocol reports.
+- Implemented REST validation router in `app/api/v1/validations.py`:
+  - `POST /api/v1/validations/status-code`
+  - `POST /api/v1/validations/content-type`
+  - `POST /api/v1/validations/payload-syntax`
+  - `POST /api/v1/validations/protocol`
+- Mounted `validations_router` in `app/api/v1/api.py`.
+- Created comprehensive unit and integration test suite in `tests/test_protocol_validation.py` (14 new tests passing).
+- Total test suite count increased to 109 passing tests with 100% pass rate.
+
 ## [Stage 06 - Sub-Stage 01] - 2026-09-09
 - **Completed**: Test Case Scenario Management & CRUD Operations.
 - Created `TestCase` database entity in `app/models/entities/test_case.py` with cascade foreign key to `Endpoint`, severity levels (`critical`, `high`, `medium`, `low`), tags JSON list (`smoke`, `regression`, `security`, `negative`), and full request parameters + assertions storage.
