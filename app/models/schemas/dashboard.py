@@ -41,6 +41,7 @@ class CriticalIssueAlert(BaseModel):
     """High-priority failure or crash alert for dashboard feed."""
     evidence_id: str = Field(..., description="Diagnostic evidence ID")
     test_result_id: Optional[int] = Field(default=None, description="TestResult record ID")
+    project_id: Optional[int] = Field(default=None, description="Project workspace ID")
     endpoint_method: str = Field(..., description="HTTP Method")
     endpoint_url: str = Field(..., description="Target URL")
     root_cause_category: str = Field(..., description="Root cause taxonomy category")

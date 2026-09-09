@@ -497,9 +497,11 @@
       // 3. Render Recent Runs
       renderRecentRuns(data.recent_runs);
 
-      // 4. Render AI Remediations Feed
-      renderAiRemediations(data.critical_issues);
+      // 4. Update Workspace View (Endpoints & Scoped AI Remediations)
+      updateSelectedProjectView();
     }
+
+    let currentDisplayedIssues = [];
 
     function onProjectChange() {
       currentProjectId = parseInt(document.getElementById("projectSelect").value);
@@ -514,6 +516,17 @@
       document.getElementById("projectBaseUrl").innerText = proj.base_url || "http://127.0.0.1:8000";
       document.getElementById("projectEnvBadge").innerText = proj.environment || "Development";
       document.getElementById("endpointCountBadge").innerText = `${proj.endpoints.length} endpoints`;
+
+      // Filter and render AI Remediations scoped to the selected project
+      let currentProjectIssues = [];
+      if (globalOverviewData.critical_issues) {
+        currentProjectIssues = globalOverviewData.critical_issues.filter(iss => !iss.project_id || iss.project_id === currentProjectId);
+      }
+      renderAiRemediations(currentProjectIssues);
+      document.getElementById("aiCardCountBadge").innerText = currentProjectIssues.length;
+      if (document.getElementById("kpiRemediationsBadge")) {
+        document.getElementById("kpiRemediationsBadge").innerText = `${currentProjectIssues.length} in Workspace`;
+      }
 
       // Render Endpoints List
       const container = document.getElementById("endpointsListContainer");
@@ -771,9 +784,10 @@
     }
 
     function renderAiRemediations(issues) {
+      currentDisplayedIssues = issues || [];
       const container = document.getElementById("aiRemediationsList");
       if (!issues || issues.length === 0) {
-        container.innerHTML = `<div class="p-6 text-center text-text-secondary text-sm">All endpoints operating at 100% health. No remediations required!</div>`;
+        container.innerHTML = `<div class="p-6 text-center text-text-secondary text-sm">All endpoints in this workspace operating at 100% health. No remediations required!</div>`;
         return;
       }
 
@@ -793,8 +807,8 @@
     }
 
     function openAiModalDirect(index) {
-      if (!globalOverviewData || !globalOverviewData.critical_issues) return;
-      const issue = globalOverviewData.critical_issues[index];
+      if (!currentDisplayedIssues || !currentDisplayedIssues[index]) return;
+      const issue = currentDisplayedIssues[index];
       if (!issue) return;
 
       document.getElementById("modalTitle").innerText = `Remediation for [${issue.endpoint_method}] ${issue.endpoint_url}`;

@@ -89,17 +89,24 @@ class DashboardService:
         for cr in crit_records:
             method = "UNKNOWN"
             url = "Ad-hoc Target"
+            proj_id = None
             if cr.test_result:
                 method = cr.test_result.http_method or "UNKNOWN"
                 url = cr.test_result.url or "Ad-hoc Target"
+                if cr.test_result.run:
+                    proj_id = cr.test_result.run.project_id
+                elif cr.test_result.test_case and cr.test_result.test_case.endpoint:
+                    proj_id = cr.test_result.test_case.endpoint.project_id
             elif cr.test_result and cr.test_result.test_case and cr.test_result.test_case.endpoint:
                 ep = cr.test_result.test_case.endpoint
                 method = ep.method
                 url = ep.path
+                proj_id = ep.project_id
             critical_alerts.append(
                 CriticalIssueAlert(
                     evidence_id=cr.evidence_id,
                     test_result_id=cr.test_result_id,
+                    project_id=proj_id,
                     endpoint_method=method,
                     endpoint_url=url,
                     root_cause_category=cr.root_cause_category,
