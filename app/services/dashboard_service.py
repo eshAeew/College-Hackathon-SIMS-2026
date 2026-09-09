@@ -93,10 +93,12 @@ class DashboardService:
             if cr.test_result:
                 method = cr.test_result.http_method or "UNKNOWN"
                 url = cr.test_result.url or "Ad-hoc Target"
-                if cr.test_result.run:
-                    proj_id = cr.test_result.run.project_id
+                if cr.test_result.test_run:
+                    proj_id = cr.test_result.test_run.project_id
                 elif cr.test_result.test_case and cr.test_result.test_case.endpoint:
                     proj_id = cr.test_result.test_case.endpoint.project_id
+                elif cr.test_result.endpoint:
+                    proj_id = cr.test_result.endpoint.project_id
             elif cr.test_result and cr.test_result.test_case and cr.test_result.test_case.endpoint:
                 ep = cr.test_result.test_case.endpoint
                 method = ep.method

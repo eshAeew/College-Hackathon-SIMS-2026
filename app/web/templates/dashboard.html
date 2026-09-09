@@ -367,7 +367,14 @@
 
       <div class="p-6 space-y-4 text-xs">
         <div>
-          <label class="block text-text-secondary mb-1">Paste OpenAPI 3.0/3.1 or Swagger 2.0 (JSON or YAML):</label>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Target Workspace:</label>
+          <select id="openApiProjectSelect" class="w-full bg-black/50 border border-white/15 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-brand-primary font-medium">
+            <option value="">Select a workspace...</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-text-secondary mb-1 font-semibold uppercase tracking-wider">Paste OpenAPI 3.0/3.1 or Swagger 2.0 (JSON or YAML):</label>
           <textarea id="openApiContent" rows="8" class="w-full bg-black/50 border border-white/15 rounded-xl p-3 font-mono text-white focus:outline-none focus:border-brand-primary" placeholder='{"openapi": "3.0.0", "info": {"title": "Sample API", "version": "1.0.0"}, "paths": {...}}'></textarea>
         </div>
 
@@ -907,6 +914,19 @@
 
     // OpenAPI Modal Functions
     function openOpenApiModal() {
+      const sel = document.getElementById("openApiProjectSelect");
+      sel.innerHTML = "";
+      if (globalOverviewData && globalOverviewData.projects && globalOverviewData.projects.length > 0) {
+        globalOverviewData.projects.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.id;
+          opt.innerText = `${p.name} (${p.total_endpoints} endpoints)`;
+          if (p.id === currentProjectId) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      } else {
+        sel.innerHTML = '<option value="">No workspaces available. Create one first.</option>';
+      }
       document.getElementById("openApiModal").classList.remove("hidden");
       document.getElementById("openApiModal").classList.add("flex");
     }
@@ -917,6 +937,11 @@
     }
 
     async function submitOpenApiSpec() {
+      const targetProjId = parseInt(document.getElementById("openApiProjectSelect").value) || currentProjectId;
+      if (!targetProjId) {
+        alert("Please select or create a target workspace first.");
+        return;
+      }
       const content = document.getElementById("openApiContent").value.trim();
       const autoGen = document.getElementById("generateSmokeTestsCheck").checked;
       if (!content) {
@@ -926,10 +951,10 @@
       const btn = document.getElementById("importSpecSubmitBtn");
       btn.disabled = true;
       btn.innerText = "Ingesting...";
-      logToTerminal("[OPENAPI]", `Importing specification into workspace #${currentProjectId}...`);
+      logToTerminal("[OPENAPI]", `Importing specification into workspace #${targetProjId}...`);
 
       try {
-        const res = await fetch(`/api/v1/projects/${currentProjectId}/openapi/import`, {
+        const res = await fetch(`/api/v1/projects/${targetProjId}/openapi/import`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -942,6 +967,7 @@
         if (res.ok) {
           logToTerminal("[OPENAPI_SUCCESS]", `Imported ${json.data.created_count} endpoints (out of ${json.data.total_discovered} discovered).`);
           closeOpenApiModal();
+          currentProjectId = targetProjId;
           fetchDashboardOverview();
         } else {
           logToTerminal("[OPENAPI_ERROR]", `Import failed: ${json.detail || json.message}`);
