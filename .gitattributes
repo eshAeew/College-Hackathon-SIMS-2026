@@ -1,0 +1,2 @@
+# ThreeUI packaged landing pages are hash-pinned; never normalize their line endings.
+app/web/static/landing-pages/** -text
