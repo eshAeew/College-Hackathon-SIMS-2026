@@ -7,10 +7,10 @@ Assign impact severity (LOW, MEDIUM, HIGH, CRITICAL) based on failure type and e
 Severity evaluation rules weighting 500 server crashes and auth failures as CRITICAL/HIGH.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] CRITICAL: HTTP 500 on negative test, auth failure, security leak.
-- [ ] HIGH: Status code mismatch on core business endpoint.
-- [ ] MEDIUM: Schema field missing or minor data type mismatch.
-- [ ] LOW: Minor latency warning or cosmetic header mismatch.
+- [x] CRITICAL: HTTP 500 on negative test, auth failure, security leak.
+- [x] HIGH: Status code mismatch on core business endpoint.
+- [x] MEDIUM: Schema field missing or minor data type mismatch.
+- [x] LOW: Minor latency warning or cosmetic header mismatch.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -18,9 +18,9 @@ Severity evaluation rules weighting 500 server crashes and auth failures as CRIT
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Failures are clearly prioritized so developers focus on critical bugs first.**

@@ -1,5 +1,30 @@
 # API Sentinel — Changelog
 
+## [Stage 17 - Result Classification Engine] - 2026-09-09
+- **Completed**: 4-Tier Result Decision Matrix (PASS/FAIL/WARNING/ERROR), Multi-Factor Failure Severity Classifier (LOW/MEDIUM/HIGH/CRITICAL), Health Score Index, and Prioritized Failure Queue (Stage 17 Complete).
+- Created `app/models/schemas/result_classification.py` with:
+  - `ExecutionOutcomeTier` (`PASS`, `FAIL`, `WARNING`, `ERROR`, `SKIPPED`).
+  - `ClassificationSeverity` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NONE`).
+  - `FailureSubCategory` (`HTTP_500_SERVER_CRASH`, `STATUS_CODE_MISMATCH`, `SCHEMA_VIOLATION`, `FIELD_ASSERTION_FAILED`, `LATENCY_SLA_BREACH`, `NETWORK_CONNECTIVITY_ERROR`, `AUTH_SECURITY_FAILURE`, `PROTOCOL_MALFORMED`, `NONE`).
+  - `ExecutionClassificationInput`, `ClassifiedResultReport`, `BatchClassificationRequest`, `ClassificationSummaryCards`, `BatchClassificationReport`, `TestRunClassificationReport`.
+- Created `app/utils/result_classifier.py` with:
+  - `classify_execution()`: 4-tier decision matrix resolving network failures (`ERROR`), 500 server crashes (`ERROR`/`CRITICAL`), status/schema/assertion failures (`FAIL`), and latency SLA overruns (`WARNING`).
+  - `classify_batch_executions()`: Batch calculator computing pass rate %, failure distributions, weighted health score index ($100 - \sum \text{penalties}$), and priority failure queue sorted by severity.
+- Implemented `ResultClassificationService` in `app/services/result_classification_service.py`:
+  - `classify_single()`: Ad-hoc single test evaluator.
+  - `classify_batch()`: Batch telemetry evaluator.
+  - `classify_test_run()`: Analyzes all `TestResult` records in a `TestRun`.
+  - `classify_project_latest()`: Analyzes the latest test run for a given workspace.
+- Implemented REST API router in `app/api/v1/classification.py`:
+  - `POST /api/v1/classification/classify`
+  - `POST /api/v1/classification/classify-batch`
+  - `GET /api/v1/runs/{run_id}/classification`
+  - `GET /api/v1/projects/{project_id}/classification/latest`
+- Mounted `classification_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_result_classification.py` (9 new tests passing).
+- Total test suite count increased to 220 passing tests with 100% pass rate.
+- Marked Stage 17: Result Classification Engine as 100% COMPLETE.
+
 ## [Stage 16 - Safety & Execution Controls] - 2026-09-09
 - **Completed**: Target Authorization & Host Allowlisting, Environment Boundary Safeguards, Destructive Method Risk Classifier, and Confirmation Token Enforcement (Stage 16 Complete).
 - Created `app/models/schemas/safety.py` with:
