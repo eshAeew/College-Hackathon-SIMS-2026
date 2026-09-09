@@ -17,8 +17,9 @@
   - **Stage 12: Test Run Management (100% Complete)**
   - **Stage 13: Regression Testing Engine (100% Complete)**
   - **Stage 14: OpenAPI Specification Support (100% Complete)**
-- **Next Sub-Stage**: Stage 15: Automatic Test Generation
-- **Latest Build Status**: Passing (195/195 unit tests green, 100% pass rate)
+  - **Stage 15: Automatic Test Generation (100% Complete)**
+- **Next Sub-Stage**: Stage 16: Safety & Execution Controls
+- **Latest Build Status**: Passing (202/202 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -66,6 +67,10 @@
 - [x] **Stage 14: OpenAPI Specification Support (COMPLETED - 8/8 tests passing)**
   - [x] **Sub-Stage 01: OpenAPI 3.0 / Swagger Parser**: Multi-format YAML & JSON parser, Swagger 2.0 and OpenAPI 3.0.x / 3.1.x spec version detection, recursive `$ref` dereferencer, path/query/header extraction, and response schema parsing (`/api/v1/openapi/validate`, `/api/v1/projects/{id}/openapi/parse`).
   - [x] **Sub-Stage 02: Automatic Endpoint & Contract Importer**: Database batch importer, schema serialization, upsert/overwrite mode, automatic smoke test generator, file upload ingestion (`/api/v1/projects/{id}/openapi/import`, `/api/v1/projects/{id}/openapi/import-file`).
+- [x] **Stage 15: Automatic Test Generation (COMPLETED - 7/7 tests passing)**
+  - [x] **Sub-Stage 01: Combinatorial Test Case Generator**: Schema-to-mock value synthesiser (strings, numbers, enums, objects, arrays), happy path generator, missing required field generator, invalid data type generator, boundary & overflow generator, null injection generator.
+  - [x] **Sub-Stage 02: Test Review & Staging Interface**: In-memory staging preview DTOs (`StagedTestCase`), ad-hoc generation (`/api/v1/test-generation/generate-adhoc`), endpoint staging (`/api/v1/endpoints/{id}/generate-tests`), staged approval & persistence (`/api/v1/endpoints/{id}/accept-tests`), and bulk project test synthesizer (`/api/v1/projects/{id}/generate-tests`).
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API
+

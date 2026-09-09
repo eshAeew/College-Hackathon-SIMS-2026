@@ -1,5 +1,32 @@
 # API Sentinel — Changelog
 
+## [Stage 15 - Automatic Test Generation] - 2026-09-09
+- **Completed**: Combinatorial Test Case Generator, Schema-to-Mock Synthesizer, and Test Review Staging Area (Stage 15 Complete).
+- Created `app/models/schemas/test_generation.py` with:
+  - `TestGenerationStrategy` (`HAPPY_PATH`, `MISSING_REQUIRED`, `INVALID_TYPE`, `BOUNDARY_VALUE`, `NULL_INJECTION`, `ALL`).
+  - `GeneratedTestCategory` (`POSITIVE`, `NEGATIVE`, `SECURITY`, `BOUNDARY`).
+  - `StagedTestCase`: In-memory transient test representation with temporary IDs (`STG-001`), descriptions, assertions, params, body, and selection state.
+  - `TestGenerationOptions`, `AdHocTestGenerationRequest`, `EndpointTestGenerationRequest`, `TestGenerationStagingResponse`, `AcceptStagedTestsRequest`, `AcceptStagedTestsResponse`, `BulkProjectTestGenerationRequest`, `BulkProjectTestGenerationResponse`.
+- Created `app/utils/test_synthesizer.py` with:
+  - `generate_mock_value_for_schema()`: Schema-driven mock synthesizer for strings (with email, uuid, date-time, uri, ipv4, password heuristics), integers/numbers (with min/max bounds), booleans, arrays, and objects.
+  - `synthesize_happy_path_payload()`: Synthesizes valid sample request body models matching OpenAPI/JSON Schema.
+  - `synthesize_mock_path_params()` & `synthesize_mock_query_params()`: Dynamic placeholder extractor and parameter filler.
+  - `generate_test_suite_for_endpoint()`: Combinatorial test suite generator outputting positive happy path, missing required field permutations, data type inversions, extreme/overflow boundaries, and null injections.
+- Implemented `TestGenerationService` in `app/services/test_generation_service.py`:
+  - `generate_adhoc_tests()`: Synthesizes test cases from raw schemas/routes without persistence.
+  - `generate_endpoint_tests()`: Evaluates registered database endpoints and generates staged test preview.
+  - `accept_staged_tests()`: Persists approved staged test cases into `TestCase` database records with full assertions and active state.
+  - `generate_project_bulk_tests()`: Multi-endpoint bulk generator across all active endpoints in a project with optional auto-acceptance.
+- Implemented REST API router in `app/api/v1/test_generation.py`:
+  - `POST /api/v1/test-generation/generate-adhoc`
+  - `POST /api/v1/endpoints/{endpoint_id}/generate-tests`
+  - `POST /api/v1/endpoints/{endpoint_id}/accept-tests`
+  - `POST /api/v1/projects/{project_id}/generate-tests`
+- Mounted `test_generation_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_test_generation.py` (7 new tests passing).
+- Total test suite count increased to 202 passing tests with 100% pass rate.
+- Marked Stage 15: Automatic Test Generation as 100% COMPLETE.
+
 ## [Stage 14 - OpenAPI Specification Support] - 2026-09-09
 - **Completed**: OpenAPI 3.0 / 3.1 and Swagger 2.0 Parser, Schema Dereferencer, and Database Endpoint / Contract Batch Importer (Stage 14 Complete).
 - Created `app/models/schemas/openapi.py` with:

@@ -7,9 +7,11 @@ Generate complete test suites (valid data, boundary conditions, missing fields) 
 Schema-to-data generator synthesizing valid sample payloads and negative mutations.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Generate Happy Path test case using mock data matching schema types.
-- [ ] Generate Missing Field test cases for each required property.
-- [ ] Generate Invalid Type test cases (e.g. sending string for integer fields).
+- [x] Generate Happy Path test case using mock data matching schema types.
+- [x] Generate Missing Field test cases for each required property.
+- [x] Generate Invalid Type test cases (e.g. sending string for integer fields).
+- [x] Generate Boundary & Extreme value tests (overflow, empty strings).
+- [x] Generate Null Injection tests for non-nullable fields.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +19,9 @@ Schema-to-data generator synthesizing valid sample payloads and negative mutatio
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Generator produces 5-10 targeted test cases per endpoint automatically from schema contracts.**

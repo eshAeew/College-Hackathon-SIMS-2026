@@ -7,8 +7,10 @@ Provide a review interface allowing users to inspect, modify, and approve genera
 Staging area API returning generated test cases for user review and bulk activation.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Implement `POST /api/v1/endpoints/{id}/generate-tests` returning staged test previews.
-- [ ] Implement `POST /api/v1/endpoints/{id}/accept-tests` to persist approved tests into database.
+- [x] Implement `POST /api/v1/endpoints/{id}/generate-tests` returning staged test previews.
+- [x] Implement `POST /api/v1/endpoints/{id}/accept-tests` to persist approved tests into database.
+- [x] Implement `POST /api/v1/test-generation/generate-adhoc` for ad-hoc schema preview.
+- [x] Implement `POST /api/v1/projects/{id}/generate-tests` for bulk project test synthesis.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -16,9 +18,9 @@ Staging area API returning generated test cases for user review and bulk activat
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Users have full visibility and control over automatically generated test cases.**
