@@ -7,9 +7,9 @@ Execute a target endpoint N times in controlled sequence/parallelism with identi
 Batch loop executor capturing results across multiple consecutive iterations.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Implement configurable execution count (e.g. 5, 10, 20 runs).
-- [ ] Collect array of `ExecutionResultDTO` for identical inputs.
-- [ ] Record status code distribution and timestamps.
+- [x] Implement configurable execution count (e.g. 5, 10, 20 runs).
+- [x] Collect array of `ExecutionResultDTO` for identical inputs.
+- [x] Record status code distribution and timestamps.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Batch loop executor capturing results across multiple consecutive iterations.
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Runner executes batch repetitions and outputs a unified collection of execution metrics.**

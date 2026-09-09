@@ -11,8 +11,9 @@
   - **Stage 06: Test Case Management (Sub-Stage 01 Complete)**
   - **Stage 07: Functional Validation Engine (100% Complete)**
   - **Stage 08: Negative & Adversarial Testing Engine (100% Complete)**
-- **Next Sub-Stage**: Stage 06 — Sub-Stage 02: Assertion Rules & Expectation Setup
-- **Latest Build Status**: Passing (135/135 unit tests green, 100% pass rate)
+  - **Stage 09: Inconsistent Behavior Detection (100% Complete)**
+- **Next Sub-Stage**: Stage 06 — Sub-Stage 02: Assertion Rules & Expectation Setup / Stage 10: Performance Analysis Engine
+- **Latest Build Status**: Passing (146/146 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -42,6 +43,9 @@
 - [x] **Stage 08: Negative & Adversarial Testing Engine (COMPLETED - 13/13 tests passing)**
   - [x] **Sub-Stage 01: Payload Mutation & Fuzzing Generators**: Combinatorial mutation synthesis across missing required fields, type inversions, boundary/extreme/fuzz values, and null injections (`/api/v1/adversarial/mutate`).
   - [x] **Sub-Stage 02: 4xx vs 500 Unhandled Exception Detector**: Automated vulnerability classification distinguishing proper 4xx client rejection from critical 500 unhandled crashes and 2xx data corruption risks, plus automated endpoint fuzz scanning (`/api/v1/adversarial/evaluate-response`, `/api/v1/adversarial/endpoints/{endpoint_id}/scan`).
+- [x] **Stage 09: Inconsistent Behavior Detection (COMPLETED - 11/11 tests passing)**
+  - [x] **Sub-Stage 01: Multi-Execution Repetitive Runner**: Sequential and concurrent batch loop runners with configurable repetition counts, execution delays, and concurrency rate-limiting semaphores (`/api/v1/inconsistency/execute-direct`, `/api/v1/inconsistency/endpoints/{endpoint_id}/execute`).
+  - [x] **Sub-Stage 02: Variance & Flakiness Analyzer**: High-precision statistical calculations (Shannon status code entropy, transition chains, latency jitter/percentiles, SHA-256 payload body drift) and composite flakiness scoring / classification (`DETERMINISTIC_PASS`, `MODERATE_FLAKINESS_WARN`, `CRITICAL_INTERMITTENT_FAILURE`) via `/api/v1/inconsistency/analyze`.
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API

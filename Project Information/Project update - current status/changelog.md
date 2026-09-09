@@ -1,5 +1,29 @@
 # API Sentinel — Changelog
 
+## [Stage 09 - Inconsistent Behavior Detection] - 2026-09-09
+- **Completed**: Multi-Execution Repetitive Runner, Statistical Variance & Flakiness Analyzer (Stage 09 Complete).
+- Created `app/utils/statistics_calculator.py` with:
+  - `compute_latency_stats()`: Calculates sample count, min, max, mean, median, sample standard deviation, P95, P99, jitter (`max - min`), and coefficient of variation (`CV%`).
+  - `compute_status_entropy()`: Calculates frequency distributions, exact status code switching count, transition chains (e.g., `200 -> 503 -> 200`), and Shannon entropy ($H = -\sum p_i \log_2 p_i$).
+  - `compute_payload_hashes()`: Calculates deterministic normalized SHA-256 digests across iterations, identifying unique payload variants and payload drift rate.
+  - `evaluate_flakiness()`: Computes composite flakiness score (0.0% to 100.0%) and categorizes reliability verdicts (`DETERMINISTIC_PASS`, `MODERATE_FLAKINESS_WARN`, `CRITICAL_INTERMITTENT_FAILURE`) with actionable root-cause recommendations.
+- Added Pydantic DTO schemas in `app/models/schemas/inconsistent_behavior.py`:
+  - `ExecutionMode` (`SEQUENTIAL`, `CONCURRENT`), `FlakinessVerdict` (`DETERMINISTIC_PASS`, `MODERATE_FLAKINESS_WARN`, `CRITICAL_INTERMITTENT_FAILURE`)
+  - `ExecutionIterationResult`, `LatencyStatistics`, `StatusCodeAnalysis`, `PayloadConsistencyAnalysis`, `FlakinessReport`
+  - `MultiExecutionRequest`, `EndpointMultiExecutionRequest`, `AnalyzeBatchRequest`
+- Implemented `InconsistencyService` in `app/services/inconsistency_service.py` supporting:
+  - `execute_multi_run_direct()`: Runs $N$ repetitions against arbitrary ad-hoc HTTP configurations sequentially (with optional inter-request delay) or concurrently (with `asyncio.Semaphore` rate-limiting).
+  - `execute_multi_run_endpoint()`: Resolves stored endpoint definitions with runtime overrides and executes multi-run flakiness analysis.
+  - `analyze_batch_executions()`: Standalone analysis of raw execution results.
+- Implemented REST API router in `app/api/v1/inconsistency.py`:
+  - `POST /api/v1/inconsistency/execute-direct`
+  - `POST /api/v1/inconsistency/endpoints/{endpoint_id}/execute`
+  - `POST /api/v1/inconsistency/analyze`
+- Mounted `inconsistency_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_inconsistent_behavior.py` (11 new tests passing).
+- Total test suite count increased to 146 passing tests with 100% pass rate.
+- Marked Stage 09: Inconsistent Behavior Detection as 100% COMPLETE.
+
 ## [Stage 08 - Negative & Adversarial Testing Engine] - 2026-09-09
 - **Completed**: Combinatorial Payload Mutation, 4xx vs 500 Crash Classifier, and Automated Endpoint Fuzz Scanner (Stage 08 Complete).
 - Created `app/utils/mutation_engine.py` with:
