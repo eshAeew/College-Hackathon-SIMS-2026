@@ -7,9 +7,9 @@ Dispatch HTTP requests using `httpx.AsyncClient` with connection pooling and con
 Async request dispatcher managing concurrency limits, redirects, and SSL verification.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Instantiate shared `httpx.AsyncClient` with connection pooling.
-- [ ] Implement request timeout handling (default 10s, configurable per test).
-- [ ] Support redirect following and custom SSL context options.
+- [x] Instantiate shared `httpx.AsyncClient` with connection pooling.
+- [x] Implement request timeout handling (default 10s, configurable per test).
+- [x] Support redirect following and custom SSL context options.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Async request dispatcher managing concurrency limits, redirects, and SSL verific
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Dispatcher sends async HTTP requests and returns raw response objects without blocking the main event loop.**

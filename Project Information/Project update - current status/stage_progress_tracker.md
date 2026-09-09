@@ -6,7 +6,7 @@
 | **Stage 02** | Project / Workspace Management | Tier 1 | `COMPLETED` | Project CRUD, workspace summary stats, environment presets (9/9 tests OK) |
 | **Stage 03** | API Endpoint Management | Tier 1 | `COMPLETED` | Endpoint registry, CRUD, path variable extraction, JSON schema contracts, ad-hoc validator (22/22 tests OK) |
 | **Stage 04** | Request Configuration Engine | Tier 1 | `COMPLETED` | Dynamic request builder, path interpolation, header merger, body serialization, pre-flight validator (18/18 tests OK) |
-| **Stage 05** | Core API Execution Engine | Tier 1 | `PLANNED` | `httpx` async dispatcher, metrics capture |
+| **Stage 05** | Core API Execution Engine | Tier 1 | `IN PROGRESS` | Async `httpx` dispatcher, connection pool, timeouts, SSL controls, dispatch APIs (11/11 tests OK) |
 | **Stage 06** | Test Case Management | Tier 1 | `PLANNED` | Test scenario CRUD, assertions & rules |
 | **Stage 07** | Functional Validation Engine | Tier 1 | `PLANNED` | Status, JSON Schema, type & field validators |
 | **Stage 08** | Negative / Adversarial Testing | Tier 2 | `PLANNED` | Fuzzing mutations, 4xx vs 500 leak detection |

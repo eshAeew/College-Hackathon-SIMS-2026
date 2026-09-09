@@ -1,5 +1,27 @@
 # API Sentinel — Changelog
 
+## [Stage 05 - Sub-Stage 01] - 2026-09-09
+- **Completed**: Asynchronous HTTP Dispatcher & Connection Pooling.
+- Created `app/core/http_client.py` managing a shared `httpx.AsyncClient` connection pool (`Limits(max_connections=50, max_keepalive_connections=20)`), default timeouts, and startup/shutdown lifecycle hooks.
+- Integrated `init_async_client()` and `close_async_client()` into FastAPI `lifespan` in `app/main.py`.
+- Created Pydantic DTO schemas in `app/models/schemas/execution.py`:
+  - `ExecutionOptions`: Configurable request timeout, follow redirects toggle, max redirects, and SSL verification enforcement.
+  - `DirectExecutionRequest`: Full specification for ad-hoc HTTP executions.
+  - `EndpointExecutionRequest`: Specification for stored endpoint executions with runtime overrides.
+  - `ExecutionResultResponse`: Telemetry-rich result schema capturing HTTP status code, status text, response headers, parsed/raw body, elapsed latency (ms), redirect counts, and network exception details.
+  - `ClientInfoResponse`: Connection pool and diagnostic info schema.
+- Implemented `HttpDispatcherService` in `app/services/http_dispatcher.py`:
+  - `dispatch_httpx_request()`: Asynchronous dispatch with per-request timeout via `extensions["timeout"]`, redirect tracking, SSL controls, and non-crashing network exception handlers (`TimeoutException`, `ConnectError`, `SSLError`, `TooManyRedirects`).
+  - `dispatch_direct()`: Pre-flight safety check, request compilation, and async dispatch for ad-hoc requests.
+  - `dispatch_endpoint()`: Workspace and endpoint resolution from SQLite DB with runtime overrides, pre-flight safety check, and async dispatch.
+- Implemented REST API endpoints in `app/api/v1/executions.py`:
+  - `POST /api/v1/executions/dispatch`
+  - `POST /api/v1/projects/{project_id}/endpoints/{endpoint_id}/execute`
+  - `GET /api/v1/executions/client-info`
+- Mounted `executions_router` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_async_http_dispatcher.py` (11 new tests passing).
+- Total test suite count increased to 74 passing tests with 100% pass rate.
+
 ## [Stage 04 - Sub-Stage 02] - 2026-09-09
 - **Completed**: Pre-flight Syntax & Configuration Validation (Stage 04 Complete).
 - Created `app/utils/preflight_validator.py` with standalone and composite pre-flight validation utilities:

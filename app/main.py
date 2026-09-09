@@ -1,4 +1,4 @@
-﻿"""API Sentinel — FastAPI Main Entry Point."""
+"""API Sentinel — FastAPI Main Entry Point."""
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
@@ -12,6 +12,7 @@ from app.core.config import get_settings
 from app.core.database import init_db
 from app.core.logging import setup_logging
 from app.core.middleware import RequestCorrelationMiddleware
+from app.core.http_client import init_async_client, close_async_client
 from app.api.v1.api import api_router
 from app.models.schemas.response import ErrorResponse, ErrorDetail
 
@@ -31,7 +32,11 @@ async def lifespan(app: FastAPI):
     )
     # Initialize SQLite database schema
     init_db()
+    # Initialize shared HTTP connection pool
+    await init_async_client()
     yield
+    # Cleanly close HTTP connection pool
+    await close_async_client()
     logger.info(f"Shutting down {settings.PROJECT_NAME} cleanly...")
 
 
