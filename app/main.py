@@ -1,10 +1,11 @@
-"""API Sentinel — FastAPI Main Entry Point."""
+﻿"""API Sentinel — FastAPI Main Entry Point."""
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
+from fastapi.openapi.docs import get_redoc_html
 
 from app.core.config import get_settings
 from app.core.logging import setup_logging
@@ -35,7 +36,7 @@ app = FastAPI(
     version=settings.VERSION,
     description=settings.DESCRIPTION,
     docs_url="/docs",
-    redoc_url="/redoc",
+    redoc_url=None,  # Handled via custom endpoint below to support OpenAPI 3.1.0
     openapi_url="/openapi.json",
     lifespan=lifespan
 )
@@ -79,8 +80,19 @@ async def root():
         "environment": settings.ENVIRONMENT,
         "status": "active",
         "documentation": "/docs",
+        "redoc": "/redoc",
         "api_v1": settings.API_V1_PREFIX
     }
+
+
+@app.get("/redoc", include_in_schema=False)
+async def custom_redoc_html():
+    """Custom ReDoc page utilizing modern Redocly bundle compatible with OpenAPI 3.1."""
+    return get_redoc_html(
+        openapi_url=app.openapi_url or "/openapi.json",
+        title=f"{app.title} - ReDoc",
+        redoc_js_url="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js",
+    )
 
 
 # Mount API v1 router

@@ -38,6 +38,12 @@ class TestAppScaffolding(unittest.TestCase):
         openapi_json = openapi_resp.json()
         self.assertEqual(openapi_json["info"]["title"], "API Sentinel")
 
+    def test_redoc_endpoint_available(self):
+        """Verify /redoc returns 200 and contains the modern Redocly bundle."""
+        redoc_resp = self.client.get("/redoc")
+        self.assertEqual(redoc_resp.status_code, 200)
+        self.assertIn("cdn.redoc.ly", redoc_resp.text)
+
 
 if __name__ == "__main__":
     unittest.main()
