@@ -23,10 +23,12 @@
   - **Stage 18: Failure Analysis Engine (100% Complete)**
   - **Stage 19: AI Recommendation Layer (100% Complete)**
   - **Stage 20: Dashboard & Web Interface (100% Complete)**
+  - **Stage 21: Run Comparison & Diff Tool (100% Complete)**
   - **Stage 22: Reporting & Export Engine (100% Complete)**
   - **Stage 23: Persistence & Database Layer (100% Complete)**
-- **Next Sub-Stage**: Stage 24: Error Handling & Resilience (or Stage 27: Demo Target API)
-- **Latest Build Status**: Passing (268/268 unit tests green, 100% pass rate)
+  - **Stage 24: Error Handling & Resilience (100% Complete)**
+- **Next Sub-Stage**: Stage 25: Logging, Tracing & Auditability (or Stage 27: Demo Target API)
+- **Latest Build Status**: Passing (276/276 unit tests green, 100% pass rate)
 
 
 
@@ -109,8 +111,14 @@
   - [x] **Sub-Stage 01: Core Database PRAGMAs & Generic Repository DAL**: Connection event listener enabling SQLite `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, and `PRAGMA synchronous=NORMAL`; generic type-safe `BaseRepository[T]` providing CRUD, count, pagination, batch creation, and existence verification.
   - [x] **Sub-Stage 02: Specialized Entity Repositories**: Concrete domain repositories (`ProjectRepository`, `EndpointRepository`, `TestCaseRepository`, `TestRunRepository`, `TestResultRepository`, `AIRecommendationRepository`) encapsulating specialized relational queries, filtering, and summary statistics.
   - [x] **Sub-Stage 03: Database Diagnostics, Maintenance, Backup & Seeding Engine**: `DatabaseService` delivering latency health probes, SQLite online snapshot backup (`sentinel_backup_*.db`), disk vacuum & query plan optimization (`VACUUM & ANALYZE`), retention pruning (`purge_old_runs`), realistic demo workspace bootstrapping (`seed_sample_data`), and REST endpoints (`GET /api/v1/database/health`, `POST /maintenance/vacuum`, `POST /maintenance/backup`, `POST /maintenance/purge-runs`, `POST /seed-sample`).
-- [ ] Stage 24: Error Handling & Resilience
+- [x] **Stage 24: Error Handling & Resilience (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Core Platform Exception Hierarchy & Standardized JSON Error Envelopes**: `SentinelBaseException`, `EntityNotFoundException` (404), `ContractValidationException` (422), `ExecutionTimeoutException` (504), `NetworkConnectivityException` (502), `SafetyViolationException` (403), `CircuitBreakerOpenException` (503), `ParserException` (400), and global exception handlers with request correlation tracking.
+  - [x] **Sub-Stage 02: Host-Level Circuit Breaker State Machine & Registry**: Thread-safe state machine (`CLOSED`, `OPEN`, `HALF_OPEN`), configurable failure thresholds, recovery timeout cooldowns, probe trials, and singleton `CircuitBreakerRegistry`.
+  - [x] **Sub-Stage 03: Safe Fault-Tolerant Parsers & Resilience Telemetry Service**: Robust `safe_json_loads`, `safe_yaml_loads`, `safe_xml_loads`, and `safe_decode_payload` returning error tuples without unhandled crashes; `ResilienceService` error ring-buffer and REST management APIs (`GET /api/v1/resilience/circuit-breakers`, `POST /circuit-breakers/{host}/reset`, `POST /circuit-breakers/reset-all`, `GET /error-summary`).
+- [ ] Stage 25: Logging, Tracing & Auditability
+- [ ] Stage 26: Platform Self-Testing Suite
 - [ ] Stage 27: Intentionally Flawed Demo Target API
+- [ ] Stage 28: Final Demo Workflow & Pitch
 
 
 

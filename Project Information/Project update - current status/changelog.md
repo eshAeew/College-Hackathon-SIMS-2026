@@ -1,5 +1,35 @@
 # API Sentinel — Changelog
 
+## [Stage 24 - Error Handling & Resilience] - 2026-09-09
+- **Completed**: Platform Exception Hierarchy, Host-Level Circuit Breaker Engine, Safe Fault-Tolerant Parsers, Resilience Telemetry & Error Ring Buffer Service, Global Exception Handlers, and Resilience REST APIs (Stage 24 Complete).
+- Created `app/core/exceptions.py`:
+  - `SentinelBaseException`: Base class with HTTP status code, category, message, and actionable hint.
+  - Concrete exceptions: `EntityNotFoundException` (404), `ContractValidationException` (422), `ExecutionTimeoutException` (504), `NetworkConnectivityException` (502), `SafetyViolationException` (403), `CircuitBreakerOpenException` (503), `ParserException` (400).
+- Created `app/core/circuit_breaker.py`:
+  - `CircuitState` (`CLOSED`, `OPEN`, `HALF_OPEN`).
+  - `CircuitBreaker`: State machine protecting external hosts against cascading network/timeout failures with failure count thresholds, recovery cooldown timeouts, and half-open trial executions.
+  - `CircuitBreakerRegistry`: Thread-safe singleton registry with URL host parsing, breaker caching, reset, and clear operations.
+- Created `app/utils/safe_parsers.py`:
+  - `safe_json_loads`, `safe_yaml_loads`, `safe_xml_loads`, `safe_decode_payload`: Resilient data parsing utilities that safely handle corrupt, unclosed, or binary payloads and return `(result, error_detail)` tuples without unhandled runtime crashes.
+- Created `app/models/schemas/resilience.py`:
+  - `CircuitBreakerStatus`, `CircuitBreakerListResponse`, `CircuitBreakerResetResponse`, `ErrorCategoryStat`, `PlatformErrorSummaryResponse`.
+- Created `app/services/resilience_service.py`:
+  - `ResilienceService`: In-memory error ring buffer tracking error categories, latest occurrences, and AI heuristic fallback events.
+  - Circuit breaker operational diagnostics and manual reset capabilities.
+- Created `app/core/exception_handlers.py`:
+  - `register_exception_handlers(app)`: Global FastAPI handlers capturing `SentinelBaseException`, `CircuitBreakerOpenException`, `RequestValidationError`, `HTTPException`, SQLAlchemy `IntegrityError`, and uncaught `Exception`, returning standardized structured JSON envelopes with correlation IDs and troubleshooting hints.
+- Created `app/api/v1/resilience.py`:
+  - `GET /api/v1/resilience/circuit-breakers`: Host circuit breaker status list and counts.
+  - `POST /api/v1/resilience/circuit-breakers/{host}/reset`: Reset specific host circuit breaker to CLOSED.
+  - `POST /api/v1/resilience/circuit-breakers/reset-all`: Reset all monitored circuit breakers.
+  - `GET /api/v1/resilience/error-summary`: Aggregated platform error telemetry and active circuit breaker counts.
+- Mounted `resilience_router` in `app/api/v1/api.py`.
+- Registered global exception handlers in `app/main.py`.
+- Added comprehensive test suite in `tests/test_resilience_and_errors.py`:
+  - 8 unit & integration tests covering CircuitBreaker state transitions, half-open recovery, safe JSON/YAML/XML/payload parsers, error summary aggregation, and resilience REST endpoints.
+- Full test suite verified: **276 / 276 passing tests with 100% pass rate**.
+- Marked Stage 24: Error Handling & Resilience as 100% COMPLETE.
+
 ## [Stage 23 - Persistence & Database Layer] - 2026-09-09
 - **Completed**: SQLite WAL/FK PRAGMA Configuration, Generic & Concrete Repository Data Access Layer (DAL), Database Health Diagnostics, Online Snapshot Backups, Disk Space Optimization (VACUUM & ANALYZE), Data Retention Pruning, Sample Data Seeding, and Maintenance REST APIs (Stage 23 Complete).
 - Updated `app/core/database.py`:

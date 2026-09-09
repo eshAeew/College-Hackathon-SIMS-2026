@@ -63,25 +63,14 @@ app.add_middleware(
 )
 
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Format request validation errors into standard JSON error envelope."""
-    logger.warning(f"Validation failure on {request.method} {request.url.path}")
-    safe_errors = jsonable_encoder(exc.errors())
-    return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content=ErrorResponse(
-            success=False,
-            error=ErrorDetail(
-                code="VALIDATION_ERROR",
-                message="Request payload or parameter validation failed",
-                details=safe_errors
-            )
-        ).model_dump(mode="json")
-    )
+from app.core.exception_handlers import register_exception_handlers
+
+# 3. Register Global Structured Exception Handlers
+register_exception_handlers(app)
 
 
 from app.web.routes import web_router
+
 
 # Mount Web Dashboard UI router (handles / and /dashboard)
 app.include_router(web_router)
