@@ -4,22 +4,18 @@
 Call Google Gemini API (or OpenAI/custom endpoint) with graceful fallback to built-in rule-based recommendations when offline.
 
 ## 2. Technical Specification & Architecture
-Dual-mode recommendation service: LLM client + local rule-based heuristic matcher.
+`AIRecommendationService` calls `gemini-2.5-flash` in JSON mode when a key and SDK are present and falls back to `app/utils/heuristic_recommender.py` otherwise; records persist to `ai_recommendations`.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Implement `GoogleGenAI` client calling `gemini-2.5-flash` with JSON response mode.
-- [ ] Implement rule-based fallback heuristics for offline or missing API key scenarios.
-- [ ] Store generated recommendations in `AIRecommendation` database table.
+- [x] Implement `GoogleGenAI` client calling `gemini-2.5-flash` with JSON response mode.
+- [x] Implement rule-based fallback heuristics for offline or missing API key scenarios.
+- [x] Store generated recommendations in `AIRecommendation` database table.
 
 ## 4. Edge Cases & Fault Tolerance
-- Validate all input parameters before execution.
-- Ensure graceful handling of unexpected nulls or network disconnects.
-- Return structured error responses adhering to the global error model.
+- [x] Missing SDK, missing key, network failure, rate limiting, and malformed model JSON all fall back to the deterministic engine instead of failing the request.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Tests confirm offline mode reports RULE_BASED_HEURISTIC, returns a CRITICAL card with a code snippet, and both persists and lists recommendations.
 
 ## 6. Definition of Done (DoD)
-> **System produces high-quality, actionable developer recommendations in both online (AI) and offline (rule-based) modes.**
+> **COMPLETED**: System produces high-quality, actionable developer recommendations in both online (AI) and offline (rule-based) modes.

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Run Comparison</h1>
+<div class="sub">{{ view.baseline_label }} &rarr; {{ view.current_label }} &middot;
+  <a href="/ui/projects/{{ project_id }}">back to project</a></div>
+
+<div class="banner" style="border-left-color:
+  {% if view.verdict.value == 'IMPROVED' %}var(--ok)
+  {% elif view.verdict.value == 'CLEAN' %}var(--accent)
+  {% elif view.verdict.value == 'DEGRADED' %}var(--warn)
+  {% else %}var(--bad){% endif %}">
+  <strong>{{ view.verdict.value }}</strong>
+  <div class="muted">{{ view.headline }}</div>
+</div>
+
+<div class="cards">
+  {% for b in view.badges %}
+  <div class="card {{ b.tone.value }}">
+    <div class="label">{{ b.label }}</div>
+    <div class="value">{{ b.value }}</div>
+    <div class="hint">{{ b.hint }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>Headline Metrics</h2>
+<div class="wrap">
+<table>
+  <tr><th>Metric</th><th>Baseline</th><th>Current</th><th>Delta</th><th>Change</th></tr>
+  {% for m in report.metric_deltas %}
+  <tr>
+    <td>{{ m.metric }}</td>
+    <td>{{ m.baseline }}</td>
+    <td>{{ m.current }}</td>
+    <td><span class="pill {{ m.tone.value }}">{{ "%+.2f"|format(m.delta) }}</span></td>
+    <td class="muted">{% if m.delta_pct is not none %}{{ "%+.1f"|format(m.delta_pct) }}%{% else %}-{% endif %}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+
+<h2>Latency Shift</h2>
+<div class="card {{ view.latency_shift.tone.value }}">
+  <div class="label">Average Latency</div>
+  <div class="value">{{ "%.0f"|format(view.latency_shift.baseline_avg_ms) }} ms
+    &rarr; {{ "%.0f"|format(view.latency_shift.current_avg_ms) }} ms</div>
+  <div class="hint">{{ view.latency_shift.summary }}</div>
+</div>
+
+{% if view.regressions %}
+<h2>Regressions</h2>
+<div class="wrap">
+<table>
+  <tr><th>Test</th><th>Badge</th><th>Was</th><th>Now</th><th>Detail</th></tr>
+  {% for c in view.regressions %}
+  <tr>
+    <td>{{ c.test_name }}</td>
+    <td><span class="pill {{ c.tone.value }}">{{ c.badge }}</span></td>
+    <td class="muted">{{ c.baseline_status }} ({{ c.baseline_code or "-" }})</td>
+    <td class="muted">{{ c.current_status }} ({{ c.current_code or "-" }})</td>
+    <td class="muted">{{ c.detail }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+
+{% if view.improvements %}
+<h2>Improvements</h2>
+<div class="wrap">
+<table>
+  <tr><th>Test</th><th>Badge</th><th>Was</th><th>Now</th><th>Detail</th></tr>
+  {% for c in view.improvements %}
+  <tr>
+    <td>{{ c.test_name }}</td>
+    <td><span class="pill {{ c.tone.value }}">{{ c.badge }}</span></td>
+    <td class="muted">{{ c.baseline_status }} ({{ c.baseline_code or "-" }})</td>
+    <td class="muted">{{ c.current_status }} ({{ c.current_code or "-" }})</td>
+    <td class="muted">{{ c.detail }}</td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+
+<h2>Change Matrix</h2>
+<div class="wrap">
+<table>
+  <tr><th>Change</th><th>Count</th></tr>
+  {% for k, v in view.status_matrix.items() %}
+  <tr><td>{{ k }}</td><td>{{ v }}</td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}

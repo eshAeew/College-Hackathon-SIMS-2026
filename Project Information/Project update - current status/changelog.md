@@ -1,5 +1,35 @@
 # API Sentinel — Changelog
 
+## [Stages 18-21 + Stage 01-17 Hardening] - 2026-09-09
+### Fixed (Stages 01-17)
+- `HttpDispatcherService.dispatch_httpx_request` now accepts `client` and defaults `options`,
+  repairing the TypeError that made every test-run execution return ERROR.
+- `POST /api/v1/performance/benchmark-direct` and `POST /api/v1/test-cases/{id}/evaluate`
+  no longer return HTTP 500.
+- Assertion engine resolves JSONPath roots (`$.a.b`), not just bare dot paths.
+- Stage 16 safety guard is now enforced inside the dispatch path; cloud-metadata and
+  link-local targets are permanently blocked (SSRF hardening).
+- `/api/v1/health` performs a real `SELECT 1` instead of hardcoding "connected".
+- Wildcard CORS is no longer paired with `allow_credentials`.
+- `EndpointResponse` exposes declared `path_variables`.
+
+### Added
+- **Stage 18 - Failure Analysis Engine**: `FailureEvidence` packager with credential masking,
+  bounded body snippets, cURL reproduction commands, historical recurrence context, and a
+  13-category deterministic root-cause taxonomy with severity derivation.
+- **Stage 19 - AI Recommendation Layer**: structured prompt synthesizer enforcing a strict JSON
+  response contract, Google Gemini client, and a deterministic rule-based fallback engine that
+  keeps the platform fully functional offline. Recommendations persist to `ai_recommendations`.
+- **Stage 20 - Dashboard & Web Interface**: global and project dashboards, endpoint inspector,
+  result detail combining evidence with the remediation card, plus a server-rendered UI at `/ui`.
+- **Stage 21 - Run Comparison & Diff**: side-by-side run comparator, per-test change
+  classification, latency-shift analysis, net quality delta, and the delta visualizer view-model.
+- `google-genai` added to `requirements.txt`; six safety settings added to `Settings`.
+- 57 new tests (`test_stage_fixes_regression.py`, `test_stages_18_to_21.py`).
+
+### Verification
+- 277/277 tests passing. 98 API operations across 22 routers.
+
 ## [Stage 17 - Result Classification Engine] - 2026-09-09
 - **Completed**: 4-Tier Result Decision Matrix (PASS/FAIL/WARNING/ERROR), Multi-Factor Failure Severity Classifier (LOW/MEDIUM/HIGH/CRITICAL), Health Score Index, and Prioritized Failure Queue (Stage 17 Complete).
 - Created `app/models/schemas/result_classification.py` with:

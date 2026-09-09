@@ -21,10 +21,10 @@
 | **Stage 15** | Automatic Test Generation | Tier 2 | `COMPLETED` | Combinatorial test generator (happy path, missing fields, type inversion, boundary, nulls), staging review area & bulk approval (7/7 tests OK) |
 | **Stage 16** | Safety & Execution Controls | Tier 1 | `COMPLETED` | Target host allowlist, localhost/RFC-1918 modes, destructive risk classifier & confirmation tokens (9/9 tests OK) |
 | **Stage 17** | Result Classification Engine | Tier 1 | `COMPLETED` | 4-tier decision matrix (PASS/FAIL/WARN/ERROR), severity scoring (LOW-CRITICAL), health index & prioritized queue (9/9 tests OK) |
-| **Stage 18** | Failure Analysis Engine | Tier 2 | `PLANNED` | Evidence DTO packager, root cause categorizer |
-| **Stage 19** | AI Recommendation Layer | Tier 3 | `PLANNED` | Gemini prompt synthesizer, fallback engine |
-| **Stage 20** | Dashboard & Web Interface | Tier 1 | `PLANNED` | Global KPI cards, endpoint drill-downs |
-| **Stage 21** | Run Comparison & Diff Tool | Tier 2 | `PLANNED` | Side-by-side run comparator, delta visualizer |
+| **Stage 18** | Failure Analysis Engine | Tier 2 | `COMPLETED` | Evidence packager (masked headers, cURL repro, history context), 13-category root-cause taxonomy, run-wide analysis (17/17 tests OK) |
+| **Stage 19** | AI Recommendation Layer | Tier 3 | `COMPLETED` | Prompt synthesizer with enforced JSON contract, Gemini client, deterministic offline heuristic engine, persisted `AIRecommendation` records (5/5 tests OK) |
+| **Stage 20** | Dashboard & Web Interface | Tier 1 | `COMPLETED` | Global + project dashboards, endpoint inspector, result detail with AI card, server-rendered `/ui` (6/6 tests OK) |
+| **Stage 21** | Run Comparison & Diff Tool | Tier 2 | `COMPLETED` | Side-by-side comparator, broken/fixed/slower badges, latency shift, net quality delta, delta visualizer (13/13 tests OK) |
 | **Stage 22** | Reporting & Export | Tier 1 | `PLANNED` | Executive summary, standalone HTML/PDF export |
 | **Stage 23** | Persistence & Database Layer | Tier 1 | `PLANNED` | SQLAlchemy models, SQLite repos, migrations |
 | **Stage 24** | Error Handling & Resilience | Tier 1 | `PLANNED` | Global exception filters, network circuit breaker |

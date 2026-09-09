@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ data.project_name }}</h1>
+<div class="sub"><code>{{ data.base_url }}</code> &middot;
+  <span class="pill INFO">{{ data.environment }}</span> &middot;
+  <a href="/ui/projects/{{ data.project_id }}/compare">compare latest runs</a></div>
+
+<div class="cards">
+  {% for c in data.kpi_cards %}
+  <div class="card {{ c.tone.value }}">
+    <div class="label">{{ c.label }}</div>
+    <div class="value">{{ c.value }}</div>
+    <div class="hint">{{ c.hint }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if data.critical_issues %}
+<h2>Critical Issues</h2>
+{% for i in data.critical_issues %}
+<div class="banner">
+  <span class="pill {{ i.tone.value }}">{{ i.status }}</span>
+  <strong>{{ i.test_name }}</strong>
+  <div class="muted">{{ i.detail }}{% if i.result_id %} &middot;
+    <a href="/ui/results/{{ i.result_id }}">inspect</a>{% endif %}</div>
+</div>
+{% endfor %}
+{% endif %}
+
+<h2>Endpoint Health</h2>
+<div class="wrap">
+<table>
+  <tr><th>Endpoint</th><th>Method</th><th>Path</th><th>Tests</th>
+      <th>Runs</th><th>Failures</th><th>Pass Rate</th><th>Avg Latency</th></tr>
+  {% for e in data.endpoints %}
+  <tr>
+    <td><a href="/ui/endpoints/{{ e.endpoint_id }}">{{ e.name }}</a>
+        {% if not e.is_active %}<span class="pill WARNING">disabled</span>{% endif %}</td>
+    <td><span class="pill INFO">{{ e.method }}</span></td>
+    <td class="muted"><code>{{ e.path }}</code></td>
+    <td>{{ e.test_case_count }}</td>
+    <td>{{ e.executions }}</td>
+    <td>{{ e.failures }}</td>
+    <td><span class="pill {{ e.tone.value }}">{{ "%.1f"|format(e.pass_rate_pct) }}%</span></td>
+    <td class="muted">{{ "%.0f"|format(e.avg_latency_ms) }} ms</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8" class="empty">No endpoints registered. Import an OpenAPI spec to populate this project.</td></tr>
+  {% endfor %}
+</table>
+</div>
+
+<h2>Recent Runs</h2>
+<div class="wrap">
+<table>
+  <tr><th>Run</th><th>Status</th><th>Tests</th><th>Passed</th><th>Failed</th>
+      <th>Errors</th><th>Pass Rate</th></tr>
+  {% for r in data.recent_runs %}
+  <tr>
+    <td>#{{ r.run_id }} {{ r.name }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td>{{ r.total_tests }}</td><td>{{ r.passed_tests }}</td>
+    <td>{{ r.failed_tests }}</td><td>{{ r.error_tests }}</td>
+    <td>{{ "%.1f"|format(r.pass_rate_pct) }}%</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="7" class="empty">No runs yet.</td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}

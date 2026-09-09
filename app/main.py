@@ -14,6 +14,7 @@ from app.core.logging import setup_logging
 from app.core.middleware import RequestCorrelationMiddleware
 from app.core.http_client import init_async_client, close_async_client
 from app.api.v1.api import api_router
+from app.web.routes import router as web_router
 from app.models.schemas.response import ErrorResponse, ErrorDetail
 
 settings = get_settings()
@@ -122,3 +123,6 @@ async def custom_redoc_html():
 
 # Mount API v1 router
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
+
+# Mount the server-rendered web interface (Stage 20)
+app.include_router(web_router)

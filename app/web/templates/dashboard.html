@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Global Dashboard</h1>
+<div class="sub">{{ data.total_projects }} project(s) &middot; {{ data.total_endpoints }} endpoint(s)
+  &middot; {{ data.total_test_cases }} test case(s) &middot; {{ data.total_runs }} run(s)</div>
+
+<div class="cards">
+  {% for c in data.kpi_cards %}
+  <div class="card {{ c.tone.value }}">
+    <div class="label">{{ c.label }}</div>
+    <div class="value">{{ c.value }}</div>
+    <div class="hint">{{ c.hint }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if data.critical_issues %}
+<h2>Critical Issues</h2>
+{% for i in data.critical_issues %}
+<div class="banner">
+  <span class="pill {{ i.tone.value }}">{{ i.status }}</span>
+  <strong>{{ i.test_name }}</strong>
+  <span class="muted">{{ i.http_method }} {{ i.url }}</span>
+  <div class="muted">{{ i.detail }}{% if i.result_id %} &middot;
+    <a href="/ui/results/{{ i.result_id }}">inspect</a>{% endif %}</div>
+</div>
+{% endfor %}
+{% endif %}
+
+<h2>Projects</h2>
+<div class="wrap">
+<table>
+  <tr><th>Project</th><th>Base URL</th><th>Environment</th><th>Actions</th></tr>
+  {% for p in projects %}
+  <tr>
+    <td><a href="/ui/projects/{{ p.id }}">{{ p.name }}</a></td>
+    <td class="muted"><code>{{ p.base_url }}</code></td>
+    <td><span class="pill INFO">{{ p.environment }}</span></td>
+    <td><a href="/ui/projects/{{ p.id }}/compare">compare runs</a></td>
+  </tr>
+  {% else %}
+  <tr><td colspan="4" class="empty">No projects yet. Create one via POST /api/v1/projects.</td></tr>
+  {% endfor %}
+</table>
+</div>
+
+<h2>Recent Runs</h2>
+<div class="wrap">
+<table>
+  <tr><th>Run</th><th>Project</th><th>Status</th><th>Tests</th><th>Passed</th>
+      <th>Failed</th><th>Errors</th><th>Pass Rate</th><th>Duration</th></tr>
+  {% for r in data.recent_runs %}
+  <tr>
+    <td>#{{ r.run_id }} {{ r.name }}</td>
+    <td class="muted">{{ r.project_name or "-" }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td>{{ r.total_tests }}</td><td>{{ r.passed_tests }}</td>
+    <td>{{ r.failed_tests }}</td><td>{{ r.error_tests }}</td>
+    <td>{{ "%.1f"|format(r.pass_rate_pct) }}%</td>
+    <td class="muted">{{ "%.0f"|format(r.duration_ms) }} ms</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="9" class="empty">No runs recorded yet.</td></tr>
+  {% endfor %}
+</table>
+</div>
+
+<h2>Diagnostic Engine</h2>
+<div class="card {{ 'SUCCESS' if ai.ai_enabled else 'INFO' }}">
+  <div class="label">Active Engine</div>
+  <div class="value" style="font-size:18px">{{ ai.active_engine.value }}</div>
+  <div class="hint">{{ ai.message }}</div>
+</div>
+{% endblock %}

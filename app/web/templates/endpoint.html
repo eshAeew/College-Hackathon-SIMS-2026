@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block content %}
+<h1><span class="pill INFO">{{ data.method }}</span> {{ data.name }}</h1>
+<div class="sub"><code>{{ data.path }}</code> &middot;
+  expects HTTP {{ data.expected_status }} &middot;
+  <a href="/ui/projects/{{ data.project_id }}">back to project</a></div>
+
+<div class="cards">
+  <div class="card INFO"><div class="label">Test Cases</div>
+    <div class="value">{{ data.test_cases|length }}</div></div>
+  <div class="card {{ 'SUCCESS' if data.pass_rate_pct >= 95 else 'WARNING' }}">
+    <div class="label">Pass Rate</div>
+    <div class="value">{{ "%.1f"|format(data.pass_rate_pct) }}%</div>
+    <div class="hint">Across recent executions</div></div>
+  <div class="card INFO"><div class="label">Avg Latency</div>
+    <div class="value">{{ "%.0f"|format(data.avg_latency_ms) }} ms</div></div>
+  <div class="card INFO"><div class="label">Path Variables</div>
+    <div class="value" style="font-size:16px">{{ data.path_variables|join(", ") or "none" }}</div></div>
+</div>
+
+<h2>Request Contract</h2>
+<div class="grid2">
+  <div><div class="muted">Headers</div><pre><code>{{ data.headers|tojson(indent=2) }}</code></pre></div>
+  <div><div class="muted">Query Parameters</div><pre><code>{{ data.query_params|tojson(indent=2) }}</code></pre></div>
+  <div><div class="muted">Body Schema</div><pre><code>{{ data.body_schema|tojson(indent=2) }}</code></pre></div>
+  <div><div class="muted">Response Schema</div><pre><code>{{ data.response_schema|tojson(indent=2) }}</code></pre></div>
+</div>
+
+<h2>Test Cases</h2>
+<div class="wrap">
+<table>
+  <tr><th>ID</th><th>Name</th><th>Tags</th><th>Severity</th><th>Active</th></tr>
+  {% for c in data.test_cases %}
+  <tr>
+    <td>#{{ c.id }}</td><td>{{ c.name }}</td>
+    <td class="muted">{{ c.tags|join(", ") }}</td>
+    <td><span class="pill INFO">{{ c.severity }}</span></td>
+    <td>{{ "yes" if c.is_active else "no" }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="5" class="empty">No test cases. Generate some via POST /api/v1/endpoints/{{ data.endpoint_id }}/generate-tests.</td></tr>
+  {% endfor %}
+</table>
+</div>
+
+<h2>Recent Results</h2>
+<div class="wrap">
+<table>
+  <tr><th>Result</th><th>Test</th><th>Status</th><th>Code</th><th>Latency</th><th>Failure Type</th></tr>
+  {% for r in data.recent_results %}
+  <tr>
+    <td><a href="/ui/results/{{ r.id }}">#{{ r.id }}</a></td>
+    <td>{{ r.test_name }}</td>
+    <td><span class="pill {{ r.status }}">{{ r.status }}</span></td>
+    <td>{{ r.response_code or "-" }}</td>
+    <td class="muted">{{ "%.0f"|format(r.response_time_ms or 0) }} ms</td>
+    <td class="muted">{{ r.failure_type or "-" }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="empty">This endpoint has not been executed yet.</td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endblock %}

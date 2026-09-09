@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ data.test_name }}</h1>
+<div class="sub">
+  <span class="pill {{ data.status }}">{{ data.status }}</span>
+  {{ data.http_method }} <code>{{ data.url }}</code>
+  {% if data.response_code %}&middot; HTTP {{ data.response_code }}{% endif %}
+  {% if data.response_time_ms %}&middot; {{ "%.1f"|format(data.response_time_ms) }} ms{% endif %}
+  {% if data.run_id %}&middot; run #{{ data.run_id }}{% endif %}
+</div>
+
+{% if data.evidence %}
+{% set ev = data.evidence %}
+<h2>Root Cause</h2>
+<div class="card {{ ev.severity }}">
+  <div class="label">{{ ev.root_cause.category }} &middot; {{ ev.severity }}</div>
+  <div class="value" style="font-size:17px">{{ ev.root_cause.title }}</div>
+  <div class="hint">{{ ev.root_cause.summary }}</div>
+  <div class="hint">Confidence {{ ev.root_cause.confidence_pct }}% &middot;
+    evidence <code>{{ ev.evidence_id }}</code></div>
+</div>
+
+<h2>Reproduce</h2>
+<pre><code>{{ ev.request.curl_command }}</code></pre>
+
+<div class="grid2">
+  <div>
+    <h2>Request</h2>
+    <pre><code>{{ ev.request|tojson(indent=2) }}</code></pre>
+  </div>
+  <div>
+    <h2>Response</h2>
+    <pre><code>{{ ev.response|tojson(indent=2) }}</code></pre>
+  </div>
+</div>
+
+{% if ev.assertion_failures %}
+<h2>Failed Assertions</h2>
+<div class="wrap">
+<table>
+  <tr><th>Rule</th><th>Expected</th><th>Actual</th><th>Message</th></tr>
+  {% for a in ev.assertion_failures %}
+  <tr><td>{{ a.rule }}</td><td><code>{{ a.expected }}</code></td>
+      <td><code>{{ a.actual }}</code></td><td class="muted">{{ a.message }}</td></tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+
+<h2>History</h2>
+<div class="card INFO">
+  <div class="label">{{ ev.history.persistence_rating }}</div>
+  <div class="value" style="font-size:18px">
+    {{ ev.history.previous_failures }} / {{ ev.history.total_observations }} failed</div>
+  <div class="hint">Failure rate {{ ev.history.failure_rate_pct }}%</div>
+</div>
+{% endif %}
+
+{% if data.recommendation %}
+{% set rec = data.recommendation %}
+<h2>Recommended Fix</h2>
+<div class="card {{ rec.severity }}">
+  <div class="label">{{ rec.source }}{% if rec.model_name %} &middot; {{ rec.model_name }}{% endif %}
+    &middot; {{ rec.severity }} &middot; {{ rec.confidence_pct }}% confidence</div>
+  <div class="value" style="font-size:16px">Likely cause</div>
+  <div class="hint">{{ rec.likely_cause }}</div>
+  <div class="value" style="font-size:16px;margin-top:12px">Suggested fix</div>
+  <div class="hint">{{ rec.suggested_fix }}</div>
+</div>
+{% if rec.code_snippet %}
+<pre><code>{{ rec.code_snippet }}</code></pre>
+{% endif %}
+{% if rec.references %}
+<div class="muted">References:
+  {% for r in rec.references %}<a href="{{ r }}">{{ r }}</a>{% if not loop.last %} &middot; {% endif %}{% endfor %}
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

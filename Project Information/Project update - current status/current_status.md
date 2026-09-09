@@ -1,34 +1,33 @@
-# API Sentinel — Project Current Status
+# API Sentinel - Project Current Status
 
 ## 1. Project Health & Stage Progress Summary
-- **Current Phase**: Phase B — Core Test Execution & Telemetry Engine
-- **Completed Stages**: 
-  - **Stage 01: Project Foundation (100% Complete)**
-  - **Stage 02: Project / Workspace Management (100% Complete)**
-  - **Stage 03: API Endpoint Management (100% Complete)**
-  - **Stage 04: Request Configuration Engine (100% Complete)**
-  - **Stage 05: Core API Execution Engine (100% Complete)**
-  - **Stage 06: Test Case Management (100% Complete)**
-  - **Stage 07: Functional Validation Engine (100% Complete)**
-  - **Stage 08: Negative & Adversarial Testing Engine (100% Complete)**
-  - **Stage 09: Inconsistent Behavior Detection (100% Complete)**
-  - **Stage 10: Performance Analysis Engine (100% Complete)**
-  - **Stage 11: Recurring Failure Detection (100% Complete)**
-  - **Stage 12: Test Run Management (100% Complete)**
-  - **Stage 13: Regression Testing Engine (100% Complete)**
-  - **Stage 14: OpenAPI Specification Support (100% Complete)**
-  - **Stage 15: Automatic Test Generation (100% Complete)**
-  - **Stage 16: Safety & Execution Controls (100% Complete)**
-  - **Stage 17: Result Classification Engine (100% Complete)**
-- **Next Sub-Stage**: Stage 18: Failure Analysis Engine
-- **Latest Build Status**: Passing (220/220 unit tests green, 100% pass rate)
+- **Current Phase**: Phase F - Run Management, AI Diagnosis & Interface
+- **Completed Stages**: Stages 01-21 (all sub-stages)
+  - **Stage 01-07**: Foundation, workspaces, endpoints, request builder, execution engine, test cases, validation
+  - **Stage 08-11**: Adversarial fuzzing, flakiness entropy, performance SLA, recurring-failure clustering
+  - **Stage 12-15**: Run orchestration, regression engine, OpenAPI import, automatic test generation
+  - **Stage 16-17**: Safety controls (now enforced in the dispatch path), 4-tier result classification
+  - **Stage 18**: Failure Analysis Engine - evidence packager + root-cause taxonomy
+  - **Stage 19**: AI Recommendation Layer - prompt synthesizer + Gemini client + offline heuristics
+  - **Stage 20**: Dashboard & Web Interface - aggregation APIs + server-rendered /ui
+  - **Stage 21**: Run Comparison & Diff - comparator + delta visualizer
+- **Next Stage**: Stage 22 - Reporting & Export (executive summary, HTML/PDF)
+- **Latest Build Status**: Passing (277/277 tests green, 98 API operations)
 
+## 2. Stage 01-17 Hardening (this cycle)
+A full live end-to-end audit of Stages 01-17 surfaced three defects the mocked unit suite
+could not see. All are fixed and covered by regression tests:
+- **Dispatcher contract break** - three call sites passed `client=` to a method that did not
+  accept it, so every test-run execution returned ERROR with zero requests actually sent.
+- **JSONPath assertions** - the documented `$.a.b` syntax silently resolved to field-not-found.
+- **SSRF** - the Stage 16 guard existed but nothing called it before dispatch; cloud-metadata
+  and link-local targets are now blocked outright.
 
-
-## 2. Milestone Checklist
+## 3. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
 - [x] Documentation & Architecture Specifications Created
 - [x] Database Schema ERD & Models Designed
+
 - [x] Intentionally Flawed Demo API Spec Finalized
 - [x] 28-Stage Modular Implementation Hierarchy Scaffolding
 - [x] **Stage 01: Project Foundation (COMPLETED - 13/13 tests)**

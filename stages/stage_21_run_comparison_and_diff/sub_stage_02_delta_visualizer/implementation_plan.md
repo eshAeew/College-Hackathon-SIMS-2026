@@ -4,22 +4,18 @@
 Render intuitive visual diffs showing fixed bugs, newly introduced regressions, and latency shift charts.
 
 ## 2. Technical Specification & Architecture
-Visual diff tables and delta indicators in the Web UI.
+`DeltaVisualization` view-model with a six-badge strip, regression and improvement lists, latency shift, and a pass-rate series; rendered at `/ui/projects/{id}/compare`.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Render green badges for fixed tests and red badges for new regressions.
-- [ ] Render side-by-side response payload and status comparisons.
-- [ ] Display latency distribution shift indicators.
+- [x] Render green badges for fixed tests and red badges for new regressions.
+- [x] Render side-by-side response payload and status comparisons.
+- [x] Display latency distribution shift indicators.
 
 ## 4. Edge Cases & Fault Tolerance
-- Validate all input parameters before execution.
-- Ensure graceful handling of unexpected nulls or network disconnects.
-- Return structured error responses adhering to the global error model.
+- [x] A regression whose current status code is 5xx is upgraded to a CRITICAL CRASH badge.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Tests assert the badge count, regression list contents, the crash badge, and that the compare page renders.
 
 ## 6. Definition of Done (DoD)
-> **Developers can instantly see the exact impact of their backend code changes between test runs.**
+> **COMPLETED**: Developers can instantly see the exact impact of their backend code changes between test runs.

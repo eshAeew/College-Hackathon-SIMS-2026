@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} - API Sentinel</title>
+  <style>
+    :root{
+      --bg:#0d1117; --panel:#161b22; --line:#272e38; --ink:#e6edf3; --muted:#8b949e;
+      --accent:#2f81f7; --ok:#3fb950; --warn:#d29922; --bad:#f85149; --info:#58a6ff;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--ink);
+         font:14px/1.55 ui-sans-serif,system-ui,"Segoe UI",Roboto,sans-serif}
+    a{color:var(--info);text-decoration:none} a:hover{text-decoration:underline}
+    header{display:flex;align-items:center;gap:16px;padding:14px 22px;
+           border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:5}
+    header .brand{font-weight:700;letter-spacing:.3px;font-size:16px}
+    header .brand span{color:var(--accent)}
+    header nav{display:flex;gap:14px;margin-left:auto;font-size:13px}
+    main{max-width:1180px;margin:0 auto;padding:22px}
+    h1{font-size:20px;margin:0 0 4px} h2{font-size:15px;margin:26px 0 10px;color:var(--muted);
+       text-transform:uppercase;letter-spacing:.6px}
+    .sub{color:var(--muted);margin-bottom:18px}
+    .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+    .card .label{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+    .card .value{font-size:26px;font-weight:700;margin-top:6px}
+    .card .hint{color:var(--muted);font-size:12px;margin-top:6px}
+    .card.CRITICAL{border-left:3px solid var(--bad)}
+    .card.WARNING{border-left:3px solid var(--warn)}
+    .card.SUCCESS{border-left:3px solid var(--ok)}
+    .card.INFO{border-left:3px solid var(--accent)}
+    table{width:100%;border-collapse:collapse;background:var(--panel);
+          border:1px solid var(--line);border-radius:10px;overflow:hidden}
+    th,td{padding:9px 12px;text-align:left;border-bottom:1px solid var(--line);font-size:13px}
+    th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+    tr:last-child td{border-bottom:none}
+    .wrap{overflow-x:auto}
+    .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700}
+    .PASS,.SUCCESS,.POSITIVE{background:rgba(63,185,80,.15);color:var(--ok)}
+    .FAIL,.CRITICAL,.NEGATIVE{background:rgba(248,81,73,.15);color:var(--bad)}
+    .WARNING,.WARN{background:rgba(210,153,34,.15);color:var(--warn)}
+    .ERROR{background:rgba(248,81,73,.22);color:var(--bad)}
+    .INFO,.NEUTRAL{background:rgba(47,129,247,.15);color:var(--info)}
+    .banner{border:1px solid var(--line);border-left:3px solid var(--bad);background:var(--panel);
+            border-radius:10px;padding:12px 16px;margin:14px 0}
+    pre{background:#0b0f14;border:1px solid var(--line);border-radius:8px;padding:12px;
+        overflow-x:auto;font-size:12.5px;color:#c9d1d9}
+    code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+    .muted{color:var(--muted)} .empty{color:var(--muted);padding:14px 0}
+    footer{color:var(--muted);font-size:12px;padding:26px 22px;text-align:center}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">API <span>Sentinel</span></div>
+    <nav>
+      <a href="/ui">Dashboard</a>
+      <a href="/docs">API Docs</a>
+      <a href="/api/v1/health">Health</a>
+    </nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+  <footer>API Sentinel v{{ version }} - deterministic engine decides pass/fail; AI only explains.</footer>
+</body>
+</html>
