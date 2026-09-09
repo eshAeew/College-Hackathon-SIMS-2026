@@ -7,6 +7,7 @@ from app.api.v1.projects import router as projects_router
 from app.api.v1.endpoints import router as endpoints_router
 from app.api.v1.requests import router as requests_router
 from app.api.v1.executions import router as executions_router
+from app.api.v1.test_cases import router as test_cases_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -58,3 +59,4 @@ api_router.include_router(projects_router)
 api_router.include_router(endpoints_router)
 api_router.include_router(requests_router)
 api_router.include_router(executions_router)
+api_router.include_router(test_cases_router)

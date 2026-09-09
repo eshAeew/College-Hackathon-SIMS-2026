@@ -1,5 +1,23 @@
 # API Sentinel — Changelog
 
+## [Stage 06 - Sub-Stage 01] - 2026-09-09
+- **Completed**: Test Case Scenario Management & CRUD Operations.
+- Created `TestCase` database entity in `app/models/entities/test_case.py` with cascade foreign key to `Endpoint`, severity levels (`critical`, `high`, `medium`, `low`), tags JSON list (`smoke`, `regression`, `security`, `negative`), and full request parameters + assertions storage.
+- Added `test_cases` cascade relationship to `Endpoint` in `app/models/entities/endpoint.py`.
+- Created Pydantic DTO schemas in `app/models/schemas/test_case.py` (`TestCaseSeverity`, `TestCaseBase`, `TestCaseCreate`, `TestCaseUpdate`, `TestCaseDuplicate`, `TestCaseResponse`).
+- Implemented `TestCaseService` in `app/services/test_case_service.py` supporting creation, filtering by `tag`, `severity`, and `is_active`, pagination, updates, deletion, active state toggling, and scenario duplication/cloning.
+- Implemented REST router in `app/api/v1/test_cases.py`:
+  - `POST /api/v1/endpoints/{endpoint_id}/test-cases`
+  - `GET /api/v1/endpoints/{endpoint_id}/test-cases`
+  - `GET /api/v1/test-cases/{test_case_id}`
+  - `PUT /api/v1/test-cases/{test_case_id}`
+  - `DELETE /api/v1/test-cases/{test_case_id}`
+  - `PATCH /api/v1/test-cases/{test_case_id}/toggle-active`
+  - `POST /api/v1/test-cases/{test_case_id}/duplicate`
+- Mounted `test_cases_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_test_cases.py` (9 new tests passing).
+- Total test suite count increased to 95 passing tests with 100% pass rate.
+
 ## [Stage 05 - Sub-Stage 02] - 2026-09-09
 - **Completed**: Response & Network Telemetry Capture (Stage 05 Complete).
 - Created `app/utils/telemetry_extractor.py` containing:

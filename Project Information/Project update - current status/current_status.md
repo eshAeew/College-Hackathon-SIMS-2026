@@ -8,8 +8,9 @@
   - **Stage 03: API Endpoint Management (100% Complete)**
   - **Stage 04: Request Configuration Engine (100% Complete)**
   - **Stage 05: Core API Execution Engine (100% Complete)**
-- **Next Stage**: Stage 06 — Test Case Management
-- **Latest Build Status**: Passing (86/86 unit tests green, 100% pass rate)
+  - **Stage 06: Test Case Management (Sub-Stage 01 Complete)**
+- **Next Sub-Stage**: Stage 06 — Sub-Stage 02: Assertion Rules & Expectation Setup
+- **Latest Build Status**: Passing (95/95 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -30,7 +31,9 @@
 - [x] **Stage 05: Core API Execution Engine (COMPLETED - 23/23 tests)**
   - [x] **Sub-Stage 01: Asynchronous HTTP Dispatcher**: `httpx.AsyncClient` connection pool lifecycle, configurable timeouts, redirect following, SSL verification controls, and dispatch REST endpoints (`/api/v1/executions/dispatch`, `/api/v1/projects/{p_id}/endpoints/{e_id}/execute`, `/api/v1/executions/client-info`).
   - [x] **Sub-Stage 02: Response & Network Telemetry Capture**: Sub-millisecond latency measurement, response payload parsing (text/JSON/binary Base64), cookie extraction, redirect history tracking, and categorized network exception diagnostics (`DNSLookupError`, `ConnectTimeout`, `ReadTimeout`, `ConnectionRefused`, `SSLValidationError`, `TooManyRedirects`).
-- [ ] Stage 06: Test Case Management
+- [ ] **Stage 06: Test Case Management (IN PROGRESS - 9/9 tests passing)**
+  - [x] **Sub-Stage 01: Test Case CRUD Operations**: SQLite `TestCase` model, endpoint cascade relationship, tags (`smoke`, `regression`, `security`, `negative`), severity ratings, cloning, active toggle, and REST endpoints (`/api/v1/endpoints/{id}/test-cases`, `/api/v1/test-cases/{id}`).
+  - [ ] **Sub-Stage 02: Assertion Rules & Expectation Setup**: Configurable expected status codes, latency ceilings, header matchers, and JSON body field expectations.
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API

@@ -7,9 +7,9 @@ Allow creation, editing, deletion, and organization of functional test cases for
 FastAPI router `/api/v1/endpoints/{id}/test-cases` connected to SQLite TestCase model.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Define `TestCaseCreate`, `TestCaseUpdate`, `TestCaseResponse` Pydantic models.
-- [ ] Implement CRUD endpoints for managing test scenarios.
-- [ ] Support tagging test cases (e.g. 'smoke', 'regression', 'security', 'negative').
+- [x] Define `TestCaseCreate`, `TestCaseUpdate`, `TestCaseResponse` Pydantic models.
+- [x] Implement CRUD endpoints for managing test scenarios.
+- [x] Support tagging test cases (e.g. 'smoke', 'regression', 'security', 'negative').
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ FastAPI router `/api/v1/endpoints/{id}/test-cases` connected to SQLite TestCase 
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Test cases can be created, listed, updated, and deleted with full relationship integrity.**

@@ -31,6 +31,7 @@ class Endpoint(Base):
 
     # Database Relationships
     project = relationship("Project", back_populates="endpoints")
+    test_cases = relationship("TestCase", back_populates="endpoint", cascade="all, delete-orphan")
 
     def extract_path_variables(self) -> list:
         """Extract variable parameter names defined inside path brackets (e.g. {id})."""
