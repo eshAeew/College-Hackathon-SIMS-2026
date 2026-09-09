@@ -1,4 +1,4 @@
-﻿"""Unit & Integration tests for Project CRUD operations."""
+"""Unit & Integration tests for Project CRUD operations and Workspace Summary statistics."""
 import unittest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -94,7 +94,28 @@ class TestProjectCRUD(unittest.TestCase):
         response = self.client.get("/api/v1/projects/9999")
         self.assertEqual(response.status_code, 404)
 
-    def test_06_update_project_success(self):
+    def test_06_get_project_summary_success(self):
+        """Verify project summary statistics endpoint."""
+        response = self.client.get("/api/v1/projects/1/summary")
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertTrue(payload["success"])
+        summary = payload["data"]
+        self.assertEqual(summary["project_id"], 1)
+        self.assertEqual(summary["project_name"], "E-Commerce Mock API")
+        self.assertEqual(summary["base_url"], "http://localhost:8001")
+        self.assertEqual(summary["total_endpoints"], 0)
+        self.assertEqual(summary["health_score"], 100.0)
+        self.assertEqual(summary["global_headers_count"], 1)
+        self.assertTrue(summary["has_auth_header"])
+        self.assertTrue(len(summary["environment_presets"]) >= 3)
+
+    def test_07_get_project_summary_not_found(self):
+        """Verify 404 on summary for non-existent project."""
+        response = self.client.get("/api/v1/projects/9999/summary")
+        self.assertEqual(response.status_code, 404)
+
+    def test_08_update_project_success(self):
         """Verify updating existing project attributes."""
         update_payload = {
             "name": "Updated E-Commerce API",
@@ -108,7 +129,7 @@ class TestProjectCRUD(unittest.TestCase):
         self.assertEqual(data["data"]["base_url"], "https://api.staging.store.com")
         self.assertEqual(data["data"]["global_headers"]["X-Custom-Key"], "secret-val")
 
-    def test_07_delete_project_success(self):
+    def test_09_delete_project_success(self):
         """Verify project deletion and subsequent 404."""
         create_resp = self.client.post("/api/v1/projects", json={
             "name": "To Delete",

@@ -1,4 +1,4 @@
-"""Pydantic schemas for Project CRUD operations."""
+"""Pydantic schemas for Project CRUD and Workspace Metadata Summary."""
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field, field_validator
@@ -54,3 +54,37 @@ class ProjectResponse(ProjectBase):
 
     class Config:
         from_attributes = True
+
+
+class EnvironmentPreset(BaseModel):
+    """Environment profile preset definition."""
+    name: str = Field(..., description="Environment name (e.g. development, staging, production)")
+    base_url: str = Field(..., description="Target base URL for this environment")
+    is_active: bool = Field(default=False, description="Whether this environment is currently active")
+
+
+class ProjectSummaryResponse(BaseModel):
+    """Aggregated workspace health metrics and execution summary."""
+    project_id: int = Field(..., description="Project ID")
+    project_name: str = Field(..., description="Project name")
+    base_url: str = Field(..., description="Active target base URL")
+    environment: str = Field(..., description="Active environment profile")
+    
+    # Workspace Counts
+    total_endpoints: int = Field(default=0, description="Total registered API endpoints")
+    total_test_cases: int = Field(default=0, description="Total configured test cases")
+    total_test_runs: int = Field(default=0, description="Total test runs executed")
+    
+    # Quality & Health Metrics
+    health_score: float = Field(default=100.0, description="Overall health rating percentage (0-100)")
+    last_run_at: Optional[datetime] = Field(default=None, description="Timestamp of last test run")
+    last_run_status: Optional[str] = Field(default=None, description="Outcome of last test run")
+    last_run_pass_rate: Optional[float] = Field(default=None, description="Pass rate percentage of last test run")
+    last_run_avg_latency_ms: Optional[float] = Field(default=None, description="Average response time of last test run")
+    
+    # Header & Security Configuration
+    global_headers_count: int = Field(default=0, description="Number of configured global headers")
+    has_auth_header: bool = Field(default=False, description="Whether Authorization/API-Key headers are configured")
+    
+    # Environment Presets
+    environment_presets: List[EnvironmentPreset] = Field(default_factory=list, description="Available environment presets")

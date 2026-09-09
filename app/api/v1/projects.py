@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse
+from app.models.schemas.project import ProjectCreate, ProjectUpdate, ProjectResponse, ProjectSummaryResponse
 from app.models.schemas.response import StandardResponse, ErrorResponse, ErrorDetail
 from app.services.project_service import ProjectService
 
@@ -70,6 +70,30 @@ def get_project(
         success=True,
         data=ProjectResponse.model_validate(project),
         message="Project details retrieved successfully"
+    )
+
+
+@router.get(
+    "/{project_id}/summary",
+    response_model=StandardResponse[ProjectSummaryResponse],
+    summary="Get Project Summary & Workspace Stats",
+    description="Retrieve live calculated health metrics, endpoint counts, test counts, and environment presets."
+)
+def get_project_summary(
+    project_id: int,
+    db: Session = Depends(get_db)
+):
+    project = ProjectService.get_project_by_id(db, project_id)
+    if not project:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Project with ID #{project_id} not found"
+        )
+    summary = ProjectService.get_project_summary(db, project)
+    return StandardResponse(
+        success=True,
+        data=summary,
+        message="Project summary statistics retrieved successfully"
     )
 
 

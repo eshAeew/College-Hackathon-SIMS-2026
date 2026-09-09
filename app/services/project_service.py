@@ -1,16 +1,16 @@
-"""Business logic service for Project / Workspace management."""
+"""Business logic service for Project / Workspace management and Summary stats."""
 import logging
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.models.entities.project import Project
-from app.models.schemas.project import ProjectCreate, ProjectUpdate
+from app.models.schemas.project import ProjectCreate, ProjectUpdate, ProjectSummaryResponse, EnvironmentPreset
 
 logger = logging.getLogger("app.services.project")
 
 
 class ProjectService:
-    """Service handling Project entity CRUD operations."""
+    """Service handling Project entity CRUD operations and workspace metrics."""
 
     @staticmethod
     def create_project(db: Session, project_in: ProjectCreate) -> Project:
@@ -62,3 +62,36 @@ class ProjectService:
         db.delete(project)
         db.commit()
         logger.info(f"Deleted Project #{project_id}: '{project_name}'")
+
+    @staticmethod
+    def get_project_summary(db: Session, project: Project) -> ProjectSummaryResponse:
+        """Compute live workspace metadata and summary statistics for a project."""
+        headers = project.global_headers
+        has_auth = any(k.lower() in ("authorization", "x-api-key", "apikey", "token") for k in headers.keys())
+        
+        # Build standard environment presets
+        presets = [
+            EnvironmentPreset(name="development", base_url=project.base_url, is_active=(project.environment == "development")),
+            EnvironmentPreset(name="staging", base_url=project.base_url.replace("localhost", "staging.api"), is_active=(project.environment == "staging")),
+            EnvironmentPreset(name="production", base_url=project.base_url.replace("localhost", "api"), is_active=(project.environment == "production")),
+        ]
+
+        # In later stages (03, 06, 12), these will dynamically count from Endpoint, TestCase, and TestRun tables
+        total_endpoints = 0
+        total_test_cases = 0
+        total_test_runs = 0
+        health_score = 100.0
+
+        return ProjectSummaryResponse(
+            project_id=project.id,
+            project_name=project.name,
+            base_url=project.base_url,
+            environment=project.environment,
+            total_endpoints=total_endpoints,
+            total_test_cases=total_test_cases,
+            total_test_runs=total_test_runs,
+            health_score=health_score,
+            global_headers_count=len(headers),
+            has_auth_header=has_auth,
+            environment_presets=presets
+        )

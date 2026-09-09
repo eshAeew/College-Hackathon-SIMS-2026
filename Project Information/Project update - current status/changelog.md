@@ -1,5 +1,13 @@
 # API Sentinel — Changelog
 
+## [Stage 02 - Sub-Stage 02] - 2026-09-09
+- **Completed**: Workspace Metadata & Summary Stats.
+- Created `ProjectSummaryResponse` and `EnvironmentPreset` schemas in `app/models/schemas/project.py`.
+- Implemented `get_project_summary()` calculation in `app/services/project_service.py`.
+- Created `GET /api/v1/projects/{id}/summary` endpoint delivering real-time health score, auth headers detection, and environment presets.
+- Added tests in `tests/test_projects.py`. Total test count: 23 passing.
+- Marked Stage 02: Project / Workspace Management as 100% COMPLETE.
+
 ## [Stage 02 - Sub-Stage 01] - 2026-09-09
 - **Completed**: Project & Workspace CRUD Operations.
 - Created `app/core/database.py` with SQLAlchemy engine, `SessionLocal`, `Base`, and `get_db` dependency.
