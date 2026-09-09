@@ -87,20 +87,24 @@ class TestDashboardUI(unittest.TestCase):
         app.dependency_overrides.clear()
         Base.metadata.drop_all(bind=self.engine)
 
-    def test_01_render_root_dashboard_html(self):
-        """Verify GET / with browser accept header returns HTTP 200 with HTML and Nova Dark theme classes."""
+    def test_01_render_root_serves_landing_page(self):
+        """Verify GET / with a browser accept header serves the welcome landing page, not the cockpit."""
         res = self.client.get("/", headers={"accept": "text/html,application/xhtml+xml"})
+        self.assertEqual(res.status_code, 200)
+        self.assertIn("text/html", res.headers.get("content-type", ""))
+        self.assertIn("API Sentinel", res.text)
+        self.assertIn("Launch Cockpit", res.text)
+        # the cockpit is a separate route and must not answer at the root
+        self.assertNotIn("bg-neutral-background", res.text)
+
+    def test_02_render_dashboard_route_html(self):
+        """Verify GET /dashboard returns HTTP 200 with the cockpit HTML and Living Green theme classes."""
+        res = self.client.get("/dashboard")
         self.assertEqual(res.status_code, 200)
         self.assertIn("text/html", res.headers.get("content-type", ""))
         self.assertIn("API Sentinel", res.text)
         self.assertIn("bg-neutral-background", res.text)
         self.assertIn("brand-primary", res.text)
-
-    def test_02_render_dashboard_route_html(self):
-        """Verify GET /dashboard returns HTTP 200 with HTML."""
-        res = self.client.get("/dashboard")
-        self.assertEqual(res.status_code, 200)
-        self.assertIn("API Sentinel", res.text)
 
     def test_03_dashboard_overview_api(self):
         """Verify GET /api/v1/dashboard/overview returns aggregated KPIs."""

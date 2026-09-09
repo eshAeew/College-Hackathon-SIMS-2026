@@ -4,6 +4,8 @@
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
   <title>API Sentinel — Autonomous API Quality, Telemetry & AI Remediation</title>
+  <!-- the welcome page mark, so the tab carries the same leaf and the browser stops asking for /favicon.ico -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 24'%3E%3Crect width='22' height='24' fill='%234a4d44'/%3E%3Cpath fill='%23fff' d='M11 1.3c-2.1 0-3.95 1.2-4.75 2.95C3.95 4.55 2.3 6.25 2.3 8.35c0 2.3 1.9 4.2 4.3 4.2h8.8c2.4 0 4.3-1.9 4.3-4.2 0-2.1-1.65-3.8-4-4.1C14.95 2.5 13.1 1.3 11 1.3Z'/%3E%3Cpath fill='%23fff' d='M9.6 12.55h2.8v4.2c1.35.3 2.45 1.15 3.15 2.4-1.35.4-2.4.15-3.15-.4v4.15H9.6v-4.15c-.75.55-1.8.8-3.15.4.7-1.25 1.8-2.1 3.15-2.4v-4.2Z'/%3E%3C/svg%3E">
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -202,7 +204,11 @@
     .dock-mark{
       background:#eef1e7; color:#23261f;
       box-shadow:0 6px 16px rgba(12,17,9,.28);
+      transition:transform .24s var(--ease-out), box-shadow .24s var(--ease);
     }
+    /* the wordmark is the way back to the landing page */
+    .brand-home{ text-decoration:none; border-radius:12px; }
+    .brand-home:hover .dock-mark{ transform:translateY(-1px); box-shadow:0 9px 20px rgba(12,17,9,.34); }
     /* the header pills, lifting as the pointer nears them */
     .dock-pill{
       color:var(--ink-faint);
@@ -286,8 +292,230 @@
     }
     select option{ background:#2b3027; color:#fff; }
 
+    /* -- themed select -------------------------------------------------
+       A native option list is drawn by the OS: it arrives as white paper
+       with a system-blue highlight and ignores every rule above, which is
+       what made the workspace picker read as a foreign control. So the
+       <select> stays in the DOM as the source of truth - every existing
+       handler still reads .value and still hears 'change' - and this is the
+       surface people actually see and drive. */
+    .tsel-native{
+      position:absolute !important; width:1px; height:1px;
+      margin:-1px; padding:0; border:0; overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+    }
+    .tsel-wrap{ position:relative; display:inline-block; vertical-align:middle; }
+    .tsel-wrap.is-block{ display:block; width:100%; }
+    .tsel{ display:inline-flex; align-items:center; gap:8px; cursor:pointer; text-align:left; }
+    .tsel-wrap.is-block .tsel{ display:flex; width:100%; }
+    .tsel-label{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tsel-caret{ flex:none; width:13px; height:13px; opacity:.5; transition:transform .22s var(--ease-out), opacity .2s var(--ease); }
+    .tsel[aria-expanded="true"] .tsel-caret{ transform:rotate(180deg); opacity:.9; }
+    .tsel:hover{ border-color:rgba(255,255,255,.26) !important; }
+    .tsel:hover .tsel-caret{ opacity:.85; }
+
+    .tsel-pop{
+      position:fixed; z-index:200; margin:0; padding:6px;
+      max-height:min(300px, 52vh); overflow-y:auto; border-radius:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 38%), rgba(36,42,32,.96);
+      border:1px solid rgba(255,255,255,.13);
+      box-shadow:0 26px 58px rgba(10,14,8,.52), inset 0 1px 0 rgba(255,255,255,.07);
+      -webkit-backdrop-filter:blur(22px) saturate(1.2); backdrop-filter:blur(22px) saturate(1.2);
+      opacity:0; transform:translateY(-4px);
+      transition:opacity .16s var(--ease), transform .18s var(--ease-out);
+    }
+    .tsel-pop.is-open{ opacity:1; transform:none; }
+    .tsel-opt{
+      display:flex; align-items:center; gap:9px; width:100%;
+      padding:8px 10px; border:0; border-radius:9px; background:transparent;
+      font:inherit; font-size:12.5px; line-height:1.35; color:var(--ink-soft);
+      text-align:left; cursor:pointer; transition:background .14s var(--ease), color .14s var(--ease);
+    }
+    .tsel-opt .dot{
+      flex:none; width:6px; height:6px; border-radius:50%;
+      background:transparent; box-shadow:inset 0 0 0 1px rgba(255,255,255,.22);
+    }
+    .tsel-opt-text{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tsel-opt.is-active{ background:rgba(255,255,255,.075); color:var(--ink); }
+    .tsel-opt[aria-selected="true"]{ color:var(--ink); background:rgba(228,234,214,.11); }
+    .tsel-opt[aria-selected="true"] .dot{ background:var(--card); box-shadow:0 0 0 3px rgba(228,234,214,.16); }
+    .tsel-opt[disabled]{ opacity:.42; cursor:not-allowed; }
+    .tsel-pop::-webkit-scrollbar{ width:5px; }
+    .tsel-pop::-webkit-scrollbar-thumb{ background:rgba(255,255,255,.16); border-radius:6px; }
+
+    @media (prefers-reduced-motion:reduce){
+      .tsel-pop{ transition:none; }
+      .tsel-caret{ transition:none; }
+    }
+
+    /* -- the grove ----------------------------------------------------
+       The welcome page's moss roots, grown inside a pane at the top of the
+       cockpit instead of a full-screen hero: the arch's crest crosses the
+       band, the far ridge sits behind it in haze, the butterfly perches on
+       the moss and pollen drifts under the pointer. The composition keeps
+       the welcome page's 1600 x 880 design stage; the scene publishes --u
+       (band width / 1600) and the stage is slid up so the crest is what
+       lands in frame. Under the WebGL canvas the band always carries the
+       same light pool as the welcome hero, so it is never a hole while the
+       scene grows, or if it never does. */
+    .grove{
+      --u: calc((100vw - 4rem) / 1600);
+      --stage-top: calc(-300 * var(--u));
+      --px: 0; --py: 0;
+      position:relative; z-index:1;
+      height:clamp(232px, 31vh, 344px);
+      border-radius:22px; overflow:hidden; isolation:isolate;
+      border:1px solid rgba(255,255,255,.11);
+      box-shadow:0 16px 38px rgba(10,14,8,.36), inset 0 1px 0 rgba(255,255,255,.07);
+      background:
+        radial-gradient(64% 52% at 27% 84%, rgba(232,238,222,.085) 0%, rgba(232,238,222,0) 72%),
+        radial-gradient(70% 60% at 92% 8%,  rgba(24,28,20,.10) 0%, rgba(24,28,20,0) 68%),
+        #4a4d44;
+    }
+    .grove::after{
+      content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(72% 58% at 50% 114%, rgba(238,243,231,.46) 0%, rgba(238,243,231,.19) 42%, rgba(238,243,231,.04) 72%, rgba(238,243,231,0) 88%),
+        linear-gradient(180deg, rgba(238,243,231,0) 54%, rgba(238,243,231,.03) 78%, rgba(238,243,231,.085) 100%);
+    }
+    .grove-stage{
+      position:absolute; left:0; top:var(--stage-top);
+      width:calc(1600 * var(--u)); height:calc(880 * var(--u));
+      pointer-events:none;
+    }
+    .grove.is-narrow{ --stage-top: calc(-500 * var(--u)); }
+    .grove.is-narrow .grove-stage{ width:calc(760 * var(--u)); }
+    .grove-ghost{
+      position:absolute; z-index:1; left:calc(10 * var(--u)); bottom:-.26em;
+      font-size:calc(150 * var(--u)); line-height:.8; font-weight:400;
+      letter-spacing:.08em; color:rgba(255,255,255,.05);
+      white-space:nowrap; user-select:none; pointer-events:none;
+    }
+    .grove-scene{
+      position:absolute; inset:0; z-index:2; width:100%; height:100%;
+      pointer-events:none; opacity:0; transition:opacity .9s var(--ease);
+    }
+    .grove.is-ready .grove-scene{ opacity:1; }
+    /* the still fallback: a soft arch of moss, drawn rather than grown */
+    .grove-fallback{ position:absolute; inset:0; z-index:2; width:100%; height:100%; display:none; pointer-events:none; }
+    .grove.scene-fallback .grove-scene{ display:none; }
+    .grove.scene-fallback .grove-fallback{ display:block; }
+    /* a breath of the ground pulled over the moss behind the copy, so the
+       title stays legible however the arch lands under it on a wide screen */
+    .grove-scrim{
+      position:absolute; inset:0; z-index:3; pointer-events:none;
+      background:linear-gradient(90deg, rgba(56,59,52,.62) 0%, rgba(56,59,52,.34) 30%, rgba(56,59,52,0) 56%);
+    }
+
+    /* the copy sits over the moss on the left, the two marks at the right;
+       both ride the pointer a few px, the way the welcome page cards do */
+    .grove-copy{
+      position:absolute; z-index:4; left:clamp(18px, 3.2vw, 48px); top:50%;
+      transform:translateY(-50%); max-width:min(52%, 560px); pointer-events:none;
+    }
+    .grove-copy > *{ pointer-events:auto; }
+    .grove-eyebrow{ font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint); font-weight:400; }
+    .grove-title{
+      margin-top:10px; font-size:clamp(24px, 3.1vw, 44px); line-height:1.04;
+      font-weight:300; letter-spacing:-.012em; color:var(--ink);
+      text-shadow:0 2px 18px rgba(10,14,8,.55);
+    }
+    .grove-title span{ display:block; padding-bottom:.04em; }
+    .grove-title i{ display:inline-block; font-style:normal; opacity:0; transform:translateY(.5em); }
+    .grove.is-ready .grove-title i{
+      opacity:1; transform:none;
+      transition:opacity 1.05s var(--ease) var(--d,0ms), transform 1.25s var(--ease-out) var(--d,0ms);
+    }
+    .grove-lede{
+      margin-top:12px; max-width:430px; font-size:13.5px; line-height:1.55;
+      color:var(--ink-soft); font-weight:300; text-shadow:0 1px 12px rgba(10,14,8,.5);
+    }
+    .grove .fade{ opacity:0; }
+    .grove.is-ready .fade{ opacity:1; transition:opacity 1.3s var(--ease) var(--d,0ms); }
+    .grove-stats{
+      position:absolute; z-index:4; right:clamp(18px, 3vw, 48px); bottom:clamp(18px, 3.6vh, 36px);
+      display:flex; gap:30px; padding:10px 18px 10px 14px; border-radius:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 42%), rgba(30,35,27,.58);
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow:0 8px 22px rgba(10,14,8,.28), inset 0 1px 0 rgba(255,255,255,.06);
+      -webkit-backdrop-filter:blur(12px) saturate(1.15); backdrop-filter:blur(12px) saturate(1.15);
+      pointer-events:none;
+    }
+    .grove-stat{ display:flex; align-items:flex-start; gap:10px; margin:0; }
+    .grove-stat .mark{ width:32px; height:32px; flex:none; margin-top:2px; color:rgba(255,255,255,.34); filter:drop-shadow(0 2px 10px rgba(10,14,8,.6)); }
+    .grove-stat .mark svg{ width:100%; height:100%; display:block; }
+    .grove-stat dt{ font-size:12.5px; font-weight:300; color:var(--ink-soft); line-height:18px; }
+    .grove-stat dd{ font-size:13px; font-weight:500; color:var(--ink); line-height:20px; margin:0; }
+    .grove-stat dt, .grove-stat dd{ text-shadow:0 2px 16px rgba(10,14,8,.6); }
+    .grove-state{
+      position:absolute; z-index:4; right:clamp(18px, 3vw, 48px); top:14px;
+      font-size:11px; color:var(--ink-faint); pointer-events:none;
+    }
+    .grove-state:empty{ display:none; }
+    /* pointer parallax: the scene writes --px/--py on the band once a frame */
+    .grove .par{
+      transform:translate3d(calc(var(--px,0) * var(--pd,0) * -1px), calc(var(--py,0) * var(--pd,0) * -.62px), 0);
+      will-change:transform;
+    }
+    /* the KPI tiles ride up onto the moss, so where they overlap it they are
+       more paper than glass */
+    @media (min-width:1024px){
+      main > .kpi-row{ margin-top:-30px !important; position:relative; z-index:6; padding:0 14px; }
+      .grove-stats{ bottom:46px; }
+    }
+    .kpi-row > div{ background-color:rgba(33,39,30,.84) !important; }
+
+    @media (max-width:1279px){
+      .grove-stats{ flex-direction:column; gap:10px; }
+    }
+    @media (max-width:1023px){
+      .grove{ height:clamp(200px, 27vh, 280px); }
+      .grove-copy{ max-width:70%; }
+      .grove-stats{ display:none; }
+    }
+    @media (max-width:639px){
+      .grove{ height:200px; --u: calc((100vw - 2rem) / 1600); }
+      .grove-lede{ display:none; }
+      .grove-copy{ max-width:86%; }
+      .grove-title{ font-size:22px; }
+    }
+
+    /* -- control feedback ---------------------------------------------
+       The welcome page's liquid buttons, in CSS: a soft top light on the
+       primary actions, a lift on hover, a sink on press, and a visible cream
+       ring on keyboard focus. Applied to every dock pill, primary button,
+       tab, and modal action. */
+    button, .dock-pill{
+      transition:transform .22s var(--ease-out), box-shadow .22s var(--ease),
+                 background-color .2s var(--ease), border-color .2s var(--ease),
+                 color .18s var(--ease), opacity .2s var(--ease);
+    }
+    button:active:not(:disabled), .dock-pill:active{
+      transform:translateY(1px) scale(.985); transition-duration:.08s;
+    }
+    button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible,
+    textarea:focus-visible, [tabindex]:focus-visible{
+      outline:2px solid rgba(228,234,214,.92); outline-offset:2px;
+      box-shadow:0 0 0 5px rgba(228,234,214,.16);
+    }
+    button.bg-brand-primary, .dock-pill--solid{
+      background-image:linear-gradient(180deg, rgba(255,255,255,.62), rgba(255,255,255,0) 58%);
+      box-shadow:0 8px 18px -6px rgba(10,14,8,.5), inset 0 1px 0 rgba(255,255,255,.75);
+    }
+    button.bg-brand-primary:hover:not(:disabled), .dock-pill--solid:hover{
+      transform:translateY(-1px);
+      box-shadow:0 12px 24px -8px rgba(10,14,8,.55), inset 0 1px 0 #fff;
+    }
+    button.bg-brand-primary:active:not(:disabled), .dock-pill--solid:active{
+      transform:translateY(1px) scale(.98);
+      box-shadow:0 4px 10px -4px rgba(10,14,8,.5), inset 0 1px 0 rgba(255,255,255,.4);
+    }
+    button:disabled{ cursor:progress; opacity:.72; transform:none; }
+
     @media (prefers-reduced-motion:reduce){
       #ambient{ display:none; }
+      .grove-scene, .grove .fade, .grove-title i{ opacity:1 !important; transform:none !important; transition:none !important; }
+      .grove .par{ transform:none !important; }
+      button, .dock-pill{ transition:none; }
     }
   </style>
 </head>
@@ -300,7 +528,7 @@
 
   <!-- Header Navigation -->
   <header class="dock-bar sticky top-3 z-50 mx-3 lg:mx-6 mt-3 h-[64px] flex items-center justify-between gap-4 px-4 lg:px-5 overflow-hidden" data-spec>
-    <div class="flex items-center gap-3 flex-none min-w-0">
+    <a href="/" class="brand-home flex items-center gap-3 flex-none min-w-0" title="API Sentinel home">
       <div class="dock-mark w-9 h-9 rounded-[10px] flex items-center justify-center">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.25">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
@@ -313,7 +541,7 @@
         </div>
         <p class="text-[11px] text-text-secondary hidden 2xl:block whitespace-nowrap">Automated Quality, Profiling & AI Remediation</p>
       </div>
-    </div>
+    </a>
 
     <!-- Right Controls -->
     <div class="flex items-center gap-2 min-w-0 overflow-x-auto no-bar">
@@ -324,11 +552,6 @@
       </div>
 
       <!-- Quick Action Buttons -->
-      <a href="/welcome" class="dock-pill px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all flex items-center gap-1.5 flex-none whitespace-nowrap" title="View 3D Welcome Landing Page">
-        <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-        <span>Welcome 3D</span>
-      </a>
-
       <button onclick="openReportModal()" class="dock-pill px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all flex items-center gap-1.5 flex-none whitespace-nowrap" title="Generate and export comprehensive quality reports">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <span>Reports</span>
@@ -359,8 +582,61 @@
   <!-- Main Container -->
   <main class="relative z-10 flex-grow max-w-[1440px] w-full mx-auto px-4 lg:px-8 py-6 space-y-6">
 
+    <!-- The grove: the welcome page's moss roots, grown into a band above the
+         telemetry. Decorative; every control on the page sits outside it. -->
+    <section class="grove" id="grove" data-spec aria-labelledby="groveTitle">
+      <div class="grove-stage" id="groveStage" aria-hidden="true"></div>
+      <div class="grove-ghost fade" style="--d:900ms" aria-hidden="true">SENTINEL</div>
+      <svg class="grove-fallback" viewBox="0 0 1600 340" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="gvMoss" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#b9cf98" stop-opacity=".95"/>
+            <stop offset=".55" stop-color="#6f8a55" stop-opacity=".9"/>
+            <stop offset="1" stop-color="#2e3a26" stop-opacity=".95"/>
+          </linearGradient>
+          <filter id="gvSoft" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="14"/></filter>
+          <filter id="gvBlur" x="-20%" y="-40%" width="140%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
+        </defs>
+        <ellipse cx="800" cy="330" rx="620" ry="90" fill="#eef3e7" opacity=".28" filter="url(#gvSoft)"/>
+        <path d="M-40 250 C 220 120, 520 80, 780 130 S 1180 240, 1640 160 L 1640 340 L -40 340 Z" fill="#20281d" opacity=".55" filter="url(#gvSoft)"/>
+        <path d="M-40 232 C 240 100, 560 60, 800 118 S 1200 230, 1640 140 L 1640 340 L -40 340 Z" fill="url(#gvMoss)" filter="url(#gvBlur)"/>
+        <path d="M-40 232 C 240 100, 560 60, 800 118 S 1200 230, 1640 140" fill="none" stroke="#dbe7c4" stroke-opacity=".55" stroke-width="3"/>
+      </svg>
+      <canvas class="grove-scene" id="groveScene" aria-hidden="true"></canvas>
+      <div class="grove-scrim" aria-hidden="true"></div>
+      <div class="grove-copy">
+        <div class="par" data-par style="--pd:9">
+          <p class="grove-eyebrow fade" style="--d:120ms">Living cockpit &middot; Case study JP-009</p>
+          <h1 class="grove-title" id="groveTitle">
+            <span><i style="--d:240ms">Autonomous API quality,</i></span>
+            <span><i style="--d:360ms">grown in the open.</i></span>
+          </h1>
+          <p class="grove-lede fade" style="--d:520ms">Every verdict is deterministic. The AI layer reads the evidence afterwards and explains what broke, and how to fix it.</p>
+        </div>
+      </div>
+      <div class="grove-stats par" data-par style="--pd:15">
+        <dl class="grove-stat fade" style="--d:700ms">
+          <span class="mark" aria-hidden="true">
+            <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+              <circle cx="15" cy="15" r="10.5" stroke-dasharray="0.6 3.6"/><circle cx="15" cy="15" r="5.6" stroke-dasharray="0.6 3.2"/><circle cx="15" cy="15" r="1.1" fill="currentColor" stroke="none"/>
+            </svg>
+          </span>
+          <div><dt>Verdict engine</dt><dd>Deterministic &middot; rule-based</dd></div>
+        </dl>
+        <dl class="grove-stat fade" style="--d:780ms">
+          <span class="mark" aria-hidden="true">
+            <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+              <path d="M15 3.5v5"/><path d="M15 21.5v5"/><path d="M3.5 15h5"/><path d="M21.5 15h5"/><path d="M6.9 6.9l3.5 3.5"/><path d="M19.6 19.6l3.5 3.5"/><path d="M23.1 6.9l-3.5 3.5"/><path d="M10.4 19.6l-3.5 3.5"/><circle cx="15" cy="15" r="3.6"/>
+            </svg>
+          </span>
+          <div><dt>AI diagnostics</dt><dd id="groveStatAi">Probing engine&hellip;</dd></div>
+        </dl>
+      </div>
+      <p class="grove-state" id="groveState" role="status"></p>
+    </section>
+
     <!-- KPI Metric Cards Grid -->
-    <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
+    <section class="kpi-row grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5" aria-label="Key metrics">
       <!-- 1. Total Projects -->
       <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
         <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Workspaces</span>
@@ -400,9 +676,12 @@
       <!-- 5. Avg Latency -->
       <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
         <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Avg Latency</span>
-        <div class="flex items-baseline justify-between mt-2">
-          <span id="kpiLatency" class="text-2xl font-bold text-white tracking-tight">--ms</span>
-          <span class="text-[10px] text-text-secondary font-mono">P95: <span id="kpiP95">--</span>ms</span>
+        <!-- The latency figure is the widest number on the row, so its P95
+             companion reads underneath it rather than being squeezed onto the
+             same baseline, where it wrapped and collided with the value. -->
+        <div class="mt-2">
+          <span id="kpiLatency" class="block text-2xl font-bold text-white tracking-tight leading-none tabular-nums">--ms</span>
+          <span class="block mt-1.5 text-[10px] text-text-secondary font-mono whitespace-nowrap tabular-nums">P95: <span id="kpiP95">--</span>ms</span>
         </div>
       </div>
 
@@ -426,7 +705,7 @@
         <div class="bg-neutral-surface/70 border border-white/10 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div class="flex items-center flex-wrap gap-2">
             <span class="text-xs uppercase tracking-widest text-text-secondary font-semibold">Active Project:</span>
-            <select id="projectSelect" onchange="onProjectChange()" class="bg-black/50 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-primary font-medium max-w-[260px] truncate">
+            <select id="projectSelect" onchange="onProjectChange()" class="bg-black/50 border border-white/15 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-brand-primary font-medium max-w-[300px]">
               <option value="">Loading workspaces...</option>
             </select>
             <button onclick="openNewProjectModal()" class="px-2.5 py-1.5 rounded-lg bg-brand-primary/10 hover:bg-brand-primary/20 border border-brand-primary/30 text-xs text-brand-primary font-semibold transition-all flex items-center gap-1" title="Create new workspace">
@@ -656,10 +935,14 @@
           const json = await res.json();
           if (json.data) {
             document.getElementById("aiEngineLabel").innerText = `AI: ${json.data.active_engine} (${json.data.model_name || 'Heuristic-v1'})`;
+            const groveAi = document.getElementById("groveStatAi");
+            if (groveAi) groveAi.innerText = `${json.data.active_engine} \u00b7 ${json.data.model_name || 'Heuristic-v1'}`;
           }
         }
       } catch (err) {
         console.warn("AI status probe error", err);
+        const groveAi = document.getElementById("groveStatAi");
+        if (groveAi) groveAi.innerText = "Heuristic \u00b7 offline";
       }
     }
 
@@ -1198,6 +1481,7 @@
       btn.disabled = true;
       btn.innerHTML = `<span class="animate-spin">↻</span> Running...`;
       logToTerminal("[DISPATCH]", `Starting automated test suite run for project #${currentProjectId}...`);
+      if (window.__grove) window.__grove.pulse();
 
       try {
         const res = await fetch(`/api/v1/projects/${currentProjectId}/runs`, {
@@ -1681,6 +1965,9 @@
     var raf = 0, last = 0;
     function frame(now) {
       raf = requestAnimationFrame(frame);
+      /* The grove renders on every frame it is in view: this is the page's
+         one animation loop, and the scene is a passenger on it. */
+      if (window.__grove) window.__grove.tick(now);
       /* The light moves slowly enough that a third of the display rate is
          indistinguishable from all of it, and leaves the main thread to
          the telemetry that actually needs it. */
@@ -1771,6 +2058,257 @@
     function boot() { startLight(); startRim(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
+  })();
+  </script>
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       Themed selects. The native <select> stays where it is and keeps
+       owning the value: everything already written against .value, .options
+       and 'change' goes on working untouched. This only replaces the
+       surface, because the popup a native select opens is drawn by the OS
+       and cannot be themed.
+       ────────────────────────────────────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    var CARET = '<svg class="tsel-caret" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6.5 8 10.5 12 6.5"/></svg>';
+    var open = null;   /* the one control whose list is showing */
+
+    function enhance(sel) {
+      if (sel.dataset.tsel) return;
+      sel.dataset.tsel = '1';
+
+      var wrap = document.createElement('span');
+      wrap.className = 'tsel-wrap' + (/\bw-full\b/.test(sel.className) ? ' is-block' : '');
+      sel.parentNode.insertBefore(wrap, sel);
+      wrap.appendChild(sel);
+
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      /* the trigger inherits the select's own utility classes, so it keeps
+         the exact size, padding and colour the layout was built around */
+      btn.className = sel.className + ' tsel';
+      btn.setAttribute('aria-haspopup', 'listbox');
+      btn.setAttribute('aria-expanded', 'false');
+      btn.innerHTML = '<span class="tsel-label"></span>' + CARET;
+      wrap.appendChild(btn);
+
+      sel.classList.add('tsel-native');
+      sel.setAttribute('tabindex', '-1');
+      sel.setAttribute('aria-hidden', 'true');
+
+      var label = btn.querySelector('.tsel-label');
+      var pop = null, opts = [], active = -1;
+
+      function sync() {
+        var o = sel.selectedOptions && sel.selectedOptions[0];
+        label.textContent = o ? o.textContent.trim() : '';
+        btn.title = label.textContent;
+        btn.disabled = sel.disabled;
+      }
+
+      function place() {
+        if (!pop) return;
+        var r = btn.getBoundingClientRect();
+        var w = Math.max(r.width, 200);
+        pop.style.width = w + 'px';
+        pop.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + 'px';
+        /* flip above when there is more room up than down */
+        var below = innerHeight - r.bottom - 12, above = r.top - 12;
+        var h = pop.offsetHeight;
+        if (below < h && above > below) pop.style.top = Math.max(8, r.top - h - 6) + 'px';
+        else pop.style.top = (r.bottom + 6) + 'px';
+      }
+
+      function build() {
+        pop = document.createElement('div');
+        pop.className = 'tsel-pop';
+        pop.setAttribute('role', 'listbox');
+        opts = [];
+        [].forEach.call(sel.options, function (o, i) {
+          var it = document.createElement('button');
+          it.type = 'button';
+          it.className = 'tsel-opt';
+          it.setAttribute('role', 'option');
+          it.setAttribute('aria-selected', String(i === sel.selectedIndex));
+          if (o.disabled) it.disabled = true;
+          it.innerHTML = '<span class="dot" aria-hidden="true"></span><span class="tsel-opt-text"></span>';
+          it.querySelector('.tsel-opt-text').textContent = o.textContent.trim();
+          it.addEventListener('click', function () { pick(i); });
+          it.addEventListener('mousemove', function () { setActive(i); });
+          pop.appendChild(it);
+          opts.push(it);
+        });
+        document.body.appendChild(pop);
+      }
+
+      function setActive(i) {
+        if (active > -1 && opts[active]) opts[active].classList.remove('is-active');
+        active = i;
+        if (i > -1 && opts[i]) {
+          opts[i].classList.add('is-active');
+          opts[i].scrollIntoView({ block: 'nearest' });
+        }
+      }
+
+      function show() {
+        if (pop || sel.disabled || !sel.options.length) return;
+        if (open) open.close();
+        open = api;
+        build();
+        place();
+        requestAnimationFrame(function () { if (pop) pop.classList.add('is-open'); });
+        btn.setAttribute('aria-expanded', 'true');
+        setActive(sel.selectedIndex > -1 ? sel.selectedIndex : 0);
+        addEventListener('scroll', place, true);
+        addEventListener('resize', place);
+        setTimeout(function () { document.addEventListener('pointerdown', outside, true); }, 0);
+      }
+
+      function close(refocus) {
+        if (!pop) return;
+        pop.remove(); pop = null; opts = []; active = -1;
+        btn.setAttribute('aria-expanded', 'false');
+        removeEventListener('scroll', place, true);
+        removeEventListener('resize', place);
+        document.removeEventListener('pointerdown', outside, true);
+        if (open === api) open = null;
+        if (refocus) btn.focus();
+      }
+
+      function outside(e) {
+        if (pop && !pop.contains(e.target) && !btn.contains(e.target)) close(false);
+      }
+
+      function pick(i) {
+        var o = sel.options[i];
+        if (!o || o.disabled) return;
+        var changed = sel.selectedIndex !== i;
+        sel.selectedIndex = i;
+        sync();
+        close(true);
+        /* inline onchange="..." handlers are listeners too, so they fire */
+        if (changed) sel.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+
+      btn.addEventListener('click', function () { pop ? close(false) : show(); });
+
+      btn.addEventListener('keydown', function (e) {
+        var k = e.key;
+        if (!pop) {
+          if (k === 'ArrowDown' || k === 'ArrowUp' || k === 'Enter' || k === ' ') { e.preventDefault(); show(); }
+          return;
+        }
+        if (k === 'Escape') { e.preventDefault(); close(true); }
+        else if (k === 'ArrowDown') { e.preventDefault(); setActive(Math.min(opts.length - 1, active + 1)); }
+        else if (k === 'ArrowUp') { e.preventDefault(); setActive(Math.max(0, active - 1)); }
+        else if (k === 'Home') { e.preventDefault(); setActive(0); }
+        else if (k === 'End') { e.preventDefault(); setActive(opts.length - 1); }
+        else if (k === 'Enter' || k === ' ') { e.preventDefault(); pick(active); }
+        else if (k === 'Tab') close(false);
+      });
+
+      /* The dashboard rewrites these lists as workspaces and runs load, and
+         it sets .value right after .innerHTML in the same task - so read the
+         result a frame later rather than mid-rewrite. */
+      var queued = false;
+      new MutationObserver(function () {
+        if (queued) return;
+        queued = true;
+        requestAnimationFrame(function () { queued = false; sync(); close(false); });
+      }).observe(sel, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled'] });
+
+      sel.addEventListener('change', sync);
+
+      var api = { close: function () { close(false); } };
+      sync();
+    }
+
+    function boot() {
+      [].forEach.call(document.querySelectorAll('select'), enhance);
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  </script>
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       The grove. three.js (600 KB) and the scene only load once the page has
+       painted and WebGL is known to exist; until then, and if either fails,
+       the band already carries the welcome page's light pool, the copy, and
+       a drawn fallback of the moss arch. Nothing the dashboard does waits
+       on this.
+       ────────────────────────────────────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+    var grove = document.getElementById('grove');
+    var canvas = document.getElementById('groveScene');
+    var stage = document.getElementById('groveStage');
+    var state = document.getElementById('groveState');
+    if (!grove || !canvas || !stage) return;
+
+    var fellBack = false;
+    function fallback(reason) {
+      if (fellBack) return;
+      fellBack = true;
+      grove.classList.add('scene-fallback', 'is-ready', 'intro-done');
+      if (state) state.textContent = reason || '';
+      window.__grove = null;
+    }
+    function hasWebGL() {
+      try {
+        var c = document.createElement('canvas');
+        return !!(c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl'));
+      } catch (e) { return false; }
+    }
+    function load(src) {
+      return new Promise(function (resolve, reject) {
+        var el = document.createElement('script');
+        el.src = src; el.async = true;
+        el.onload = resolve;
+        el.onerror = function () { reject(new Error('failed to load ' + src)); };
+        document.head.appendChild(el);
+      });
+    }
+
+    /* the copy never waits on the scene */
+    setTimeout(function () { grove.classList.add('is-ready'); }, 1800);
+
+    if (!hasWebGL()) { fallback('Still view \u2014 WebGL is not available in this browser.'); return; }
+
+    function start() {
+      load('/inner-green-assets/three.min.js')
+        .then(function () { return load('/inner-green-assets/sentinel-scene.js'); })
+        .then(function () {
+          var ctrl = window.SentinelScene.mount({
+            hero: grove, stage: stage, canvas: canvas,
+            externalLoop: true, maxPixelRatio: 1.5,
+            onError: function (err) {
+              console.error('[grove] scene failed', err);
+              fallback('Still view \u2014 the scene could not start.');
+            }
+          });
+          if (!ctrl) throw new Error('scene did not mount');
+          window.__grove = ctrl;
+          /* A band scrolled out of view renders nothing. The top 80px of
+             the viewport sit under the sticky dock, so a sliver of band
+             left there is not on screen in any sense that matters. */
+          if ('IntersectionObserver' in window) {
+            new IntersectionObserver(function (entries) {
+              ctrl.setInView(entries[0].isIntersecting);
+            }, { threshold: 0.02, rootMargin: '-80px 0px 0px 0px' }).observe(grove);
+          }
+        })
+        .catch(function (err) {
+          console.warn('[grove]', err);
+          fallback('Still view \u2014 the scene could not load.');
+        });
+    }
+    /* let the first paint and the telemetry fetch go first */
+    if ('requestIdleCallback' in window) requestIdleCallback(start, { timeout: 1200 });
+    else setTimeout(start, 200);
   })();
   </script>
 

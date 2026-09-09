@@ -1,1726 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>API Sentinel — Autonomous API Quality & Telemetry Cockpit</title>
-<meta name="description" content="API Sentinel: Autonomous API quality engineering, real-time telemetry capture, AI root-cause diagnostics, and closed-loop regression verification platform.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 24'%3E%3Crect width='22' height='24' fill='%234a4d44'/%3E%3Cpath fill='%23fff' d='M11 1.3c-2.1 0-3.95 1.2-4.75 2.95C3.95 4.55 2.3 6.25 2.3 8.35c0 2.3 1.9 4.2 4.3 4.2h8.8c2.4 0 4.3-1.9 4.3-4.2 0-2.1-1.65-3.8-4-4.1C14.95 2.5 13.1 1.3 11 1.3Z'/%3E%3Cpath fill='%23fff' d='M9.6 12.55h2.8v4.2c1.35.3 2.45 1.15 3.15 2.4-1.35.4-2.4.15-3.15-.4v4.15H9.6v-4.15c-.75.55-1.8.8-3.15.4.7-1.25 1.8-2.1 3.15-2.4v-4.2Z'/%3E%3C/svg%3E">
-<script>document.documentElement.className += " js";</script>
-<style>
-  @font-face{
-    font-family:'Lexend';
-    src:url('/inner-green-assets/lexend-latin.woff2') format('woff2');
-    font-weight:100 900; font-style:normal; font-display:swap;
-    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
-  }
-
-  /* ── design unit: 1u === 1px on the 1600 × 880 reference frame ───────── */
-  :root{
-    --u: calc(100vw / 1600);
-
-    --ink:            #ffffff;
-    --ink-soft:       rgba(255,255,255,.62);
-    --ink-faint:      rgba(255,255,255,.44);
-    --rule:           rgba(255,255,255,.055);
-
-    --card:           #f2f3ef;
-    --card-ink:       #23261f;
-    --card-label:     #7c8177;
-
-    --ease: cubic-bezier(.22,.61,.36,1);
-    --ease-out: cubic-bezier(.16,1,.3,1);
-  }
-  @media (min-width:1900px){ :root{ --u: calc(1900px / 1600); } }
-
-  *,*::before,*::after{ box-sizing:border-box; margin:0; padding:0; }
-
-  html{ background:#383b34; }
-  body{
-    font-family:'Lexend',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-    font-weight:300;
-    color:var(--ink);
-    background:#383b34;
-    overflow-x:hidden;
-    -webkit-font-smoothing:antialiased;
-    -moz-osx-font-smoothing:grayscale;
-  }
-
-  /* ── hero shell ──────────────────────────────────────────────────────── */
-  .hero{
-    position:relative;
-    width:100%;
-    height:100svh;
-    min-height:calc(880 * var(--u));
-    overflow:hidden;
-    isolation:isolate;
-    /* the reference screen reads a near-flat #4a4d44 corner to corner —
-       all the modelling comes from the light pool the root sits in */
-    background:
-      radial-gradient(64% 52% at 27% 84%, rgba(232,238,222,.085) 0%, rgba(232,238,222,0) 72%),
-      radial-gradient(70% 60% at 92% 8%,  rgba(24,28,20,.10) 0%, rgba(24,28,20,0) 68%),
-      #4a4d44;
-  }
-  /* The floor of light the root stands in. Sampled off the reference: the
-     background climbs from 73 luma at the nav to ~128 at y 850, brightest
-     around the middle of the bottom edge. */
-  .hero::after{
-    content:'';
-    position:absolute; inset:0;
-    background:
-      radial-gradient(72% 44% at 50% 117%, rgba(238,243,231,.50) 0%, rgba(238,243,231,.21) 42%, rgba(238,243,231,.04) 72%, rgba(238,243,231,0) 88%),
-      linear-gradient(180deg, rgba(238,243,231,0) 54%, rgba(238,243,231,.03) 78%, rgba(238,243,231,.085) 100%);
-    pointer-events:none; z-index:0;
-  }
-
-  /* The whole composition lives on a centred 1600 × 880 stage.
-     Centred with margins rather than a transform on purpose: a transform would
-     open a stacking context and trap every child below #scene. */
-  .stage{
-    position:absolute; left:50%; top:50%;
-    margin-left:calc(-800 * var(--u));
-    margin-top:calc(-440 * var(--u));
-    width:calc(1600 * var(--u));
-    height:calc(880 * var(--u));
-  }
-
-  /* ── column guides (z 1) ─────────────────────────────────────────────── */
-  .guides{ position:absolute; inset:calc(-40 * var(--u)) 0; z-index:1; pointer-events:none; }
-  .guides i{
-    position:absolute; top:0; bottom:0; width:1px;
-    background:linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--rule) 12%, var(--rule) 78%, rgba(255,255,255,0) 100%);
-  }
-
-  /* ── ghost wordmark (z 1) ────────────────────────────────────────────── */
-  .ghost{
-    position:absolute; z-index:1;
-    left:calc(6 * var(--u)); bottom:calc(-64 * var(--u));
-    font-size:calc(310 * var(--u));
-    line-height:.78;
-    font-weight:400;
-    letter-spacing:calc(30 * var(--u));
-    color:rgba(255,255,255,.055);
-    white-space:nowrap; user-select:none; pointer-events:none;
-  }
-
-  /* ── three.js canvas (z 3 — above card 1, below everything else) ─────── */
-  #scene{
-    position:absolute; inset:0; z-index:3;
-    width:100%; height:100%;
-    pointer-events:none;
-    opacity:0; transition:opacity .7s var(--ease);
-  }
-  .is-ready #scene{ opacity:1; }
-
-  /* ── nav: a floating dock (z 5) ──────────────────────────────────────
-     A centred capsule of pills that magnify as the pointer nears them, over
-     a rim highlight that tracks where the pointer is — the dock idiom from
-     ascii-page-transition, in this page's palette and unit system.
-     The wrapper does the centring so the capsule itself is free to carry the
-     pointer-parallax transform; putting both on one element means whichever
-     is written last wins and the dock jumps out of centre. */
-  .dock-wrap{
-    position:absolute; z-index:5;
-    top:calc(38 * var(--u)); left:0; right:0;
-    display:flex; justify-content:center;
-    pointer-events:none;
-  }
-  .dock{
-    pointer-events:auto;
-    display:flex; align-items:flex-start; gap:calc(3 * var(--u));
-    height:calc(46 * var(--u));
-    padding:calc(5 * var(--u));
-    border-radius:calc(14 * var(--u));
-    border:1px solid rgba(255,255,255,.11);
-    /* No backdrop-filter. It sits over a canvas that repaints every frame,
-       so the backdrop has to be re-sampled and re-blurred every frame too —
-       measured at ~20 fps off the whole page, and the radius made no
-       difference because the cost is the extra pass, not the blur. A
-       translucent panel with a lit top edge reads the same at this size. */
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,0) 42%),
-      rgba(34,40,31,.74);
-    box-shadow:0 calc(8 * var(--u)) calc(22 * var(--u)) rgba(10,14,8,.30),
-               inset 0 1px rgba(255,255,255,.06);
-    isolation:isolate;
-  }
-  /* Anchored at the top so growth runs downward, out of the headline's way —
-     a dock that grew from its centre would push into the nav's own row. */
-  .dock-item{
-    position:relative; z-index:6;
-    display:inline-flex; align-items:center; justify-content:center;
-    flex:none;
-    height:calc(36 * var(--u));
-    gap:calc(8 * var(--u));
-    padding:0 calc(13 * var(--u));
-    transform-origin:50% 0;
-    border:1px solid transparent;
-    border-radius:calc(10 * var(--u));
-    background:rgba(255,255,255,.04);
-    color:var(--ink-faint);
-    text-decoration:none; cursor:pointer;
-    font-family:inherit;
-    font-size:calc(11 * var(--u)); font-weight:500;
-    letter-spacing:calc(1.5 * var(--u)); text-transform:uppercase;
-    white-space:nowrap;
-    will-change:width,height,transform;
-    transition:color .18s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
-  }
-  /* A magnified pill hangs below the capsule, so it needs to be its own
-     opaque tile — a translucent white wash at that size reads as a milky
-     rectangle stuck to the bar rather than as a key lifting off it. */
-  .dock-item[data-near="true"]{
-    z-index:7;
-    color:var(--ink);
-    border-color:rgba(255,255,255,.19);
-    background:rgba(31,37,28,.94);
-    box-shadow:0 calc(7 * var(--u)) calc(16 * var(--u)) rgba(10,14,8,.30);
-  }
-  .dock-item .glyph{
-    width:calc(14 * var(--u)); height:calc(14 * var(--u)); flex:none;
-    opacity:.66; transition:opacity .18s var(--ease);
-  }
-  .dock-item .glyph svg{
-    display:block; width:100%; height:100%;
-    fill:none; stroke:currentColor; stroke-width:1.25;
-    stroke-linecap:round; stroke-linejoin:round;
-  }
-  .dock-item[data-near="true"] .glyph{ opacity:1; }
-
-  /* the mark is the dock's anchor: a solid pale tile, the one opaque thing
-     in a bar made of glass */
-  .dock-mark{
-    width:calc(36 * var(--u)); padding:0;
-    background:#eef1e7; border-color:#eef1e7; color:#23261f;
-    overflow:hidden;
-  }
-  .dock-mark svg{ width:58%; height:58%; display:block; fill:currentColor; }
-  /* the near state paints .dock-item white, which on the pale mark tile
-     would be a white glyph on a white ground */
-  .dock-mark[data-near="true"]{ background:#fff; border-color:#fff; color:#1b1e18; }
-
-  /* the current section wears the cards' paper, so the nav and the cards
-     read as the same material */
-  .dock-item.is-active{
-    background:var(--card); border-color:var(--card); color:var(--card-ink);
-    box-shadow:0 calc(6 * var(--u)) calc(16 * var(--u)) rgba(12,17,9,.24);
-  }
-  .dock-item.is-active .glyph{ opacity:.8; }
-  .dock-item--enter{ color:var(--ink); background:rgba(255,255,255,.075); }
-
-  /* ── specular rim ────────────────────────────────────────────────────
-     A conic gradient masked down to the border, whose start angle points at
-     the pointer and whose opacity falls off with distance. It is the reason
-     the glass reads as a lit edge rather than as a flat translucent box. */
-  [data-spec]{ --spec-angle:2.4rad; --spec-bright:0; }
-  [data-spec]::after{
-    content:''; position:absolute; inset:-1px; z-index:5;
-    padding:1px; border-radius:inherit; pointer-events:none;
-    opacity:var(--spec-bright);
-    background:conic-gradient(from var(--spec-angle) at 50% 50%,
-      rgba(240,246,232,0) 0deg, rgba(240,246,232,.08) 14deg, rgba(240,246,232,.95) 28deg,
-      rgba(240,246,232,.16) 46deg, rgba(240,246,232,0) 68deg, rgba(240,246,232,0) 180deg,
-      rgba(240,246,232,.08) 194deg, rgba(240,246,232,.95) 208deg, rgba(240,246,232,.16) 226deg,
-      rgba(240,246,232,0) 248deg, rgba(240,246,232,0) 360deg);
-    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-            mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite:xor; mask-composite:exclude;
-  }
-  .dock{ position:relative; }
-
-  /* ── hero copy (z 4) ─────────────────────────────────────────────────── */
-  .headline{
-    position:absolute; z-index:4;
-    left:calc(46 * var(--u)); top:calc(202 * var(--u));
-    font-size:calc(63 * var(--u)); line-height:calc(65 * var(--u));
-    font-weight:300; letter-spacing:calc(-0.4 * var(--u));
-    color:var(--ink);
-  }
-  /* No overflow clip: cropping a 63u face to wipe it in cuts the descenders
-     of "Step" and "living" at the moment they land. The padding stays even
-     though the clip is gone — it set the two lines' metrics, and removing it
-     would shift line two. */
-  .headline span{ display:block; padding-bottom:.04em; }
-  .headline span i{ display:inline-block; font-style:normal; }
-
-  .lede{
-    position:absolute; z-index:4;
-    left:calc(510 * var(--u)); top:calc(202 * var(--u));
-    width:calc(250 * var(--u));
-    font-size:calc(15.5 * var(--u)); line-height:calc(22 * var(--u));
-    font-weight:300; color:var(--ink-soft);
-  }
-
-  /* ── liquid-metal controls ──────────────────────────────────────────
-     The original five-pass WebGL2 renderer now mounts directly in this
-     document. Its canvas, sizing, glass plate, shader constants and input
-     model are unchanged; only the iframe boundary has been removed. */
-  .pill-clip{
-    position:absolute; z-index:4;
-    left:calc(644 * var(--u)); top:calc(360 * var(--u));
-    width:calc(410 * var(--u)); height:calc(270 * var(--u));
-    margin:calc(-135 * var(--u)) 0 0 calc(-205 * var(--u));
-    clip-path:inset(calc(72 * var(--u)) calc(60 * var(--u))
-                    calc(26 * var(--u)) calc(60 * var(--u)) round calc(62 * var(--u)));
-  }
-  .pill{
-    position:absolute; inset:0; --mr:calc(150 * var(--u));
-    display:grid; place-items:center;
-  }
-
-  .liquid-stage{
-    --lu:calc(var(--h) / 516);
-    --bh:var(--h);
-    --pad:calc(900 * var(--lu));
-    position:relative;
-    width:max-content; height:max-content;
-    padding:var(--pad);
-    display:grid; place-items:center;
-    touch-action:manipulation;
-    font-family:'Lexend','Inter',-apple-system,BlinkMacSystemFont,'Helvetica Neue',Arial,sans-serif;
-    font-optical-sizing:auto;
-    -webkit-font-smoothing:antialiased;
-  }
-  .liquid-stage--explore{ --h:calc(60.156 * var(--u)); }
-  .liquid-stage--play{ --h:calc(88.2288 * var(--u)); }
-
-  .liquid-plate{
-    position:absolute;
-    inset:var(--pad);
-    border-radius:999px;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.014) 44%, rgba(255,255,255,0) 64%),
-      rgba(10,12,10,.42);
-    box-shadow:
-      0 calc(var(--h) * 0.08) calc(var(--h) * 0.18) rgba(0,0,0,.38),
-      0 calc(var(--h) * 0.24) calc(var(--h) * 0.50) rgba(0,0,0,.28),
-      0 calc(var(--h) * 0.48) calc(var(--h) * 0.96) rgba(0,0,0,.16),
-      inset 0 1px 0 rgba(255,255,255,.13),
-      inset 0 calc(var(--h) * -0.02) calc(var(--h) * 0.05) rgba(255,255,255,.05);
-    transition:box-shadow .38s cubic-bezier(.22,.61,.36,1),
-               background .38s cubic-bezier(.22,.61,.36,1);
-  }
-  .liquid-stage.hot .liquid-plate{
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.105), rgba(255,255,255,.02) 44%, rgba(255,255,255,0) 64%),
-      rgba(8,10,8,.50);
-    box-shadow:
-      0 calc(var(--h) * 0.10) calc(var(--h) * 0.22) rgba(0,0,0,.44),
-      0 calc(var(--h) * 0.32) calc(var(--h) * 0.66) rgba(0,0,0,.34),
-      0 calc(var(--h) * 0.66) calc(var(--h) * 1.32) rgba(0,0,0,.20),
-      inset 0 1px 0 rgba(255,255,255,.17),
-      inset 0 calc(var(--h) * -0.02) calc(var(--h) * 0.05) rgba(255,255,255,.06);
-  }
-  .liquid-fx{ position:absolute; inset:0; width:100%; height:100%; display:block; }
-
-  .liquid-button{
-    position:relative;
-    height:var(--bh);
-    border:0; background:none;
-    border-radius:999px;
-    display:flex; align-items:center; justify-content:center;
-    color:#fff;
-    font-family:inherit; font-weight:500; line-height:1; letter-spacing:0;
-    cursor:pointer; -webkit-tap-highlight-color:transparent; outline:none;
-  }
-  .liquid-button:focus-visible{
-    outline:calc(4 * var(--lu)) solid rgba(255,255,255,.55);
-    outline-offset:calc(10 * var(--lu));
-  }
-  .liquid-button .ico{ display:block; flex:none; overflow:visible; }
-  .liquid-button .lbl{ display:block; transform:translateY(calc(2 * var(--lu))); }
-  .liquid-button--explore{
-    padding:0 calc(224 * var(--lu)) 0 calc(95 * var(--lu));
-    gap:calc(112 * var(--lu));
-    font-size:calc(140 * var(--lu));
-  }
-  .liquid-button--explore .ico{
-    width:calc(150 * var(--lu)); height:calc(150 * var(--lu));
-  }
-  .liquid-button--play{
-    width:var(--bh); height:var(--bh); padding:0;
-  }
-  .liquid-button--play .ico{
-    width:calc(176 * var(--lu)); height:calc(176 * var(--lu));
-    margin-left:calc(14 * var(--lu));
-  }
-  .liquid-button--play .lbl{ display:none; }
-  .liquid-stage.press .liquid-plate{
-    background:
-      linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.01) 44%, rgba(255,255,255,0) 64%),
-      rgba(7,9,7,.55);
-    box-shadow:
-      0 calc(var(--h) * 0.04) calc(var(--h) * 0.11) rgba(0,0,0,.46),
-      0 calc(var(--h) * 0.13) calc(var(--h) * 0.32) rgba(0,0,0,.36),
-      0 calc(var(--h) * 0.27) calc(var(--h) * 0.62) rgba(0,0,0,.22),
-      inset 0 1px 0 rgba(255,255,255,.10);
-    transition-duration:.10s;
-  }
-
-  /* ── play button (z 4) ─────────────────────────────────────────────── */
-  .play-wrap{
-    position:absolute; z-index:4; pointer-events:none;
-    left:calc(187 * var(--u)); top:calc(431 * var(--u));
-    width:calc(170 * var(--u)); height:calc(170 * var(--u));
-  }
-  .play-wrap > *{ pointer-events:auto; }
-  .play-clip{
-    position:absolute; left:50%; top:50%;
-    width:calc(396 * var(--u)); height:calc(396 * var(--u));
-    margin:calc(-198 * var(--u)) 0 0 calc(-198 * var(--u));
-    clip-path:inset(calc(131 * var(--u)) calc(106 * var(--u))
-                    calc(73 * var(--u)) calc(106 * var(--u)) round calc(92 * var(--u)));
-  }
-  .play-glass{ position:absolute; inset:0; display:grid; place-items:center; }
-  .play-ring{
-    position:absolute; inset:0; pointer-events:none;
-    border:1px solid rgba(255,255,255,.17); border-radius:50%;
-  }
-  .play-ring::after{
-    content:''; position:absolute; inset:calc(-1 * var(--u));
-    border:1px solid rgba(255,255,255,.32); border-radius:50%;
-    opacity:0; transform:scale(.86);
-    transition:opacity .7s var(--ease), transform .9s var(--ease-out);
-  }
-  .play-clip:hover ~ .play-ring::after,
-  .play-clip:focus-within ~ .play-ring::after{ opacity:1; transform:scale(1.06); }
-
-  /* ── stats (z 4) ─────────────────────────────────────────────────────── */
-  .stat{ position:absolute; z-index:4; display:flex; align-items:flex-start; gap:calc(9 * var(--u)); }
-  .stat--a{ left:calc(1250 * var(--u)); top:calc(216 * var(--u)); }
-  .stat--b{ left:calc(1346 * var(--u)); top:calc(326 * var(--u)); }
-  .stat .mark{ width:calc(32 * var(--u)); height:calc(32 * var(--u)); flex:none; margin-top:calc(2 * var(--u)); color:rgba(255,255,255,.34); }
-  .stat .mark svg{ width:100%; height:100%; display:block; }
-  .stat dt{ font-size:calc(13.5 * var(--u)); font-weight:300; color:var(--ink-soft); line-height:calc(19 * var(--u)); }
-  .stat dt, .stat dd{ text-shadow:0 calc(2 * var(--u)) calc(16 * var(--u)) rgba(10,14,8,.6); }
-  .stat .mark svg{ filter:drop-shadow(0 calc(2 * var(--u)) calc(10 * var(--u)) rgba(10,14,8,.6)); }
-  .stat dd{ font-size:calc(13.5 * var(--u)); font-weight:600; color:var(--ink); line-height:calc(21 * var(--u)); }
-
-  /* ── cards ───────────────────────────────────────────────────────────── */
-  .card{
-    position:absolute;
-    background:var(--card); border-radius:calc(46 * var(--u));
-    box-shadow:0 calc(30 * var(--u)) calc(70 * var(--u)) rgba(16,21,13,.30);
-    transition:box-shadow .8s var(--ease);
-  }
-  /* No z-index here on purpose. z-index:auto keeps the card out of its own
-     stacking context, so the body paints under #scene (the moss drapes over
-     its shoulder) while .knob, at z 4, still sits in front of the moss. */
-  .card--about{
-    left:calc(890 * var(--u)); top:calc(200 * var(--u));
-    width:calc(330 * var(--u)); height:calc(305 * var(--u));
-  }
-  .card--stove{
-    z-index:4; will-change:transform;
-    left:calc(1237 * var(--u)); top:calc(482 * var(--u));
-    width:calc(328 * var(--u)); height:calc(310 * var(--u));
-  }
-  .card .label{
-    position:absolute; left:calc(38 * var(--u));
-    font-size:calc(15.5 * var(--u)); font-weight:300; color:var(--card-label);
-  }
-  .card h2{
-    position:absolute; left:calc(38 * var(--u));
-    font-size:calc(26.2 * var(--u)); line-height:calc(27 * var(--u));
-    font-weight:400; letter-spacing:calc(-0.5 * var(--u)); color:var(--card-ink);
-  }
-  .card--about .label{ top:calc(152 * var(--u)); }
-  .card--about h2{ top:calc(177 * var(--u)); width:calc(142 * var(--u)); }
-  .card--stove .label{ top:calc(45 * var(--u)); }
-  .card--stove h2{ top:calc(70 * var(--u)); }
-  .card .card-desc{
-    position:absolute; left:calc(38 * var(--u)); right:calc(38 * var(--u));
-    top:calc(234 * var(--u));
-    font-size:calc(11.5 * var(--u)); line-height:calc(15.5 * var(--u));
-    font-weight:300; color:var(--card-label);
-  }
-  /* Both cards carry a plate. The Field Note reads downward — label, title,
-     then the photograph — so its window sits at the foot of the card; the
-     Ethos card reads the other way up, so its window is at the head and the
-     copy sits under it. Same frame, mirrored. */
-  .card figure{
-    position:absolute; left:calc(14 * var(--u)); right:calc(14 * var(--u));
-    border-radius:calc(34 * var(--u)); overflow:hidden;
-    isolation:isolate; background:#263025;
-  }
-  .card--stove figure{ bottom:calc(14 * var(--u)); height:calc(158 * var(--u)); }
-  .card--about figure{ top:calc(14 * var(--u)); height:calc(122 * var(--u)); }
-  /* The plate is its own depth plane. It travels against the card and the
-     moss, so the landscape feels like a small window rather than a
-     photograph glued to the surface. */
-  .portal-media{
-    position:absolute; inset:calc(-9 * var(--u)); z-index:1; display:block;
-    will-change:transform,clip-path;
-    transform:
-      perspective(900px)
-      translate3d(calc(var(--px,0) * -11px),calc(var(--py,0) * -7px),0)
-      rotateY(calc(var(--px,0) * -1.4deg))
-      rotateX(calc(var(--py,0) * .9deg));
-    transform-origin:50% 50%;
-  }
-  .portal-media img{
-    width:100%; height:100%; object-fit:cover; display:block;
-    transform:scale(1.08);
-    filter:saturate(.92) contrast(1.03);
-    transition:transform 1.25s var(--ease-out),filter .8s var(--ease);
-  }
-  .card:hover .portal-media img{ transform:scale(1.13); filter:saturate(1.04) contrast(1.04); }
-  .pixel-reveal{
-    position:absolute; inset:0; z-index:3; width:100%; height:100%;
-    pointer-events:none; opacity:0; mix-blend-mode:screen;
-  }
-  /* The white scan rides the clip edge, so its centre has to travel the
-     media element's box, not the figure's — .portal-media is overscanned by
-     9u on every side to give the parallax rotation somewhere to go. Offsetting
-     by that 9u in calc() rather than by a translate percentage keeps the
-     glow on the edge at every breakpoint, whatever size the plate is. */
-  .card figure::after{
-    content:''; position:absolute; z-index:2;
-    filter:blur(calc(2 * var(--u))); opacity:0; pointer-events:none;
-    top:0; bottom:0; width:26%; left:calc(-13% - 9 * var(--u));
-    background:linear-gradient(90deg,transparent,rgba(229,244,209,.2) 42%,rgba(252,255,246,.72) 54%,transparent);
-  }
-
-  .knob-float{
-    position:absolute; z-index:4; pointer-events:none;
-    left:calc(1142 * var(--u)); top:calc(427 * var(--u));
-    width:calc(58 * var(--u)); height:calc(58 * var(--u));
-  }
-  .knob-float > *{ pointer-events:auto; }
-  .knob--about{ left:0; top:0; }
-  .card .knob, .knob--about{
-    position:absolute; z-index:4; right:calc(20 * var(--u)); bottom:calc(20 * var(--u));
-    width:calc(58 * var(--u)); height:calc(58 * var(--u));
-    border:0; border-radius:50%; cursor:pointer;
-    background:#fbfcf8; display:grid; place-items:center;
-    box-shadow:0 calc(6 * var(--u)) calc(16 * var(--u)) rgba(16,21,13,.18);
-    transition:transform .5s var(--ease-out), background .4s var(--ease);
-  }
-  .knob--about{ right:auto; bottom:auto; width:calc(58 * var(--u)); height:calc(58 * var(--u)); }
-  .card--stove .knob{ width:calc(54 * var(--u)); height:calc(54 * var(--u)); right:calc(26 * var(--u)); bottom:calc(26 * var(--u)); }
-  .card .knob svg, .knob--about svg{ width:calc(19 * var(--u)); height:calc(19 * var(--u)); display:block; color:#3f453a; }
-  .card .knob:hover, .knob--about:hover{ transform:scale(1.1) rotate(8deg); background:#fff; }
-  .card:hover{ box-shadow:0 calc(38 * var(--u)) calc(84 * var(--u)) rgba(16,21,13,.36); }
-
-  /* ── scroll cue (z 4) ────────────────────────────────────────────────── */
-  .scroll{
-    position:absolute; z-index:4;
-    left:calc(846 * var(--u)); top:calc(690 * var(--u));
-    display:flex; align-items:center; gap:calc(12 * var(--u));
-    writing-mode:vertical-rl;
-    font-size:calc(11 * var(--u)); font-weight:400;
-    letter-spacing:calc(4.4 * var(--u));
-    color:rgba(255,255,255,.5);
-    text-transform:uppercase; text-decoration:none;
-  }
-  .scroll .track{ position:relative; width:1px; height:calc(56 * var(--u)); background:rgba(255,255,255,.18); overflow:hidden; }
-  .scroll .track::after{
-    content:''; position:absolute; inset:0 0 auto; height:40%;
-    background:rgba(255,255,255,.75);
-    animation:trickle 2.6s var(--ease) infinite;
-  }
-  @keyframes trickle{
-    0%   { transform:translateY(-105%); opacity:0; }
-    22%  { opacity:1; }
-    78%  { opacity:1; }
-    100% { transform:translateY(255%); opacity:0; }
-  }
-
-  /* ── entrance: everything is wiped in behind a mask ───────────────────
-     Transform is reserved for the pointer parallax, so the reveal is done
-     with clip-path. Once the intro has run, .intro-done drops the clip
-     entirely — a live clip-path would open a stacking context on the About
-     card and trap its knob under the moss. */
-  .js .mask{ clip-path:inset(100% 0 0 0 round var(--mr,0px)); }
-  .is-ready .mask{
-    clip-path:inset(0 0 0 0 round var(--mr,0px));
-    transition:clip-path 1.05s var(--ease-out) var(--d,0ms);
-  }
-  .js .mask-circle{ clip-path:circle(0% at 50% 50%); }
-  .is-ready .mask-circle{
-    clip-path:circle(76% at 50% 50%);
-    transition:clip-path 1.1s var(--ease-out) var(--d,0ms);
-  }
-  .js .fade{ opacity:0; }
-  .is-ready .fade{ opacity:1; transition:opacity 1.3s var(--ease) var(--d,0ms); }
-
-  .intro-done .mask, .intro-done .mask-circle{ clip-path:none; transition:none; }
-
-  .card{ --mr:calc(46 * var(--u)); }
-
-  /* the dock drops in tile by tile; the capsule itself only fades, because
-     a clip on it would cut the pills off as they magnify past its edge */
-  .js .dock{ opacity:0; }
-  .is-ready .dock{ opacity:1; transition:opacity .8s var(--ease) 80ms; }
-  .js .dock-item{ clip-path:inset(0 0 105% 0); }
-  .is-ready .dock-item{
-    clip-path:inset(0 0 -30% 0);
-    transition:clip-path .9s var(--ease-out) var(--d,0ms),
-               color .18s var(--ease), border-color .2s var(--ease), background .2s var(--ease);
-  }
-  .intro-done .dock-item{ clip-path:none; }
-
-  /* A short rise under a fade rather than a full-height wipe: with nothing
-     cropping it, a 105% travel would start line one sitting on top of line
-     two. .headline itself carries the pointer parallax, so the transform has
-     to go on the inner <i>. */
-  .js .headline span i{ opacity:0; transform:translateY(calc(16 * var(--u))); }
-  .is-ready .headline span i{
-    opacity:1; transform:none;
-    transition:opacity 1.05s var(--ease) var(--d,0ms),
-               transform 1.25s var(--ease-out) var(--d,0ms);
-  }
-
-  /* Each plate resolves like a low-bandwidth botanical transmission: a
-     stepped clip exposes the photograph while sampled pixel-dots gather along
-     the advancing edge (the dots themselves are painted by canvas).
-     Both plates scan across, the Ethos one a beat ahead of the Field Note. */
-  .js .portal-media{ clip-path:inset(0 100% 0 0 round calc(25 * var(--u))); }
-  .is-ready .card--about .portal-media{ animation:portal-cut 1.45s steps(12,end) .92s both; }
-  .is-ready .card--stove .portal-media{ animation:portal-cut 1.45s steps(12,end) 1.08s both; }
-  .is-ready .card--about figure::after{ animation:portal-scan 1.45s steps(12,end) .92s both; }
-  .is-ready .card--stove figure::after{ animation:portal-scan 1.45s steps(12,end) 1.08s both; }
-  .intro-done .portal-media{ clip-path:none; animation:none; }
-  @keyframes portal-cut{
-    from{ clip-path:inset(0 100% 0 0 round calc(25 * var(--u))); }
-    to{ clip-path:inset(0 0 0 0 round calc(25 * var(--u))); }
-  }
-  /* The glow travels by animating its own offset, not by a translate
-     percentage. A translate is a percentage of the glow's width, so the
-     distance it covers depends on the plate's proportions — it overshot by
-     a quarter of the card here and rode ahead of the edge the whole way.
-     In calc() the travel is exactly the media box: 100% of the plate plus
-     the 9u of overscan at each end, at every breakpoint. */
-  @keyframes portal-scan{
-    0%{ left:calc(-13% - 9 * var(--u)); opacity:0; }
-    10%{ opacity:.75; }
-    88%{ opacity:.55; }
-    100%{ left:calc(87% + 9 * var(--u)); opacity:0; }
-  }
-
-  /* No clip on the canvas: the root draws itself in behind the survey pulse,
-     and a CSS wipe on top of that would be two reveals fighting each other.
-     The fade is only here to cover the first compiled frame. */
-  .is-ready #scene{ transition:opacity .45s var(--ease); }
-
-  /* ── pointer parallax ────────────────────────────────────────────────
-     --px / --py are written on .hero once per frame (-1…1). Each layer
-     declares how far it rides (--pd, px at full deflection) and how much
-     it turns (--pr, degrees), which is what gives the plane its depth. */
-  .par{
-    transform:
-      perspective(1400px)
-      translate3d(calc(var(--px,0) * var(--pd,0) * -1px),
-                  calc(var(--py,0) * var(--pd,0) * -0.62px),
-                  0)
-      rotateY(calc(var(--px,0) * var(--pr,0) * 1deg))
-      rotateX(calc(var(--py,0) * var(--pr,0) * -0.7deg));
-  }
-  /* the floating knob turns about the About card's centre, not its own,
-     so it stays glued to the corner it belongs to */
-  .knob-float{ transform-origin:calc(-87 * var(--u)) calc(-74.5 * var(--u)); }
-  .card--about{ transform-origin:50% 50%; }
-
-  /* ── keyboard focus ──────────────────────────────────────────────────── */
-  a:focus-visible, button:focus-visible{
-    outline:2px solid rgba(255,255,255,.85);
-    outline-offset:calc(4 * var(--u));
-    border-radius:calc(6 * var(--u));
-  }
-  .card .knob:focus-visible, .knob--about:focus-visible, .play:focus-visible{ outline-color:rgba(28,34,22,.9); }
-
-  @media (prefers-reduced-motion:reduce){
-    .mask,.mask-circle,.fade,#scene,
-    .dock,.dock-item,
-    .headline span i{ opacity:1 !important; clip-path:none !important; transform:none !important; transition:none !important; }
-    .par{ transform:none !important; }
-    .portal-media{ clip-path:none !important; animation:none !important; transform:none !important; }
-    .pixel-reveal,.card figure::after{ display:none !important; }
-    .portal-media img{ transform:none !important; transition:none !important; }
-    .scroll .track::after{ animation:none; }
-    #scene{ transition:none; }
-  }
-
-  /* ── narrow screens: one column, the moss becomes a band between the
-        copy and the cards (760 design units wide) ───────────────────────── */
-  @media (max-width:900px){
-    :root{ --u: calc(100vw / 760); }
-    .hero{ height:auto; min-height:100svh; }
-    .stage{
-      position:relative; left:auto; top:auto; margin:0;
-      width:100%; height:calc(1625 * var(--u));
-    }
-    .hero::after{
-      background:
-        radial-gradient(90% 30% at 50% 74%, rgba(238,243,231,.40) 0%, rgba(238,243,231,.14) 46%, rgba(238,243,231,0) 82%),
-        linear-gradient(180deg, rgba(238,243,231,0) 62%, rgba(238,243,231,.05) 100%);
-    }
-    .guides i:nth-child(3){ display:none; }
-    .guides i:nth-child(1){ left:calc(253 * var(--u)) !important; }
-    .guides i:nth-child(2){ left:calc(506 * var(--u)) !important; }
-
-    /* one column: the labels come off and the dock keeps only its glyphs,
-       because at this scale the type would be four pixels tall */
-    /* Floored with max(), not left on the design unit alone: this breakpoint
-       runs from 900px down to 320px, so a pure --u dock is a 24px bar with
-       12px targets on a phone. The floor only bites at the small end. */
-    .dock-wrap{ top:calc(30 * var(--u)); }
-    .dock{
-      height:max(56px, calc(58 * var(--u)));
-      padding:max(6px, calc(6 * var(--u)));
-      gap:max(4px, calc(4 * var(--u)));
-      border-radius:max(17px, calc(18 * var(--u)));
-    }
-    .dock-item{
-      height:max(44px, calc(46 * var(--u)));
-      width:max(44px, calc(46 * var(--u)));
-      padding:0; border-radius:max(12px, calc(13 * var(--u)));
-    }
-    .dock-item span:not(.glyph){ display:none; }
-    .dock-item .glyph{ width:max(19px, calc(20 * var(--u))); height:max(19px, calc(20 * var(--u))); }
-    .dock-mark svg{ width:52%; height:52%; }
-    .knob-float{ left:calc(644 * var(--u)); top:calc(1218 * var(--u)); transform-origin:calc(-264 * var(--u)) calc(-43 * var(--u)); }
-    .headline{ left:calc(34 * var(--u)); top:calc(128 * var(--u)); font-size:calc(62 * var(--u)); line-height:calc(66 * var(--u)); }
-    .lede{ left:calc(34 * var(--u)); top:calc(288 * var(--u)); width:calc(400 * var(--u)); font-size:calc(19 * var(--u)); line-height:calc(27 * var(--u)); }
-    /* one column: the frame keeps its aspect, re-anchored to the left rail */
-    .pill-clip{
-      left:calc(34 * var(--u)); top:calc(430 * var(--u));
-      width:calc(506 * var(--u)); height:calc(334 * var(--u));
-      margin:calc(-167 * var(--u)) 0 0 calc(-79 * var(--u));
-      clip-path:inset(calc(93 * var(--u)) calc(74 * var(--u)) calc(1 * var(--u)) calc(74 * var(--u)) round calc(76 * var(--u)));
-    }
-    .liquid-stage--explore{ --h:calc(74.4152 * var(--u)); }
-    .play-wrap{ display:none; }
-
-    .stat{ gap:calc(11 * var(--u)); }
-    .stat .mark{ width:calc(36 * var(--u)); height:calc(36 * var(--u)); }
-    .stat dt{ font-size:calc(16 * var(--u)); line-height:calc(22 * var(--u)); }
-    .stat dd{ font-size:calc(16.5 * var(--u)); line-height:calc(24 * var(--u)); }
-    .stat--a{ left:calc(34 * var(--u));  top:calc(540 * var(--u)); }
-    .stat--b{ left:calc(396 * var(--u)); top:calc(540 * var(--u)); }
-
-    .card{ border-radius:calc(40 * var(--u)); }
-    .card--about{ left:calc(34 * var(--u)); top:calc(1050 * var(--u)); width:calc(692 * var(--u)); height:calc(250 * var(--u)); }
-    .card--about .label{ top:calc(96 * var(--u)); }
-    .card--about h2{ top:calc(124 * var(--u)); width:calc(400 * var(--u)); font-size:calc(32 * var(--u)); line-height:calc(36 * var(--u)); }
-    .card--stove{ left:calc(34 * var(--u)); top:calc(1324 * var(--u)); width:calc(692 * var(--u)); height:calc(268 * var(--u)); }
-    .card--stove h2{ font-size:calc(32 * var(--u)); }
-    /* one column: both plates become a thumbnail on the card's outer edge,
-       the Ethos one still anchored to the top */
-    .card--stove figure{ left:auto; right:calc(16 * var(--u)); bottom:calc(16 * var(--u)); width:calc(300 * var(--u)); height:calc(150 * var(--u)); }
-    .card--about figure{ left:auto; right:calc(16 * var(--u)); top:calc(16 * var(--u)); width:calc(224 * var(--u)); height:calc(218 * var(--u)); }
-    .card .knob{ right:calc(24 * var(--u)); bottom:calc(24 * var(--u)); }
-    .card--stove .knob{ right:calc(30 * var(--u)); bottom:calc(30 * var(--u)); }
-    .card--about .card-desc{
-      top:calc(185 * var(--u));
-      width:calc(420 * var(--u));
-      font-size:calc(13 * var(--u));
-      line-height:calc(17 * var(--u));
-    }
-
-    .scroll{ left:calc(702 * var(--u)); top:calc(470 * var(--u)); }
-    .ghost{ font-size:calc(184 * var(--u)); letter-spacing:calc(14 * var(--u)); bottom:calc(660 * var(--u)); left:calc(-10 * var(--u)); }
-  }
-</style>
-</head>
-<body>
-
-<main class="hero" id="hero">
-  <canvas id="scene"></canvas>
-
-  <div class="dock-wrap">
-    <nav class="dock par-dock" style="--pd:5" data-spec aria-label="Primary">
-      <a class="dock-item dock-mark" data-dock data-spec data-burst href="/" style="--d:120ms" aria-label="API Sentinel — Home">
-        <svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
-          <path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4zm-2 15l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/>
-        </svg>
-      </a>
-      <a class="dock-item" data-dock data-spec data-burst href="/dashboard" style="--d:180ms">
-        <span class="glyph" aria-hidden="true">
-          <svg viewBox="0 0 16 16"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>
-        </span>
-        <span>Cockpit</span>
-      </a>
-      <a class="dock-item" data-dock data-spec data-burst href="/docs" style="--d:230ms">
-        <span class="glyph" aria-hidden="true">
-          <svg viewBox="0 0 16 16"><path d="M4 2.4h5.3L12 5.1v8.5H4z"/><path d="M9.2 2.4V5h2.7"/><path d="M6 8.4h4M6 10.8h2.8"/></svg>
-        </span>
-        <span>API Docs</span>
-      </a>
-      <a class="dock-item" data-dock data-spec data-burst href="/api/v1/health" style="--d:280ms" target="_blank">
-        <span class="glyph" aria-hidden="true">
-          <svg viewBox="0 0 16 16"><path d="M2 8h3l2-5 3 10 2-5h3"/></svg>
-        </span>
-        <span>Self-Test</span>
-      </a>
-      <a class="dock-item dock-item--enter" data-dock data-spec data-burst href="/dashboard" style="--d:330ms">
-        <span class="glyph" aria-hidden="true">
-          <svg viewBox="0 0 16 16"><path d="M6.6 2.5h5.1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6.6"/><path d="M2.6 8h6.6"/><path d="m7 5.6 2.4 2.4L7 10.4"/></svg>
-        </span>
-        <span>Launch</span>
-      </a>
-    </nav>
-  </div>
-
-  <div class="stage" id="stage">
-
-    <div class="guides fade" style="--d:900ms" aria-hidden="true">
-      <i style="left:calc(405 * var(--u))"></i>
-      <i style="left:calc(748 * var(--u))"></i>
-      <i style="left:calc(1091 * var(--u))"></i>
-    </div>
-
-    <div class="ghost fade" style="--d:1150ms" aria-hidden="true">SENTINEL</div>
-
-    <!-- card 1 sits *behind* the canvas so the moss drapes over its shoulder -->
-    <article class="card card--about mask" style="--d:760ms; --pd:10; --pr:2.2">
-      <figure class="portal" data-delay="920">
-        <span class="portal-media"><img src="/inner-green-assets/card-ethos.jpg" alt="API Sentinel Core Architecture" loading="eager" decoding="async"></span>
-        <canvas class="pixel-reveal" aria-hidden="true"></canvas>
-      </figure>
-      <p class="label">Core Engine</p>
-      <h2>Autonomous Quality</h2>
-      <p class="card-desc">OpenAPI ingestion, combinatorial tests, AI root-cause diagnostics, and closed-loop regression diffing.</p>
-    </article>
-
-    <!-- the About knob rides *outside* the card: the card has to stay a plain
-         painted box under #scene, so anything that must sit in front of the
-         moss lives here instead, sharing the card's parallax origin -->
-    <span class="knob-float" style="--pd:10; --pr:2.2">
-      <button class="knob knob--about mask-circle" style="--d:1100ms" aria-label="API Sentinel Architecture">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 21v-7"/><path d="M12 14c0-3.3 2.4-6 5.5-6 .3 3.6-2.2 6.4-5.5 6Z"/>
-          <path d="M12 16c-.1-2.9-2.2-5.2-4.9-5.2C6.8 13.7 9 16 12 16Z"/>
-        </svg>
-      </button>
-    </span>
-
-    <h1 class="headline" style="--pd:18; --pr:1.2">
-      <span><i style="--d:260ms">Step into</i></span>
-      <span><i style="--d:360ms">the living API</i></span>
-    </h1>
-
-    <p class="lede mask" style="--d:480ms; --pd:14; --pr:1">Autonomous quality engineering, real-time telemetry capture, and self-healing AI diagnostics for modern APIs.</p>
-
-    <div class="pill-clip">
-      <div class="pill mask" style="--d:600ms; --pd:15; --pr:1.4">
-        <div class="liquid-stage liquid-stage--explore" data-liquid-metal="explore">
-          <div class="liquid-plate plate" aria-hidden="true"></div>
-          <canvas class="liquid-fx" aria-hidden="true"></canvas>
-          <button class="liquid-button liquid-button--explore btn" type="button" onclick="window.location.href='/dashboard'">
-            <svg class="ico" viewBox="0 0 115 115" aria-hidden="true">
-              <g stroke="currentColor" stroke-width="11" stroke-linecap="round">
-                <path d="M14 34.5 H101"/>
-                <path d="M14 57.5 H101"/>
-                <path d="M14 80.5 H68"/>
-              </g>
-            </svg>
-            <span class="lbl">Launch Cockpit</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <span class="play-wrap" style="--pd:20">
-      <span class="play-clip">
-        <span class="play-glass mask-circle" style="--d:900ms">
-          <span class="liquid-stage liquid-stage--play" data-liquid-metal="play">
-            <span class="liquid-plate plate" aria-hidden="true"></span>
-            <canvas class="liquid-fx" aria-hidden="true"></canvas>
-            <button class="liquid-button liquid-button--play btn" type="button" aria-label="Open Interactive API Documentation" onclick="window.location.href='/docs'">
-              <svg class="ico" viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M8 5.2v13.6L19 12z" fill="currentColor"/>
-              </svg>
-            </button>
-          </span>
-        </span>
-      </span>
-      <span class="play-ring mask-circle" style="--d:840ms" aria-hidden="true"></span>
-    </span>
-
-    <dl class="stat stat--a mask" style="--d:700ms; --pd:12">
-      <span class="mark" aria-hidden="true">
-        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
-          <circle cx="15" cy="15" r="10.5" stroke-dasharray="0.6 3.6"/>
-          <circle cx="15" cy="15" r="5.6" stroke-dasharray="0.6 3.2"/>
-          <circle cx="15" cy="15" r="1.1" fill="currentColor" stroke="none"/>
-        </svg>
-      </span>
-      <div><dt>Autonomous Tests</dt><dd>302 Passing (100%)</dd></div>
-    </dl>
-
-    <dl class="stat stat--b mask" style="--d:770ms; --pd:13">
-      <span class="mark" aria-hidden="true">
-        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
-          <g id="rays">
-            <path d="M15 3.5v5"/><path d="M15 21.5v5"/><path d="M3.5 15h5"/><path d="M21.5 15h5"/>
-            <path d="M6.9 6.9l3.5 3.5"/><path d="M19.6 19.6l3.5 3.5"/><path d="M23.1 6.9l-3.5 3.5"/><path d="M10.4 19.6l-3.5 3.5"/>
-          </g>
-          <circle cx="15" cy="15" r="3.6"/>
-        </svg>
-      </span>
-      <div><dt>Defect Vectors</dt><dd>6 Dimensions</dd></div>
-    </dl>
-
-    <article class="card card--stove mask" style="--d:880ms; --pd:22; --pr:2.4">
-      <p class="label">Continuous QA</p>
-      <h2>Zero Regression</h2>
-      <figure class="portal" data-delay="1080">
-        <span class="portal-media"><img src="/inner-green-assets/card-ecostove.jpg" alt="Dark Cyber Telemetry" loading="eager" decoding="async"></span>
-        <canvas class="pixel-reveal" aria-hidden="true"></canvas>
-      </figure>
-      <button class="knob" aria-label="Open Telemetry Cockpit" onclick="window.location.href='/dashboard'">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-      </button>
-    </article>
-
-    <a class="scroll mask" style="--d:1040ms; --pd:9" href="/dashboard">Explore Cockpit<span class="track"></span></a>
-
-  </div>
-</main>
-
-<script src="/inner-green-assets/three.min.js"></script>
-<script>
-(function () {
-  'use strict';
-
-  function mountLiquidMetal(host) {
-    const hostWindow = globalThis;
-    const document = {
-      body: host,
-      getElementById(id) {
-        if (id === 'stage') return host;
-        if (id === 'fx') return host.querySelector('.liquid-fx');
-        if (id === 'btn') return host.querySelector('.liquid-button');
-        return null;
-      },
-      querySelector(selector) { return host.querySelector(selector); }
-    };
-    const window = {
-      devicePixelRatio: hostWindow.devicePixelRatio,
-      addEventListener: hostWindow.addEventListener.bind(hostWindow)
-    };
-
-/* =====================================================================
-   Liquid metal — a dispersion shader.
-
-   A scalar field V is painted through a soft plateau: dark below it, blown
-   white inside, dark above.  The plateau is evaluated once per spectral
-   wavelength at a slightly different height in V, so the plateau's lower
-   edge fringes warm (red turns on first) and its upper edge fringes cool
-   (red turns off first).  Fringe width falls out as dispersion / |grad V|,
-   which is why the same shader gives razor-thin rainbow lines where the
-   field is pinched and huge navy-to-cyan washes where it is not.
-
-   V itself is built as a family of parallel curves — one swooping valley
-   repeated up the button, at a density that varies along its length — so
-   the ribbons stay laminar rather than turbulent.  See the shader body.
-   ===================================================================== */
-
-const VERT = `#version 300 es
-in vec2 position; void main(){ gl_Position = vec4(position,0.,1.); }`;
-
-const HEAD = `#version 300 es
-precision highp float;
-out vec4 o;
-
-uniform vec2  uC;        // pill centre, device px
-uniform vec2  uHalf;     // pill half-extent, device px
-uniform float uT;        // seconds
-uniform float uHover;    // 0..1
-uniform float uPress;    // 0..1, eased
-uniform vec4  uRip[3];   // xy centre (button heights, +y down), z start, w live
-uniform vec4  uRipK;     // speed, ring width, decay, amplitude
-uniform vec4  uRipK2;    // facet depth, facet count, crest sharpness, emission
-uniform vec4  uPtr;      // xy trailing cursor, z strength, w normalised speed
-uniform vec4  uPtrK;     // radius, base amplitude, speed amplitude, rim lift
-
-#define PI 3.14159265
-
-float sdPill(vec2 p, vec2 b, float r){
-  vec2 q = abs(p) - b + r;
-  return min(max(q.x,q.y),0.) + length(max(q,0.)) - r;
-}
-
-/* Expanding ring from each press, in button-height units.  Three slots so a
-   quick double-tap overlaps instead of cutting the first one off.
-
-   Two things keep it from reading as a water ripple: the wavefront is
-   faceted rather than circular — its radius is modulated by angle, and the
-   facets rotate as it travels — and the crest profile is a cusp rather than
-   a gaussian, so it lands as a crease in sheet metal instead of a soft swell. */
-float ripple(vec2 p, float t){
-  float sum = 0.;
-  for(int i = 0; i < 3; i++){
-    if(uRip[i].w < 0.5) continue;
-    float age = t - uRip[i].z;
-    if(age < 0. || age > 4.) continue;
-    vec2  rp = p - uRip[i].xy;
-    float facet = 1. + uRipK2.x * cos(uRipK2.y * atan(rp.y, rp.x) + age * 2.1 + float(i) * 2.4);
-    float x = (length(rp) - age * uRipK.x * facet) / uRipK.y;
-    sum += exp(-pow(abs(x) + 1e-4, uRipK2.z)) * exp(-age * uRipK.z);
-  }
-  return sum;
-}
-
-/* A soft well under the cursor.  It lags behind the real pointer and swells
-   with speed, so moving across the button drags the metal rather than sliding
-   a static blob over it. */
-float pointerW(vec2 p){
-  if(uPtr.z < 0.001) return 0.;
-  float d = length(p - uPtr.xy) / uPtrK.x;
-  return exp(-d*d) * uPtr.z;
-}
-/* Displacing the sample point, not the field value, is what makes this read as
-   liquid: the bands bulge and stretch around the cursor like a lens instead of
-   just getting brighter under it. */
-vec2 pointerWarp(vec2 p){
-  float w = pointerW(p);
-  if(w <= 0.) return vec2(0.);
-  return normalize(p - uPtr.xy + vec2(1e-5)) * w * (uPtrK.y + uPtrK.z * uPtr.w);
-}
-`;
-
-/* ---- the travelling rim, in its own pass so the blur below never touches it */
-const FRAG_RIM = HEAD + `
-uniform float uBw;       // stroke half-width, device px
-uniform float uE[8];     // base, hot, chroma-across, chroma-along, speed,
-                         // topBias, press lift, ripple lift
-
-/* Arc-length position around the pill, 0..1, starting at the right-hand
-   extreme and running counter-clockwise.  Straight runs and caps are measured
-   in real length so a highlight travels at a constant speed all the way
-   round instead of stalling on the caps. */
-float perim(vec2 d, float a, float r){
-  float P = 4.*a + 2.*PI*r;
-  float s;
-  if(d.x >= a){                                   // right cap
-    float th = atan(d.y, d.x - a); if(th < 0.) th += 2.*PI;
-    s = (th <= PI*0.5) ? r*th : P - r*(2.*PI - th);
-  } else if(d.x <= -a){                           // left cap
-    float th = atan(d.y, d.x + a); if(th < 0.) th += 2.*PI;
-    s = r*PI*0.5 + 2.*a + r*(th - PI*0.5);
-  } else if(d.y >= 0.){                           // top run
-    s = r*PI*0.5 + (a - d.x);
-  } else {                                        // bottom run
-    s = r*PI*1.5 + 2.*a + (d.x + a);
-  }
-  return s / P;
-}
-// periodic bump, so a highlight wraps cleanly at s = 0
-float pb(float u, float w){ u = fract(u); float x = min(u, 1.-u); return exp(-(x*x)/(w*w)); }
-
-// travelling brightness around the rim — three lobes at different speeds and
-// widths, which never quite re-align, so the light keeps re-pooling
-float rimHot(float s, float t){
-  float v = uE[0];
-  v += 0.62 * pb(s - t*uE[4],             0.075);
-  v += 0.44 * pb(s + t*uE[4]*0.63 + 0.41, 0.135);
-  v += 0.30 * pb(s - t*uE[4]*0.34 + 0.73, 0.200);
-  return v;
-}
-// soft band riding the pill edge, offset per channel to fringe across the stroke
-float rimBand(float sd, float off){ return 1. - smoothstep(0., uBw*1.05, abs(sd + uBw*0.55 + off)); }
-
-void main(){
-  vec2  d  = gl_FragCoord.xy - uC;
-  float sd = sdPill(d, uHalf, uHalf.y);
-  if(sd > uBw*2.5 || sd < -uBw*3.5){ o = vec4(0.); return; }
-
-  /* Each channel is offset both *across* the stroke and *along* it, so the rim
-     fringes red-outside / cyan-inside and its hue also drifts as a highlight
-     slides past — the two together are what read as metal rather than as a
-     moving white dot. */
-  float a = max(uHalf.x - uHalf.y, 0.);
-  float s = perim(d, a, uHalf.y);
-  float top = mix(1., 0.5 + 0.5 * (d.y / uHalf.y), uE[5]);
-
-  // pressing lifts the whole outline, and each ripple flares it again as the
-  // ring sweeps past — so the rim reports the press twice, once as a step and
-  // once as a wave running round the edge
-  // …and the stretch of outline nearest the cursor picks up a little too
-  vec2  p   = vec2(d.x, -d.y) / (uHalf.y * 2.);
-  float lift = 1. + uPress * uE[6] + ripple(p, uT) * uE[7]
-             + pointerW(p) * uPtrK.w;
-
-  o = vec4(vec3(
-    rimBand(sd,  uE[2]) * rimHot(s + uE[3], uT),
-    rimBand(sd,  0.   ) * rimHot(s,         uT),
-    rimBand(sd, -uE[2]) * rimHot(s - uE[3], uT)
-  ) * uE[1] * top * lift, 1.);
-}`;
-
-const FRAG_SCENE = HEAD + `
-uniform float uP[21];    // tunables
-
-float h21(vec2 p){
-  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-  p3 += dot(p3, p3.yzx + 33.33);
-  return fract((p3.x + p3.y) * p3.z);
-}
-float vn(vec2 p){
-  vec2 i = floor(p), f = fract(p);
-  f = f*f*(3.-2.*f);
-  float a = h21(i), b = h21(i+vec2(1,0)), c = h21(i+vec2(0,1)), d = h21(i+vec2(1,1));
-  return mix(mix(a,b,f.x), mix(c,d,f.x), f.y) * 2. - 1.;
-}
-// normalised to roughly -1..1; low gain keeps the first octave dominant, which
-// is what keeps the ribbons big and smooth instead of turbulent
-float fbm(vec2 p, float g){
-  float s = 0., a = 1., n = 0.;
-  for(int i=0;i<4;i++){ s += a*vn(p); n += a; p = p*2.03 + 11.7; a *= g; }
-  return s / n;
-}
-float fbm(vec2 p){ return fbm(p, 0.5); }
-
-/* p is in button-height units, +y down, origin at the pill centre.
-
-   The bands in the reference are a *family of parallel curves*: one swooping
-   valley repeated up the button, dense where the light is pinched and pulled
-   wide open where it is not.  So the field is built that way explicitly —
-
-       V = (y - valley(x)) * density(x)
-
-   — rather than hoping 2-D noise happens to produce it.  Level sets of V are
-   all vertical translates of the same valley curve, which is what makes the
-   ribbons laminar and near-parallel; a density that varies along x is what makes
-   them crowd into razor fringes at one end and open into a broad wash at the
-   other.  A soft plateau over V then paints them, sampled once per
-   wavelength at slightly offset heights, so every edge opens into a prism of
-   width dispersion / |grad V|.                                             */
-
-// smooth 1-D wiggle that drifts slowly with time
-float wig(float x, float t, float seed){
-  return vn(vec2(x,          t*0.150 + seed)) * 0.60
-       + vn(vec2(x*2.07 + 4., t*0.105 + seed)) * 0.27
-       + vn(vec2(x*4.30 - 7., t*0.080 + seed)) * 0.13;
-}
-
-float valleyAt(vec2 p, float t){ return wig(p.x*uP[0], t, 0.0) * uP[1]; }
-float densAt  (vec2 p, float t){ return uP[2] * exp(uP[3] * wig(p.x*uP[4] + 9.0, t, 2.7)); }
-
-float surface(vec2 p, float t){
-  float V = (p.y - valleyAt(p,t)) * densAt(p,t);
-  V += uP[5] * fbm(p*vec2(0.8, 1.7)*uP[6] + vec2(t*0.05, -t*0.03), uP[17]);
-  return V - uP[7];
-}
-// One plateau per unit of V — so the density is literally bands per button height.
-// A plateau rather than a step is what puts warm on the low edge and cool on
-// the high edge of every ribbon.
-float tone(float v){
-  float u = fract(v);
-  float e = uP[9], W = uP[10] * 0.5;
-  return smoothstep(0.5-W-e, 0.5-W, u) * (1. - smoothstep(0.5+W, 0.5+W+e, u));
-}
-vec3 spec(float t){ return clamp(vec3(1.5) - abs(4.*t - vec3(3.,2.,1.)), 0., 1.); }
-
-void main(){
-  vec2  d  = gl_FragCoord.xy - uC;
-  float sd = sdPill(d, uHalf, uHalf.y);
-  float pill = 1. - smoothstep(-1., 1., sd);
-  float S = uHalf.y * 2.;                 // button height, device px
-  float t = uT;
-
-  // rgb is premultiplied by the mask and alpha carries it, so the blur that
-  // follows can normalise and keep a clean edge instead of a dark vignette
-  if(uHover <= 0.0015 || pill <= 0.0015){ o = vec4(0., 0., 0., pill); return; }
-
-  vec2  p = vec2(d.x, -d.y) / S;          // gl_FragCoord is y-up
-  vec2  q = p + pointerWarp(p);           // the cursor drags the sheet
-
-  // self-refraction: bend the lookup along the field's own slope, which piles
-  // iso-lines up into folds instead of leaving them evenly spaced
-  float h0 = surface(q, t);
-  vec2  gp = vec2(dFdx(h0), -dFdy(h0)) * S;          // grad in p-units
-  float V  = surface(q - gp * uP[8] / max(uP[2], .001), t);
-
-  // gradient-aligned filaments: fast variation across the iso-lines, slow
-  // along them, so the fine detail reads as drawn-out fibres of light
-  vec2  gd = normalize(gp + vec2(1e-5));
-  V += uP[13] * fbm(vec2(dot(q,gd)*uP[14], dot(q, vec2(-gd.y,gd.x))*uP[14]*0.04) + vec2(0., t*0.06));
-
-  // press ripple: displacing the field rather than adding light means the
-  // bands themselves bow outwards as the ring passes, which is what sells it
-  // as a disturbance *in* the metal instead of a decal over it
-  float rip  = ripple(p, t);
-  float well = pointerW(p);
-  V += rip * uRipK.w;
-
-  // Real dispersion is not linear in wavelength — the blue end bends far more
-  // than the red (Cauchy).  Skewing the sample offsets the same way is what
-  // gives the reference its broad cool wash against a tight warm edge.
-  const int N = 21;
-  float mid = 1. - pow(0.5, uP[12]);
-  vec3 col = vec3(0.), wsum = vec3(0.);
-  for(int i=0;i<N;i++){
-    float k = float(i)/float(N-1);
-    vec3  w = spec(k);
-    col  += w * tone(V + ((1. - pow(1. - k, uP[12])) - mid) * uP[11]);
-    wsum += w;
-  }
-  col /= wsum;
-  col = pow(col, vec3(uP[15]));
-
-  // light envelope — the ribbons only exist where the sheet is lit, and the
-  // dark upper region is bounded by the same valley curve the bands follow
-  float lit = smoothstep(uP[18], uP[19], q.y - valleyAt(q, t));
-  lit *= mix(1., lit, 0.55);                     // deepen the unlit crescent
-  col *= uP[16] * lit;
-
-  // the crest runs hotter, and carries a little light of its own so it stays
-  // legible through the softening blur and across the unlit part of the pill
-  col = col * (1. + rip * 1.15 + well * 0.60);
-
-  o = vec4(col * pill * uHover, pill);
-}`;
-
-/* Downsample; optionally adding a second source (used to fold the rim into
-   the bloom input).  Alpha rides along so the metal's coverage mask survives
-   the blur chain. */
-const FRAG_DOWN = `#version 300 es
-precision highp float;
-out vec4 o;
-uniform sampler2D uTex, uTex2;
-uniform vec2 uDstTexel;   // 1 / destination size  (maps dest fragCoord -> uv)
-uniform vec2 uSrcTexel;   // 1 / source size       (tap spacing)
-uniform float uAdd;       // 1 to include uTex2
-void main(){
-  vec2 uv = gl_FragCoord.xy * uDstTexel;
-  // Taps sit a quarter of a *destination* texel out, so for a 2x reduction
-  // they land exactly on the four source texel centres.  Spacing them by a
-  // whole source texel instead — as this did originally — skips every other
-  // pixel, and any fine detail in the field folds down into low-frequency
-  // moiré that no amount of subsequent blurring can remove.
-  vec2 e = uDstTexel * 0.25;
-  vec4 s = texture(uTex, uv + vec2(-e.x,-e.y)) + texture(uTex, uv + vec2( e.x,-e.y))
-         + texture(uTex, uv + vec2(-e.x, e.y)) + texture(uTex, uv + vec2( e.x, e.y));
-  s *= 0.25;
-  if(uAdd > 0.5){
-    vec4 r = texture(uTex2, uv + vec2(-e.x,-e.y)) + texture(uTex2, uv + vec2( e.x,-e.y))
-           + texture(uTex2, uv + vec2(-e.x, e.y)) + texture(uTex2, uv + vec2( e.x, e.y));
-    s.rgb += r.rgb * 0.25;
-  }
-  o = s;
-}`;
-
-const FRAG_BLUR = `#version 300 es
-precision highp float;
-out vec4 o;
-uniform sampler2D uTex; uniform vec2 uTexel; uniform vec2 uDir; uniform float uR;
-void main(){
-  vec2 uv = gl_FragCoord.xy * uTexel;
-  vec2 st = uTexel * uDir * uR;
-  vec4 s = texture(uTex, uv) * 0.1964;
-  s += (texture(uTex, uv + st*1.4118) + texture(uTex, uv - st*1.4118)) * 0.2969;
-  s += (texture(uTex, uv + st*3.2941) + texture(uTex, uv - st*3.2941)) * 0.0944;
-  s += (texture(uTex, uv + st*5.1765) + texture(uTex, uv - st*5.1765)) * 0.0104;
-  o = s;
-}`;
-
-const FRAG_COMP = HEAD + `
-uniform sampler2D uSoft, uRim, uGlow;
-uniform vec2  uRes;
-uniform float uGlowGain, uGlowIn, uOccl, uDim, uPunch;
-
-void main(){
-  vec2 uv = gl_FragCoord.xy / uRes;
-  vec3 glow = texture(uGlow, uv).rgb;
-
-  vec2  d    = gl_FragCoord.xy - uC;
-  float sd   = sdPill(d, uHalf, uHalf.y);
-  float pill = 1. - smoothstep(-1., 1., sd);
-
-  // normalised blur: dividing by the blurred coverage keeps the softened metal
-  // full strength right up to the edge instead of fading into the mask
-  vec4 m = texture(uSoft, uv);
-
-  // Scrim, applied *after* the blur: knock the metal back through the middle
-  // where the label sits, leaving the top and bottom at full brightness.  Doing
-  // this before the blur would smear the protection away at high blur values.
-  float veil = 1. - smoothstep(0.46, 0.88, abs(d.y) / uHalf.y);
-
-  // Blurring flattens the tonal range into a wash; putting the contrast back
-  // with a power curve — after the blur, so it costs no smoothness — is what
-  // makes it read as poured metal rather than a soft glow.  Highlights keep
-  // their level while the mid-tones drop away.
-  vec3 metal = pow(max(m.rgb / max(m.a, 1e-3), 0.), vec3(uPunch));
-
-  vec3 core = metal * pill * mix(1., uDim, veil) + texture(uRim, uv).rgb;
-
-  // The ripple's own light is added here, after the blur, so the crease stays
-  // a hard line.  Its displacement of the field still rides inside the
-  // softened metal — the sheet bows, and the crest glints along the fold.
-  float rip = ripple(vec2(d.x, -d.y) / (uHalf.y * 2.), uT);
-  core += vec3(rip * rip) * uRipK2.w * pill * mix(1., 0.42, veil);
-
-  // The button occludes its own bloom over the patch where its shadow falls,
-  // so the drop shadow keeps its contrast even when the face is blown out.
-  float sdSh = sdPill(d + vec2(0., uHalf.y * 0.62), uHalf * 0.94, uHalf.y * 0.94);
-  float occl = uOccl * exp(-max(sdSh, 0.) / (uHalf.y * 0.75));
-
-  // Bloom spills mostly outward; a little of it is allowed back inside so the
-  // hot rim bleeds onto the face, as it does on the reference component.
-  vec3 rgb = core + glow * uGlowGain * mix(1., uGlowIn, pill) * (1. - occl * (1. - pill));
-
-  // premultiplied — the page's ambient pool and the button's drop shadow are
-  // CSS underneath, and this layer adds light on top of them
-  float a = clamp(max(rgb.r, max(rgb.g, rgb.b)), 0., 1.);
-  o = vec4(min(rgb, vec3(1.)), a);
-}`;
-
-/* --------------------------------------------------------------- */
-const cv = document.getElementById('fx');
-const gl = cv.getContext('webgl2', {alpha:true, antialias:false, premultipliedAlpha:true, powerPreference:'high-performance'});
-const stage = document.getElementById('stage');
-const btn   = document.getElementById('btn');
-const plate = document.querySelector('.plate');
-
-// the metal field — uP[0..20]
-const P = window.__P = {
-  valFreq:   0.50,   // 0  x-frequency of the valley curve
-  valAmp:    0.55,   // 1  valley depth, in button heights (bounded so the
-                     //    ribbon can never drift entirely off the pill)
-  dens:      2.40,   // 2  band density — bands per button height
-  densVar:   2.20,   // 3  how much the density swings along x (exponential)
-  densFreq:  0.32,   // 4  x-frequency of the density variation
-  wobAmp:    0.12,   // 5  organic 2-D wobble, in field units
-  wobFreq:   1.60,   // 6  its frequency
-  lift:      0.05,   // 7  phase offset of the band family
-  refract:   0.18,   // 8  self-refraction — folds the iso-lines
-  edge:      0.04,   // 9  softness of the plateau edges
-  width:     0.46,   // 10 plateau width, as a fraction of one band period
-  disp:      0.30,   // 11 spectral dispersion, in band periods
-  skew:      1.50,   // 12 dispersion skew — >1 spreads the blue end
-  // The filaments were 20 cycles per button height — finer than the softening
-  // buffer can carry, so they aliased into stripes instead of reading as
-  // fibres.  At this blur they contribute nothing but that, so they are off.
-  fineAmp:   0.0,    // 13 filament amplitude
-  fineFreq:  9.0,    // 14 filament frequency across the iso-lines
-  gamma:     1.00,   // 15 tone gamma
-  gain:      1.90,   // 16 overall gain
-  octGain:   0.32,   // 17 fbm octave gain — low keeps the wobble big
-  litLo:    -0.26,   // 18 distance below the valley where light begins
-  litHi:     0.10,   // 19 …and where it is full
-  dim:       0.44    // 20 how far the metal is knocked back under the label
-};
-const PKEYS = Object.keys(P);
-
-// the animated rim — uE[0..5]
-const E = window.__E = {
-  base:   0.20,      // 0 floor brightness, so the whole outline stays drawn
-  hot:    0.82,      // 1 gain on the travelling highlights
-  chromA: 0.42,      // 2 chromatic offset across the stroke, device px
-  chromS: 0.030,     // 3 chromatic offset along the perimeter, in laps
-  speed:  0.070,     // 4 laps per second of the leading highlight
-  top:    0.35,      // 5 how much the rim stays biased to the top edge
-  press:  0.85,      // 6 how far the outline brightens while held
-  ripple: 1.60       // 7 extra flare as a ripple crest crosses the outline
-};
-const EKEYS = Object.keys(E);
-
-// composite / JS-side only
-const C = window.__C = {
-  glow:   host.dataset.liquidMetal === 'play' ? 1.28 : 1.95,      // outer-glow gain
-  glowR:  host.dataset.liquidMetal === 'play' ? 0.94 : 1.30,      // outer-glow radius
-  glowIn: 0.30,      // how much bloom is allowed back inside the pill
-  occl:   0.62,      // how much the drop shadow eats the bloom beneath it
-  soften: 0.24,      // blur on the metal, in button heights — the "molten" knob
-  punch:  1.50       // contrast curve on the softened metal; 1 = off
-};
-
-// disturbances — all distances in button heights, times in seconds
-const R = window.__R = {
-  // press ripple
-  speed:  1.85,      // how fast the ring expands
-  width:  0.20,      // ring thickness
-  decay:  1.35,      // e-fold fade
-  amp:    1.35,      // how far it displaces the metal field
-  facet:  0.18,      // depth of the faceting on the wavefront
-  lobes:  6.0,       // how many facets
-  sharp:  1.15,      // crest profile: 2 = gaussian swell, ~1 = hard crease
-  emit:   0.45,      // light the crest carries of its own
-  // cursor well
-  ptrRad:  0.55,     // radius of the well
-  ptrAmp:  0.32,     // how far the sheet is dragged when the cursor is still
-  ptrFast: 0.40,     // extra drag at full speed
-  ptrRim:  0.80,     // how much the nearest rim brightens
-  ptrLag:  0.0016,   // trail: fraction of the gap left after 1s (lower = snappier)
-  ptrVref: 4.5       // cursor speed, in button heights/sec, that counts as "fast"
-};
-
-if(!gl){
-  document.body.innerHTML = '<p style="color:#888;font:14px system-ui">WebGL2 is required for this page.</p>';
-} else {
-
-function sh(type, src){
-  const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
-  if(!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s) + '\n' + src);
-  return s;
-}
-function prog(fs){
-  const p = gl.createProgram();
-  gl.attachShader(p, sh(gl.VERTEX_SHADER, VERT));
-  gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
-  gl.bindAttribLocation(p, 0, 'position');
-  gl.linkProgram(p);
-  if(!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
-  const u = {};
-  const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
-  for(let i=0;i<n;i++){ const info = gl.getActiveUniform(p,i); u[info.name.replace('[0]','')] = gl.getUniformLocation(p, info.name); }
-  return {p, u};
-}
-const pScene = prog(FRAG_SCENE), pRim = prog(FRAG_RIM),
-      pDown  = prog(FRAG_DOWN),  pBlur = prog(FRAG_BLUR), pComp = prog(FRAG_COMP);
-
-const vao = gl.createVertexArray(); gl.bindVertexArray(vao);
-const vbo = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, vbo);
-gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
-gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-
-const hasFloat = !!gl.getExtension('EXT_color_buffer_half_float');
-function makeTarget(){
-  const tex = gl.createTexture();
-  gl.bindTexture(gl.TEXTURE_2D, tex);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-  const fbo = gl.createFramebuffer();
-  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-  return {tex, fbo, w:0, h:0};
-}
-function sizeTarget(t, w, h){
-  if(t.w === w && t.h === h) return;
-  t.w = w; t.h = h;
-  gl.bindTexture(gl.TEXTURE_2D, t.tex);
-  if(hasFloat) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, w, h, 0, gl.RGBA, gl.HALF_FLOAT, null);
-  else         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8,   w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-}
-const T_core = makeTarget(), T_rim = makeTarget(),   // full res
-      T_s1   = makeTarget(), T_s2  = makeTarget(),   // half res: metal softening
-      T_a    = makeTarget(), T_b   = makeTarget();   // 1/DOWN: bloom
-
-let W = 0, H = 0, DPR = 1, BW = 0, BH = 0, CX = 0, CY = 0;
-// The bloom buffer is downsampled to keep the button ~129 texels tall at any
-// size, so one set of blur radii gives a glow of the same *relative* extent
-// whether this renders at 52px or as a hero.
-let DOWN = 4;
-const GLOW_TEX = 129;
-let needResize = true;
-
-function resize(){
-  const r  = stage.getBoundingClientRect();
-  const br = btn.getBoundingClientRect();
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
-  const w = Math.max(2, Math.round(r.width  * DPR));
-  const h = Math.max(2, Math.round(r.height * DPR));
-  if(w !== W || h !== H){ W = w; H = h; cv.width = W; cv.height = H; }
-  BW = br.width  * DPR; BH = br.height * DPR;
-  CX = (br.left - r.left) * DPR + BW/2;
-  CY = H - ((br.top - r.top) * DPR + BH/2);     // gl_FragCoord is y-up
-  sizeTarget(T_core, W, H); sizeTarget(T_rim, W, H);
-  const hw = Math.max(2, Math.ceil(W/2)), hh = Math.max(2, Math.ceil(H/2));
-  sizeTarget(T_s1, hw, hh); sizeTarget(T_s2, hw, hh);
-  DOWN = Math.max(1, Math.min(4, Math.round(BH / GLOW_TEX)));
-  const dw = Math.max(2, Math.ceil(W/DOWN)), dh = Math.max(2, Math.ceil(H/DOWN));
-  sizeTarget(T_a, dw, dh); sizeTarget(T_b, dw, dh);
-  needResize = false;
-}
-new ResizeObserver(() => { needResize = true; }).observe(stage);
-
-function drawTo(t){
-  gl.bindFramebuffer(gl.FRAMEBUFFER, t ? t.fbo : null);
-  gl.viewport(0, 0, t ? t.w : W, t ? t.h : H);
-  gl.drawArrays(gl.TRIANGLES, 0, 3);
-}
-
-const uArr = new Float32Array(PKEYS.length);
-const eArr = new Float32Array(EKEYS.length);
-let hover = 0, hoverTarget = 0, clock = 0, last = performance.now();
-
-// three ripple slots, reused round-robin so rapid taps overlap
-const RIP = [0,1,2].map(() => ({x:0, y:0, t:-99, on:0}));
-const ripArr = new Float32Array(12);
-let ripNext = 0, press = 0, pressTarget = 0;
-
-// the cursor well: a target the metal chases, plus how fast it is being moved
-const ptr = {x:0, y:0}, ptrS = {x:0, y:0};
-let ptrAmt = 0, ptrSpeed = 0;
-
-function addRipple(x, y){
-  const r = RIP[ripNext];
-  ripNext = (ripNext + 1) % RIP.length;
-  r.x = x; r.y = y; r.t = clock; r.on = 1;
-}
-// pointer position -> button-height units from the pill centre, +y down
-function localPt(e){
-  const b = btn.getBoundingClientRect(), s = b.height;
-  return [(e.clientX - (b.left + b.width/2)) / s,
-          (e.clientY - (b.top  + b.height/2)) / s];
-}
-
-const calm = matchMedia('(prefers-reduced-motion: reduce)');
-let drawn = null;                  // signature of the last frame actually drawn
-
-/* HOST ADAPTATION — idle frame cap.
-   The authored scene owns its page and can afford to run all twenty passes
-   every frame forever, because the rim keeps travelling even at rest. Here
-   two of these sit on top of a hero that is already rendering 190k blades of
-   moss, and measured together they were halving the whole page: 50 fps with
-   them, 92 without.
-   Nothing is removed — the cap only applies while the button is genuinely
-   idle, and the rim's travel is 0.07 laps a second, so 30 Hz is far more than
-   it needs. The moment a pointer, a press, a focus or a ripple is in play it
-   goes back to running every frame, because that is when the metal has to
-   track the cursor. */
-const IDLE_HZ = 30;
-let lastDraw = 0;
-
-function frame(now){
-  const dtRaw = (now - last) / 1000; last = now;
-  const dt = Math.min(dtRaw, 1/20);
-  if(!calm.matches) clock += dt;
-
-  // asymmetric ease: quick to bloom, a touch quicker to die
-  const k = hoverTarget > hover ? 1 - Math.pow(0.0012, dt) : 1 - Math.pow(0.00012, dt);
-  hover += (hoverTarget - hover) * k;
-  if(Math.abs(hoverTarget - hover) < 0.0008) hover = hoverTarget;
-
-  // press snaps on and lets go slowly
-  const pk = pressTarget > press ? 1 - Math.pow(1e-9, dt) : 1 - Math.pow(0.004, dt);
-  press += (pressTarget - press) * pk;
-  if(Math.abs(pressTarget - press) < 0.002) press = pressTarget;
-
-  for(let i = 0; i < RIP.length; i++){
-    const r = RIP[i];
-    if(r.on && clock - r.t > 4) r.on = 0;
-    ripArr[i*4] = r.x; ripArr[i*4+1] = r.y; ripArr[i*4+2] = r.t; ripArr[i*4+3] = r.on;
-  }
-  const ripLive = RIP.some(r => r.on);
-
-  // the well trails the cursor and swells with how fast it is being dragged
-  const lag = 1 - Math.pow(R.ptrLag, dt);
-  const dx = (ptr.x - ptrS.x) * lag, dy = (ptr.y - ptrS.y) * lag;
-  ptrS.x += dx; ptrS.y += dy;
-  const inst = Math.min(Math.hypot(dx, dy) / Math.max(dt, 1e-3) / R.ptrVref, 1);
-  ptrSpeed += (inst - ptrSpeed) * (1 - Math.pow(inst > ptrSpeed ? 0.001 : 0.02, dt));
-  const wantWell = (on.over || on.press) ? 1 : 0;
-  ptrAmt += (wantWell - ptrAmt) * (1 - Math.pow(0.004, dt));
-  if(Math.abs(wantWell - ptrAmt) < 0.002) ptrAmt = wantWell;
-
-  if(needResize) resize();
-
-  // The rim keeps travelling even at rest, so the only truly static case is
-  // reduced motion with nothing in flight.
-  const sig = (calm.matches && !ripLive && ptrAmt < 0.002)
-    ? `${hover}|${press}|${W}|${H}` : null;
-  if(sig !== null && sig === drawn){ requestAnimationFrame(frame); return; }
-  drawn = sig;
-
-  const idle = !on.over && !on.press && !on.focus && !ripLive
-            && hover < 0.002 && press < 0.002 && ptrAmt < 0.002;
-  if(idle && now - lastDraw < 1000 / IDLE_HZ){ requestAnimationFrame(frame); return; }
-  lastDraw = now;
-
-  for(let i = 0; i < uArr.length; i++) uArr[i] = P[PKEYS[i]];
-  for(let i = 0; i < eArr.length; i++) eArr[i] = E[EKEYS[i]];
-  const bw = Math.max(1.5, 3.2 * (BH/516));      // stroke half-width, device px
-
-  // 1. metal + travelling rim, masked to the pill
-  gl.useProgram(pScene.p);
-  gl.uniform2f(pScene.u.uC, CX, CY);
-  gl.uniform2f(pScene.u.uHalf, BW/2, BH/2);
-  gl.uniform1f(pScene.u.uT, clock);
-  gl.uniform1f(pScene.u.uHover, hover);
-  gl.uniform1f(pScene.u.uPress, press);
-  gl.uniform4fv(pScene.u.uRip, ripArr);
-  gl.uniform4f(pScene.u.uRipK, R.speed, R.width, R.decay, R.amp);
-  gl.uniform4f(pScene.u.uRipK2, R.facet, R.lobes, R.sharp, R.emit);
-  gl.uniform4f(pScene.u.uPtr, ptrS.x, ptrS.y, ptrAmt, ptrSpeed);
-  gl.uniform4f(pScene.u.uPtrK, R.ptrRad, R.ptrAmp, R.ptrFast, R.ptrRim);
-  gl.uniform1fv(pScene.u.uP, uArr);
-  drawTo(T_core);
-
-  // 2. rim, kept out of the softening blur so the outline stays razor thin
-  gl.useProgram(pRim.p);
-  gl.uniform2f(pRim.u.uC, CX, CY);
-  gl.uniform2f(pRim.u.uHalf, BW/2, BH/2);
-  gl.uniform1f(pRim.u.uT, clock);
-  gl.uniform1f(pRim.u.uBw, bw);
-  gl.uniform1f(pRim.u.uPress, press);
-  gl.uniform4fv(pRim.u.uRip, ripArr);
-  gl.uniform4f(pRim.u.uRipK, R.speed, R.width, R.decay, R.amp);
-  gl.uniform4f(pRim.u.uRipK2, R.facet, R.lobes, R.sharp, R.emit);
-  gl.uniform4f(pRim.u.uPtr, ptrS.x, ptrS.y, ptrAmt, ptrSpeed);
-  gl.uniform4f(pRim.u.uPtrK, R.ptrRad, R.ptrAmp, R.ptrFast, R.ptrRim);
-  gl.uniform1fv(pRim.u.uE, eArr);
-  drawTo(T_rim);
-
-  // 3. soften the metal — half-res box down, then a separable gaussian.  This
-  //    is what turns the prismatic ribbons molten rather than etched.
-  gl.useProgram(pDown.p);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, T_core.tex);
-  gl.uniform1i(pDown.u.uTex, 0);
-  gl.uniform1f(pDown.u.uAdd, 0);
-  gl.uniform2f(pDown.u.uDstTexel, 1/T_s1.w, 1/T_s1.h);
-  gl.uniform2f(pDown.u.uSrcTexel, 1/W, 1/H);
-  drawTo(T_s1);
-
-  gl.useProgram(pBlur.p);
-  gl.uniform1i(pBlur.u.uTex, 0);
-  gl.uniform2f(pBlur.u.uTexel, 1/T_s1.w, 1/T_s1.h);
-  // Target sigma in half-res texels, tied to the button so it scales with any
-  // size.  One very wide 9-tap pass leaves visible comb ghosts — the taps end
-  // up further apart than the sigma they are meant to describe — so the blur
-  // is split into passes whose radii add in quadrature.
-  const sigTex = C.soften * (BH * 0.5) * 0.95;
-  if(sigTex > 0.1){
-    const iters = Math.min(4, Math.max(1, Math.ceil(sigTex / 3.0)));
-    gl.uniform1f(pBlur.u.uR, sigTex / Math.sqrt(iters) / 1.95);
-    for(let i = 0; i < iters; i++){
-      gl.bindTexture(gl.TEXTURE_2D, T_s1.tex); gl.uniform2f(pBlur.u.uDir, 1, 0); drawTo(T_s2);
-      gl.bindTexture(gl.TEXTURE_2D, T_s2.tex); gl.uniform2f(pBlur.u.uDir, 0, 1); drawTo(T_s1);
-    }
-  }
-
-  // 4. bloom, fed by the softened metal plus the crisp rim
-  gl.useProgram(pDown.p);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, T_s1.tex);
-  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, T_rim.tex);
-  gl.uniform1i(pDown.u.uTex, 0);
-  gl.uniform1i(pDown.u.uTex2, 1);
-  gl.uniform1f(pDown.u.uAdd, 1);
-  gl.uniform2f(pDown.u.uDstTexel, 1/T_a.w, 1/T_a.h);
-  gl.uniform2f(pDown.u.uSrcTexel, 1/T_s1.w, 1/T_s1.h);
-  drawTo(T_a);
-
-  gl.useProgram(pBlur.p);
-  gl.activeTexture(gl.TEXTURE0);
-  gl.uniform1i(pBlur.u.uTex, 0);
-  gl.uniform2f(pBlur.u.uTexel, 1/T_a.w, 1/T_a.h);
-  const rs = C.glowR * (BH / DOWN) / GLOW_TEX;
-  for(const r of [1.0, 2.3, 5.2, 9.0].map(v => v * rs)){
-    gl.uniform1f(pBlur.u.uR, r);
-    gl.bindTexture(gl.TEXTURE_2D, T_a.tex); gl.uniform2f(pBlur.u.uDir, 1, 0); drawTo(T_b);
-    gl.bindTexture(gl.TEXTURE_2D, T_b.tex); gl.uniform2f(pBlur.u.uDir, 0, 1); drawTo(T_a);
-  }
-
-  // 5. composite
-  gl.useProgram(pComp.p);
-  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, T_s1.tex);  gl.uniform1i(pComp.u.uSoft, 0);
-  gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, T_rim.tex); gl.uniform1i(pComp.u.uRim, 1);
-  gl.activeTexture(gl.TEXTURE2); gl.bindTexture(gl.TEXTURE_2D, T_a.tex);   gl.uniform1i(pComp.u.uGlow, 2);
-  gl.uniform2f(pComp.u.uRes, W, H);
-  gl.uniform2f(pComp.u.uC, CX, CY);
-  gl.uniform2f(pComp.u.uHalf, BW/2, BH/2);
-  gl.uniform1f(pComp.u.uT, clock);
-  gl.uniform4fv(pComp.u.uRip, ripArr);
-  gl.uniform4f(pComp.u.uRipK, R.speed, R.width, R.decay, R.amp);
-  gl.uniform4f(pComp.u.uRipK2, R.facet, R.lobes, R.sharp, R.emit);
-  gl.uniform1f(pComp.u.uGlowGain, C.glow);
-  gl.uniform1f(pComp.u.uGlowIn, C.glowIn);
-  gl.uniform1f(pComp.u.uOccl, C.occl);
-  gl.uniform1f(pComp.u.uDim, P.dim);
-  gl.uniform1f(pComp.u.uPunch, C.punch);
-  drawTo(null);
-
-  requestAnimationFrame(frame);
-}
-
-/* ---------------- interaction ----------------
-   Hover, press and focus all light the metal; press additionally throws a
-   ripple from wherever it landed.  Works for mouse, touch and keyboard. */
-const on = {over:false, press:false, focus:false};
-const sync = () => {
-  hoverTarget = (on.over || on.press || on.focus) ? 1 : 0;
-  pressTarget = on.press ? 1 : 0;
-  document.body.classList.toggle('hot', hoverTarget > 0.5);
-  document.body.classList.toggle('press', on.press);
-};
-
-btn.addEventListener('pointerenter', e => {
-  if(e.pointerType !== 'mouse') return;
-  // land the well where the cursor actually entered, not where it last was
-  [ptr.x, ptr.y] = localPt(e);
-  ptrS.x = ptr.x; ptrS.y = ptr.y; ptrSpeed = 0;
-  on.over = true; sync();
-});
-btn.addEventListener('pointerleave', e => { if(e.pointerType === 'mouse'){ on.over = false; sync(); } });
-
-// the cursor drags the metal; tracked on the window so a press can slide off
-// the button, but only measured while the button is actually engaged
-window.addEventListener('pointermove', e => {
-  if(!on.over && !on.press) return;
-  [ptr.x, ptr.y] = localPt(e);
-}, {passive:true});
-
-btn.addEventListener('pointerdown', e => {
-  [ptr.x, ptr.y] = localPt(e);
-  on.press = true; sync();
-  addRipple(ptr.x, ptr.y);
-});
-window.addEventListener('pointerup',     () => { on.press = false; sync(); });
-window.addEventListener('pointercancel', () => { on.press = false; sync(); });
-// only keyboard focus keeps it lit — a mouse click shouldn't leave the button
-// glowing after the pointer has moved away
-btn.addEventListener('focus', () => {
-  on.focus = btn.matches(':focus-visible'); sync();
-});
-btn.addEventListener('blur', () => { on.focus = false; sync(); });
-
-// keyboard activation gets the same treatment, rippling from the centre
-btn.addEventListener('keydown', e => {
-  if(e.key !== 'Enter' && e.key !== ' ' || e.repeat) return;
-  on.press = true; sync(); addRipple(0, 0);
-});
-btn.addEventListener('keyup', e => {
-  if(e.key !== 'Enter' && e.key !== ' ') return;
-  on.press = false; sync();
-});
-
-resize();
-requestAnimationFrame(frame);
-
-// tiny console hooks for tuning
-window.__set = (o = {}, e = {}, c = {}, r = {}) => {
-  Object.assign(P, o); Object.assign(E, e); Object.assign(C, c); Object.assign(R, r);
-  drawn = null;
-};
-window.__hover  = v => { on.over = !!v; sync(); };
-window.__press  = v => { on.press = !!v; sync(); if(v) addRipple(0, 0); };
-window.__ripple = (x = 0, y = 0) => addRipple(x, y);
-window.__seek   = v => { clock = v; drawn = null; };
-}
-
-  }
-
-  const hosts = globalThis.document.querySelectorAll('[data-liquid-metal]');
-  for (let i = 0; i < hosts.length; i++) mountLiquidMetal(hosts[i]);
-})();
-</script>
-<script>
-/* ====================================================================== *
- * The moss root is grown, not photographed.
+/* ======================================================================
+ * sentinel-scene.js — the welcome page's moss-root scene, extracted so the
+ * dashboard can grow it inside a compact band instead of a full-screen hero.
  *
- * Everything the old build shipped as two transparent PNGs (4.6 MB) is now
- * geometry: a tapered tube swept along a measured centreline, a second tube
- * that loops over it to make the arch, a handful of recursive offshoots, and
- * ~130 000 instanced blades of moss planted on whatever part of that surface
- * faces the light. The silhouette landmarks — crest at 25% width, valley at
- * 50%, apex at 73%, the hollow under it — are lifted straight off the
- * original artwork's alpha channel, so the composition it was laid out
- * against is unchanged.
+ *   SentinelScene.mount({
+ *     hero, stage, canvas,   // the band, its 1600x880 design stage, the GL canvas
+ *     externalLoop,          // true: the page drives tick(now) from its own rAF
+ *     maxPixelRatio, blades, butterfly, narrowBelow, parallax,
+ *     onError, onReady
+ *   }) -> { tick, pulse, burst, relayout, setInView, destroy }
  *
- * Being procedural also means the scene no longer needs a texture upload, so
- * it now runs from file:// as well as it does from a server.
+ * The geometry, materials, butterfly, pollen and pointer response are the
+ * welcome page's, unchanged. What changed: the scene is framed on the band
+ * rather than the window, the dock / photo-plate code that only the welcome
+ * page has markup for is gone, the render loop is pausable, the pixel ratio
+ * is capped, and the entrance scan can be re-run on demand.
  * ====================================================================== */
 (function () {
   'use strict';
 
+  function mount(opts) {
+  if (!window.THREE) { (opts.onError || console.error)(new Error('three.js is not loaded')); return null; }
+
   var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var onError = opts.onError || function (err) { console.error(err); };
+  var onReady = opts.onReady || function () {};
+  var running = false, rafId = 0, inView = true;
 
   /* ── pointer parallax ───────────────────────────────────────────────
      Every layer that carries a --pd gets .par; the loop writes the eased
@@ -1731,30 +35,33 @@ window.__seek   = v => { clock = v; drawn = null; };
      they are the furthest plane, their travel would be a few pixels, and
      promoting two near-full-stage boxes to composited layers cost more
      frames than the effect was worth. */
-  var PARALLAX = '.dock,.headline,.lede,.pill,.play-wrap,' +
-                 '.stat--a,.stat--b,.card--about,.knob-float,.card--stove,.scroll';
+  var PARALLAX = opts.parallax || '[data-par]';
 
   var pointer = { x: 0, y: 0 }, smooth = { x: 0, y: 0 };
-  var heroEl = document.getElementById('hero');
+  var heroEl = opts.hero;
   var lastX = null, lastY = null;
-  var ticking = false, parOn = false;
+  var parOn = false;
 
-  /* one rAF for the whole page: it eases the pointer, publishes it, and
-     renders the GL scene if there is one */
+  /* One rAF eases the pointer, publishes it, and renders the GL scene. The
+     dashboard owns the page's single loop and calls tick() from it, so the
+     moss never competes with the ambient light for frames; without an
+     external driver the module runs its own, paused whenever the band is
+     off screen or the tab is hidden. Reduced motion renders once and only
+     again on resize. */
+  function loop() { rafId = 0; if (!running) return; rafId = requestAnimationFrame(loop); tick(); }
   function startTick() {
-    if (ticking) return;
-    ticking = true;
-    (function loop() { requestAnimationFrame(loop); tick(); })();
+    if (opts.externalLoop || REDUCED) return;
+    running = true;
+    if (!rafId && inView && !document.hidden) rafId = requestAnimationFrame(loop);
   }
+  function stopTick() { if (rafId) { cancelAnimationFrame(rafId); rafId = 0; } }
 
   var lastTick = 0;
   function tick() {
+    if (!inView || document.hidden) return;
     var now = performance.now();
     var dtUI = lastTick ? Math.min((now - lastTick) / 1000, 0.05) : 0.016;
     lastTick = now;
-    drawDock(dtUI);
-    drawSpec(dtUI);
-    aimMoved = false;
     if (parOn) {
       smooth.x += (pointer.x - smooth.x) * 0.055;
       smooth.y += (pointer.y - smooth.y) * 0.055;
@@ -1775,30 +82,36 @@ window.__seek   = v => { clock = v; drawn = null; };
     startTick();
     if (REDUCED || parOn) return;
     parOn = true;
-    var nodes = document.querySelectorAll(PARALLAX);
+    var nodes = hero.querySelectorAll(PARALLAX);
     for (var i = 0; i < nodes.length; i++) nodes[i].classList.add('par');
 
     window.addEventListener('pointermove', function (e) {
       if (e.pointerType === 'touch') return;
-      pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
-      pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
-      /* the GL camera is framed on .hero, not on the window — on the narrow
-         layout the hero is the taller of the two, so the pointer has to be
-         put back into the canvas's own box or the moss parts in the wrong place */
+      /* Both the camera drift and the moss-bend are framed on the band: it
+         is a strip of a much taller page. The camera keeps a little of the
+         pointer once it has left the band so the scene never snaps; the
+         moss only feels the pointer directly over it. */
       var r = hero.getBoundingClientRect();
-      ndc.x =  ((e.clientX - r.left) / r.width) * 2 - 1;
-      ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+      var nx = ((e.clientX - r.left) / r.width) * 2 - 1;
+      var ny = ((e.clientY - r.top) / r.height) * 2 - 1;
+      pointer.x = Math.max(-1.4, Math.min(1.4, nx));
+      pointer.y = Math.max(-1.4, Math.min(1.4, ny));
+      var over = nx >= -1 && nx <= 1 && ny >= -1 && ny <= 1;
+      ndc.x = over ? nx : 10;
+      ndc.y = over ? -ny : 10;
     }, { passive: true });
 
-    window.addEventListener('pointerleave', function () {
+    document.documentElement.addEventListener('pointerleave', function () {
       pointer.x = pointer.y = 0; ndc.x = 10;
     });
   }
 
-  var canvas   = document.getElementById('scene');
-  var hero     = document.getElementById('hero');
-  var stageEl  = document.getElementById('stage');
-  var NARROW   = window.matchMedia('(max-width: 900px)');
+  var canvas   = opts.canvas;
+  var hero     = opts.hero;
+  var stageEl  = opts.stage;
+  var NARROW_AT = opts.narrowBelow || 900;
+  /* narrow is a property of the band, not of the window */
+  var NARROW   = { get matches() { return hero.clientWidth < NARROW_AT; } };
 
   /* ── where the two roots sit on the 1600 × 880 reference frame ───────
      Unchanged from the artwork build: the near root's box is the old
@@ -1818,333 +131,6 @@ window.__seek   = v => { clock = v; drawn = null; };
   var clock = null;
   var readyStarted = false;
 
-  /* ── plate transmission ─────────────────────────────────────────────
-     Sample the actual photograph into a tiny grid and carry those colours
-     along the stepped clip edge. The canvas exists for this one entrance
-     only; after the reveal it stops painting and the live image takes over.
-
-     The dot front, the white scan and the CSS clip all have to sit on the
-     same line, which means reproducing the CSS progression exactly rather
-     than approximating it: floor(t * STEPS) / STEPS, linear — an eased
-     curve here put the dots a third of a plate ahead of the edge they are
-     supposed to be gathering on. The clip is applied to .portal-media,
-     which is overscanned past the figure by 9u so the parallax rotation has
-     somewhere to go, so the front has to be converted out of that box and
-     into the canvas's before it is painted. */
-  var CUT_STEPS = 12, CUT_MS = 1450;
-  var portalStarted = false;
-
-  function startPortalReveal() {
-    if (REDUCED || portalStarted) return;
-    portalStarted = true;
-    var figs = document.querySelectorAll('.portal');
-    for (var i = 0; i < figs.length; i++) revealPortal(figs[i]);
-  }
-
-  function revealPortal(fig) {
-    var img = fig.querySelector('img');
-    var canvasEl = fig.querySelector('.pixel-reveal');
-    var media = fig.querySelector('.portal-media');
-    if (!img || !canvasEl || !media) return;
-
-    var delay = parseFloat(fig.getAttribute('data-delay')) || 1080;
-
-    function launch() {
-      setTimeout(function () {
-        var box = canvasEl.getBoundingClientRect();
-        if (!box.width || !box.height) return;
-
-        var dpr = Math.min(window.devicePixelRatio || 1, 2);
-        canvasEl.width = Math.max(1, Math.round(box.width * dpr));
-        canvasEl.height = Math.max(1, Math.round(box.height * dpr));
-        var ctx = canvasEl.getContext('2d');
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-        var cols = 52;
-        var rows = Math.max(18, Math.round(cols * box.height / box.width));
-
-        var sample = document.createElement('canvas');
-        sample.width = cols; sample.height = rows;
-        var sg = sample.getContext('2d', { willReadFrequently:true });
-        var rgba = null;
-        try {
-          sg.drawImage(img, 0, 0, cols, rows);
-          rgba = sg.getImageData(0, 0, cols, rows).data;
-        } catch (err) {
-          /* file:// can make canvas pixels unreadable; the reveal still runs
-             with the page's pale-moss transmission colour. */
-        }
-
-        /* layout offsets, not bounding rects — .portal-media carries a live
-           transform and its rect would drift with the pointer */
-        var over = -media.offsetLeft;
-        var span = media.offsetWidth;
-        var reach = box.width;
-
-        canvasEl.style.opacity = '1';
-        var startedAt = performance.now();
-
-        function paint(now) {
-          var t = Math.min(1, (now - startedAt) / CUT_MS);
-          var stepped = Math.floor(t * CUT_STEPS) / CUT_STEPS;
-          var front = (stepped * span - over) / reach;
-          var tailFade = t < .88 ? 1 : (1 - t) / .12;
-          ctx.clearRect(0, 0, box.width, box.height);
-
-          for (var y = 0; y < rows; y++) {
-            for (var x = 0; x < cols; x++) {
-              var an = (x + .5) / cols;
-              var delta = an - front;
-              /* symmetric about the front: an asymmetric band puts the
-                 pattern's centre of mass ahead of the edge it belongs to */
-              if (delta < -.16 || delta > .16) continue;
-
-              var band = 1 - Math.abs(delta) / .16;
-              var pulse = .68 + .32 * Math.sin(x * 2.71 + y * 1.93 + t * 26);
-              var alpha = Math.max(0, band * pulse * tailFade);
-              if (alpha < .08) continue;
-
-              var r = 220, g = 238, b = 202;
-              if (rgba) {
-                var q = (y * cols + x) * 4;
-                r = Math.min(255, rgba[q] * 1.18 + 20);
-                g = Math.min(255, rgba[q + 1] * 1.18 + 24);
-                b = Math.min(255, rgba[q + 2] * 1.12 + 14);
-              }
-
-              var px = (x + .5) * box.width / cols;
-              var py = (y + .5) * box.height / rows;
-              var jitter = (1 - band) * 5;
-              px += Math.sin(y * 3.17 + x) * jitter;
-              py += Math.cos(x * 2.41 - y) * jitter;
-              var radius = (.55 + band * 1.25) * Math.max(.75, reach / 300);
-
-              ctx.fillStyle = 'rgba(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ',' + (alpha * .92) + ')';
-              ctx.beginPath();
-              ctx.arc(px, py, radius, 0, Math.PI * 2);
-              ctx.fill();
-            }
-          }
-
-          if (t < 1) requestAnimationFrame(paint);
-          else {
-            ctx.clearRect(0, 0, box.width, box.height);
-            canvasEl.style.opacity = '0';
-          }
-        }
-        requestAnimationFrame(paint);
-      }, delay);
-    }
-
-    if (img.complete && img.naturalWidth) launch();
-    else img.addEventListener('load', launch, { once:true });
-  }
-
-  /* ── the dock ────────────────────────────────────────────────────────
-     Proximity magnification over a rim highlight that points back at the
-     pointer. Both are springs, both run off the page's single rAF, and both
-     switch off for a coarse pointer — a dock that magnifies on touch just
-     reads as broken, because there is no hover to anticipate the tap.
-
-     Every layout read happens inside the frame, never in the pointer
-     handler: the items resize as they grow, so their rects have to be
-     re-read, and doing that per pointermove forces a synchronous layout
-     several times a frame. The handler only records where the pointer is. */
-  var DOCK = { root: null, items: [], on: false, live: false, key: false, dirty: false, u: 1 };
-  var SPEC = { items: [], on: false, dirty: false };
-  var aimX = 0, aimY = 0, aimSeen = false, aimMoved = false;
-
-  function fineHover() {
-    return !REDUCED && window.matchMedia('(hover:hover) and (pointer:fine)').matches;
-  }
-
-  function measureDock() {
-    if (!DOCK.root) return;
-    DOCK.on = fineHover();
-    DOCK.u = stageEl.getBoundingClientRect().width / (NARROW.matches ? 760 : 1600);
-    for (var i = 0; i < DOCK.items.length; i++) {
-      var st = DOCK.items[i];
-      st.el.style.width = st.el.style.height = st.el.style.transform = '';
-      st.el.dataset.near = 'false';
-      st.v = st.vel = st.target = 0;
-    }
-    for (i = 0; i < DOCK.items.length; i++) {
-      var r = DOCK.items[i].el.getBoundingClientRect();
-      DOCK.items[i].w = r.width;
-      DOCK.items[i].h = r.height;
-    }
-    DOCK.live = false;
-    DOCK.dirty = true;
-    aimMoved = aimSeen;
-  }
-
-  function dockRest() {
-    DOCK.live = false;
-    DOCK.dirty = true;
-    for (var i = 0; i < DOCK.items.length; i++) {
-      DOCK.items[i].target = 0;
-      DOCK.items[i].el.dataset.near = 'false';
-    }
-  }
-
-  function drawDock(dt) {
-    if (!DOCK.root || !DOCK.on) return;
-
-    /* Targets are only recomputed when the pointer actually MOVES.
-       Re-deriving them every frame from a stale position oscillates: the
-       capsule is centred, so a growing pill shifts the whole bar sideways,
-       which slides a different pill under a stationary cursor, which grows
-       instead, which shifts it back.
-       And whichever input moved last owns the dock, or the pointer's last
-       position re-targets over keyboard focus and focus never takes. */
-    if (aimSeen && aimMoved && !DOCK.key) {
-      var rr = DOCK.root.getBoundingClientRect();
-      /* the catch box reaches well below the bar, because that is where the
-         pills grow to and the pointer has to be able to follow them */
-      if (aimX > rr.left - 48 && aimX < rr.right + 48 && aimY > rr.top - 44 && aimY < rr.bottom + 104) {
-        for (var i = 0; i < DOCK.items.length; i++) {
-          var st = DOCK.items[i], r = st.el.getBoundingClientRect();
-          var prox = clamp01(1 - Math.abs(aimX - (r.left + r.width * 0.5)) / (128 * DOCK.u));
-          st.target = prox * prox * (3 - 2 * prox);
-          st.el.dataset.near = st.target > 0.08 ? 'true' : 'false';
-        }
-        DOCK.live = true;
-        DOCK.dirty = true;
-      } else if (DOCK.live) dockRest();
-    }
-
-    if (!DOCK.dirty) return;
-    var moving = false;
-    for (i = 0; i < DOCK.items.length; i++) {
-      st = DOCK.items[i];
-      st.vel += (st.target - st.v) * 190 * dt;
-      st.vel *= Math.exp(-23 * dt);
-      st.v += st.vel * dt;
-      if (Math.abs(st.target - st.v) < 0.001 && Math.abs(st.vel) < 0.004) { st.v = st.target; st.vel = 0; }
-      else moving = true;
-
-      var v = Math.min(Math.max(st.v, 0), 1.08);
-      var mark = st.el.classList.contains('dock-mark');
-      var ew = mark ? 14 * DOCK.u : Math.min(18 * DOCK.u, st.w * 0.24);
-      var eh = mark ? 14 * DOCK.u : 16 * DOCK.u;
-      st.el.style.width = (st.w + ew * v).toFixed(2) + 'px';
-      st.el.style.height = (st.h + eh * v).toFixed(2) + 'px';
-      st.el.style.transform = 'translateY(' + (v * 3.5 * DOCK.u).toFixed(2) + 'px)';
-    }
-    if (!moving) DOCK.dirty = false;
-  }
-
-  function drawSpec(dt) {
-    if (!SPEC.on) return;
-
-    if (aimSeen && aimMoved) {
-      for (var i = 0; i < SPEC.items.length; i++) {
-        var st = SPEC.items[i], r = st.el.getBoundingClientRect();
-        var cx = r.left + r.width * 0.5, cy = r.top + r.height * 0.5;
-        var dx = Math.max(r.left - aimX, 0, aimX - r.right);
-        var dy = Math.max(r.top - aimY, 0, aimY - r.bottom);
-        var d = Math.sqrt(dx * dx + dy * dy);
-        /* inside the box there is no direction to point at, so bias off the
-           corner and let the offset from centre steer it */
-        st.tAng = d === 0
-          ? Math.atan2(2 / Math.max(r.height, 1), -2 / Math.max(r.width, 1)) +
-            ((aimX - cx) / Math.max(r.width * 0.5, 1)) * 0.30 +
-            ((cy - aimY) / Math.max(r.height * 0.5, 1)) * 0.15
-          : Math.atan2(cy - aimY, aimX - cx);
-        var raw = clamp01(1 - d / (st.reach * DOCK.u));
-        st.tBr = Math.max(raw * raw * (3 - 2 * raw), st.focused ? 0.9 : 0);
-      }
-      SPEC.dirty = true;
-    }
-
-    if (!SPEC.dirty) return;
-    var moving = false;
-    for (i = 0; i < SPEC.items.length; i++) {
-      st = SPEC.items[i];
-      var diff = ((st.tAng - st.ang + Math.PI * 3) % (Math.PI * 2)) - Math.PI;
-      st.ang += diff * (1 - Math.exp(-dt * 8));
-      st.br += (st.tBr - st.br) * (1 - Math.exp(-dt * 9));
-      if (Math.abs(diff) < 0.001 && Math.abs(st.tBr - st.br) < 0.002) { st.ang = st.tAng; st.br = st.tBr; }
-      else moving = true;
-      st.el.style.setProperty('--spec-angle', st.ang.toFixed(4) + 'rad');
-      st.el.style.setProperty('--spec-bright', (clamp01(st.br) * 0.92).toFixed(3));
-    }
-    if (!moving) SPEC.dirty = false;
-  }
-
-  function initDock() {
-    var root = document.querySelector('.dock');
-    if (!root) return;
-    DOCK.root = root;
-    DOCK.items = [].map.call(root.querySelectorAll('[data-dock]'), function (el) {
-      return { el: el, w: 0, h: 0, v: 0, vel: 0, target: 0 };
-    });
-    SPEC.items = [].map.call(document.querySelectorAll('[data-spec]'), function (el) {
-      return { el: el, ang: 2.4, tAng: 2.4, br: 0, tBr: 0, focused: false,
-               reach: el.classList.contains('dock') ? 250 : 185 };
-    });
-    SPEC.on = fineHover();
-
-    measureDock();
-    /* the labels set the pill widths, so the base measure is wrong until the
-       real face has landed */
-    if (document.fonts && document.fonts.ready) document.fonts.ready.then(measureDock);
-    window.addEventListener('resize', measureDock);
-
-    window.addEventListener('pointermove', function (e) {
-      if (e.pointerType === 'touch') return;
-      aimX = e.clientX; aimY = e.clientY; aimSeen = true; aimMoved = true; DOCK.key = false;
-      DOCK.dirty = SPEC.dirty = true;
-    }, { passive: true });
-
-    window.addEventListener('pointerleave', function () {
-      aimSeen = false;
-      dockRest();
-      for (var i = 0; i < SPEC.items.length; i++) SPEC.items[i].tBr = SPEC.items[i].focused ? 0.9 : 0;
-      SPEC.dirty = true;
-    });
-
-    /* keyboard gets the same magnification, centred on the focused pill */
-    root.addEventListener('focusin', function (e) {
-      var item = e.target.closest('[data-dock]');
-      if (!item || !DOCK.on) return;
-      var idx = DOCK.items.map(function (st) { return st.el; }).indexOf(item);
-      DOCK.items.forEach(function (st, i) {
-        st.target = i === idx ? 1 : Math.abs(i - idx) === 1 ? 0.24 : 0;
-        st.el.dataset.near = st.target > 0.08 ? 'true' : 'false';
-      });
-      DOCK.live = false; DOCK.key = true; DOCK.dirty = true;
-    });
-    root.addEventListener('focusout', function () {
-      requestAnimationFrame(function () {
-        if (!root.contains(document.activeElement)) { DOCK.key = false; dockRest(); }
-      });
-    });
-    for (var i = 0; i < SPEC.items.length; i++) (function (st) {
-      st.el.addEventListener('focusin', function () { st.focused = true; SPEC.dirty = true; });
-      st.el.addEventListener('focusout', function () { st.focused = false; SPEC.dirty = true; });
-    })(SPEC.items[i]);
-
-    /* the current section moves with the click, and the pill throws a
-       handful of pollen — the page already has an emitter for that */
-    root.addEventListener('click', function (e) {
-      var item = e.target.closest('[data-dock]');
-      if (!item) return;
-      var href = item.getAttribute('href') || '';
-      var navigates = href && href.charAt(0) !== '#';
-      /* Only in-page keys are swallowed; anything pointing somewhere real is
-         left to the browser, so the pollen bursts and the page still goes. */
-      if (!navigates) {
-        e.preventDefault();
-        if (!item.classList.contains('dock-mark')) {
-          for (var i = 0; i < DOCK.items.length; i++) DOCK.items[i].el.classList.remove('is-active');
-          item.classList.add('is-active');
-        }
-      }
-      burstAt(e.clientX, e.clientY);
-    });
-  }
-
   function ready() {
     if (readyStarted) return;
     readyStarted = true;
@@ -2153,14 +139,13 @@ window.__seek   = v => { clock = v; drawn = null; };
        nothing has forced the browser to compute them yet. Without a recalc
        here it computes once, sees the finished state, and every transition is
        skipped. */
-    void document.body.offsetHeight;
-    document.body.classList.add('is-ready');
+    void hero.offsetHeight;
+    hero.classList.add('is-ready');
     startParallax();
-    startPortalReveal();
-    initDock();
+    onReady();
     /* the wipes are done — drop the clips so nothing keeps a stacking
-       context alive (the About knob has to stay above the moss) */
-    setTimeout(function () { document.body.classList.add('intro-done'); }, REDUCED ? 0 : 2900);
+       context alive */
+    setTimeout(function () { hero.classList.add('intro-done'); }, REDUCED ? 0 : 2900);
   }
 
   /* pointer in NDC, read by the moss shaders through a plane raycast */
@@ -3392,16 +1377,16 @@ window.__seek   = v => { clock = v; drawn = null; };
    * ================================================================== */
   function build() {
     var narrow = NARROW.matches;
-    var small = narrow || (window.innerWidth * window.innerHeight) < 620000;
-    var BLADES_NEAR = small ? 70000 : 190000;
-    var BLADES_FAR  = small ? 20000 :  60000;
+    /* The band is a fraction of the welcome hero's area, so it gets a
+       fraction of its moss: enough to read as a pelt, not enough to be felt
+       under a dashboard that repaints telemetry on a poll. */
+    var small = narrow || (hero.clientWidth * hero.clientHeight) < 300000;
+    var BLADES_NEAR = opts.blades || (small ? 55000 : 120000);
+    var BLADES_FAR  = Math.round(BLADES_NEAR * 0.3);
 
-    var q = /[?&]blades=(\d+)/.exec(location.search);
-    if (q) { BLADES_NEAR = +q[1]; BLADES_FAR = Math.round(+q[1] * 0.21); }
-
-    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: !small });
+    renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: !narrow, powerPreference: 'high-performance' });
     renderer.setClearColor(0x000000, 0);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, small ? 1.6 : 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio || 1.5));
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.30;
     if ('sRGBEncoding' in THREE) renderer.outputEncoding = THREE.sRGBEncoding;
@@ -3438,7 +1423,7 @@ window.__seek   = v => { clock = v; drawn = null; };
       mouse: uMouseNear, mouseR: 1.20
     });
     scene.add(nearGroup);
-    if (!small) bf = buildButterfly(nearGroup, nearLimbs, nearGroup.userData.uni);
+    if (!narrow && opts.butterfly !== false) bf = buildButterfly(nearGroup, nearLimbs, nearGroup.userData.uni);
 
     /* ---- far ridge: same builder, pushed back and washed into the air.
             It dissolves before it reaches the cards (local x 0.5 → 4.0) and
@@ -3458,13 +1443,15 @@ window.__seek   = v => { clock = v; drawn = null; };
 
     buildAmbient();
     layout();
-    window.addEventListener('resize', layout);
+    /* the band reflows with its container, not only with the window */
+    if (window.ResizeObserver) new ResizeObserver(scheduleLayout).observe(hero);
+    else window.addEventListener('resize', scheduleLayout);
     clock = new THREE.Clock();
 
     /* Hold the pulse for a page nobody is looking at: a background tab gets
        no rAF, so the scan would never advance and the hero would still be
        empty when it was finally opened. */
-    if (!REDUCED && !document.hidden) { uScanOn.value = 1; uScanR.value = 0; scanning = true; }
+    if (!REDUCED && !document.hidden) pulse(); else hideWires();
 
     /* Paint once here rather than waiting on the loop. A tab that is opened
        in the background never gets a rAF, so the hero would sit empty until
@@ -3502,7 +1489,7 @@ window.__seek   = v => { clock = v; drawn = null; };
        no matter how many there are. Sizes follow a power law — a few big
        soft ones near the lens, a great many specks behind them — and they
        depth-test against the moss so the ones behind the root are hidden. */
-    var COUNT = (NARROW.matches || (window.innerWidth * window.innerHeight) < 620000) ? 1500 : 4200;
+    var COUNT = (NARROW.matches || (hero.clientWidth * hero.clientHeight) < 300000) ? 900 : 2400;
     var pos = new Float32Array(COUNT * 3);
     var seed = new Float32Array(COUNT * 4);
     for (var i = 0; i < COUNT; i++) {
@@ -4171,7 +2158,34 @@ window.__seek   = v => { clock = v; drawn = null; };
      root can be pinned to the same stage coordinates the copy is laid out
      on. Each root is modelled in its own 10-unit-wide box and scaled into
      place around a pinned landmark, exactly as the artwork was. */
+  var layoutQueued = false;
+  function scheduleLayout() {
+    if (layoutQueued || !renderer) return;
+    layoutQueued = true;
+    requestAnimationFrame(function () {
+      layoutQueued = false;
+      layout();
+      if (REDUCED) renderFrame();      /* no loop to pick the new size up */
+    });
+  }
+
+  function hideWires() { for (var i = 0; i < wireMeshes.length; i++) wireMeshes[i].visible = false; }
+
+  /* The entrance scan, re-runnable: the cage snaps back on and the moss
+     regrows behind the front. The dashboard fires it when a suite starts. */
+  function pulse() {
+    if (!renderer || REDUCED) return;
+    for (var i = 0; i < wireMeshes.length; i++) wireMeshes[i].visible = true;
+    scanT = 0; scanning = true;
+    uScanOn.value = 1; uScanR.value = 0; uWire.value = 0;
+  }
+
   function layout() {
+    /* The stage is 1600 (760 narrow) design units wide and always exactly
+       as wide as the band; --u is published so the overlay shares the unit. */
+    var narrow0 = NARROW.matches;
+    hero.style.setProperty('--u', (hero.clientWidth / (narrow0 ? 760 : 1600)) + 'px');
+    hero.classList.toggle('is-narrow', narrow0);
     W = hero.clientWidth; H = hero.clientHeight;
     renderer.setSize(W, H, false);
     camera.fov = 2 * Math.atan((H / 2) / DIST) * 180 / Math.PI;
@@ -4260,6 +2274,7 @@ window.__seek   = v => { clock = v; drawn = null; };
   /* ── frame ─────────────────────────────────────────────────────────── */
   var frames = 0;
   function renderFrame() {
+    if (!renderer || !clock) return;
     var dt = Math.min(clock.getDelta(), 0.05);
     if (!REDUCED) uTime.value += dt;
 
@@ -4284,12 +2299,7 @@ window.__seek   = v => { clock = v; drawn = null; };
         scanning = false;
         uScanOn.value = 0;
         uWire.value = 0;
-        for (var wi = 0; wi < wireMeshes.length; wi++) {
-          var wm = wireMeshes[wi];
-          if (wm.parent) wm.parent.remove(wm);
-          wm.geometry.dispose(); wm.material.dispose();
-        }
-        wireMeshes.length = 0;
+        hideWires();
       }
     }
 
@@ -4299,7 +2309,7 @@ window.__seek   = v => { clock = v; drawn = null; };
     emitSpray(dt);
 
     renderer.render(scene, camera);
-    if (++frames === 2) window.__ready = true;
+    if (++frames === 2) hero.classList.add('is-drawn');
   }
 
   /* ── boot ──────────────────────────────────────────────────────────── */
@@ -4310,12 +2320,34 @@ window.__seek   = v => { clock = v; drawn = null; };
   ready();
   requestAnimationFrame(function () { requestAnimationFrame(function () {
     try { build(); }
-    catch (err) { console.error(err); }
+    catch (err) { onError(err); }
   }); });
 
-  /* never leave the page invisible if something stalls */
+  /* never leave the band invisible if something stalls */
   setTimeout(ready, 4000);
+
+  /* a hidden tab pays nothing; the band's own visibility is the caller's
+     to report, since only the page knows how it scrolls */
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stopTick(); else startTick();
+  });
+
+  return {
+    tick: tick,
+    pulse: pulse,
+    burst: burstAt,
+    relayout: scheduleLayout,
+    setInView: function (v) { inView = !!v; if (inView) startTick(); else stopTick(); },
+    /* a window onto the closure, for debugging placement and cost */
+    inspect: function () {
+      var g = function (o) { return o ? { x: +o.position.x.toFixed(1), y: +o.position.y.toFixed(1), z: +o.position.z.toFixed(1), s: +o.scale.x.toFixed(2), vis: o.visible, kids: o.children.length } : null; };
+      return { W: W, H: H, narrow: NARROW.matches, frames: frames, scanning: scanning, scanR: uScanR.value, scanOn: uScanOn.value,
+               near: g(nearGroup), far: g(farGroup), cam: camera ? { x: +camera.position.x.toFixed(1), y: +camera.position.y.toFixed(1), fov: +camera.fov.toFixed(2) } : null,
+               wires: wireMeshes.length, render: renderer ? renderer.info.render : null, ctxLost: renderer ? renderer.getContext().isContextLost() : null };
+    },
+    destroy: function () { stopTick(); if (renderer) renderer.dispose(); }
+  };
+  }
+
+  window.SentinelScene = { mount: mount };
 })();
-</script>
-</body>
-</html>

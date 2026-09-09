@@ -21,34 +21,21 @@ TEMPLATE_PATH = Path(__file__).parent / "templates" / "dashboard.html"
 WELCOME_TEMPLATE_PATH = Path(__file__).parent / "templates" / "welcome.html"
 
 
-@web_router.get("/welcome", response_class=HTMLResponse, summary="Serve Welcome Landing Page")
-async def render_welcome(request: Request):
-    """Render the ThreeUI Sylva Living Green landing page for API Sentinel."""
-    if not WELCOME_TEMPLATE_PATH.exists():
+def _render_template(path: Path, label: str) -> HTMLResponse:
+    """Read a UI template from disk, or fail loudly if it was not deployed."""
+    if not path.exists():
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Welcome HTML template not found on server."
+            detail=f"{label} HTML template not found on server."
         )
-    html_content = WELCOME_TEMPLATE_PATH.read_text(encoding="utf-8")
-    return HTMLResponse(content=html_content, status_code=200)
+    return HTMLResponse(content=path.read_text(encoding="utf-8"), status_code=200)
 
 
-@web_router.get("/", summary="Serve Web Dashboard UI or Root Identity")
-@web_router.get("/dashboard", response_class=HTMLResponse, summary="Serve Web Dashboard UI")
-async def render_dashboard(request: Request):
-    """Render the high-contrast dark AI theme dashboard web interface."""
-    accept = request.headers.get("accept", "")
-    is_explicit_dashboard = request.url.path.rstrip("/").endswith("dashboard")
-    is_browser_html = "text/html" in accept
-
-    if is_explicit_dashboard or is_browser_html:
-        if not TEMPLATE_PATH.exists():
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Dashboard HTML template not found on server."
-            )
-        html_content = TEMPLATE_PATH.read_text(encoding="utf-8")
-        return HTMLResponse(content=html_content, status_code=200)
+@web_router.get("/", summary="Serve Welcome Landing Page or Root Identity")
+async def render_root(request: Request):
+    """Serve the landing page to browsers; machine clients get the service identity."""
+    if "text/html" in request.headers.get("accept", ""):
+        return _render_template(WELCOME_TEMPLATE_PATH, "Welcome")
 
     return JSONResponse(
         status_code=200,
@@ -57,11 +44,25 @@ async def render_dashboard(request: Request):
             "version": settings.VERSION,
             "environment": settings.ENVIRONMENT,
             "status": "active",
+            "landing_page": "/",
+            "dashboard": "/dashboard",
             "documentation": "/docs",
             "redoc": "/redoc",
             "api_v1": settings.API_V1_PREFIX
         }
     )
+
+
+@web_router.get("/welcome", response_class=HTMLResponse, summary="Serve Welcome Landing Page")
+async def render_welcome(request: Request):
+    """Render the ThreeUI Sylva Living Green landing page for API Sentinel."""
+    return _render_template(WELCOME_TEMPLATE_PATH, "Welcome")
+
+
+@web_router.get("/dashboard", response_class=HTMLResponse, summary="Serve Web Dashboard UI")
+async def render_dashboard(request: Request):
+    """Render the Living Green telemetry cockpit."""
+    return _render_template(TEMPLATE_PATH, "Dashboard")
 
 
 @dashboard_api_router.get(
