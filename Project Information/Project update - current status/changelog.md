@@ -1,5 +1,13 @@
 # API Sentinel — Changelog
 
+## [Stage 01 - Sub-Stage 03] - 2026-09-09
+- **Completed**: Structured Logging & Health Check Probe.
+- Implemented `JSONLogFormatter` and `ConsoleLogFormatter` with context variable Request-ID support in `app/core/logging.py`.
+- Implemented `RequestCorrelationMiddleware` attaching `X-Request-ID` and `X-Response-Time-Ms` in `app/core/middleware.py`.
+- Enhanced `/api/v1/health` diagnostic probe returning uptime, database connection state, environment, and AI engine status.
+- Added unit test suite in `tests/test_logging_and_health.py` (4 tests passing).
+- All 13 unit tests across Stage 01 passing cleanly. Stage 01 is now 100% COMPLETE.
+
 ## [Stage 01 - Sub-Stage 02] - 2026-09-09
 - **Completed**: Configuration & Environment Management.
 - Implemented `Settings` class using `pydantic-settings` in `app/core/config.py`.

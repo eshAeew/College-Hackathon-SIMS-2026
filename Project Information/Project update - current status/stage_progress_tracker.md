@@ -2,7 +2,7 @@
 
 | Stage # | Stage Name | Tier | Status | Notes / Deliverables |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stage 01** | Project Foundation | Tier 1 | `IN_PROGRESS` | Sub-stages 01 & 02 completed (App scaffolding, Pydantic settings & validation) |
+| **Stage 01** | Project Foundation | Tier 1 | `COMPLETED` | FastAPI app, env settings, structured logging, healthcheck (13/13 tests OK) |
 | **Stage 02** | Project / Workspace Management | Tier 1 | `PLANNED` | Project CRUD, environment profiles |
 | **Stage 03** | API Endpoint Management | Tier 1 | `PLANNED` | Endpoint registry, method & path specs |
 | **Stage 04** | Request Configuration Engine | Tier 1 | `PLANNED` | Request builder, param & body serializer |

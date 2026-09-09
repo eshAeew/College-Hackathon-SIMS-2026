@@ -1,4 +1,4 @@
-"""Standardized API Response Envelopes."""
+"""Standardized API Response Envelopes and Health Diagnostics."""
 from typing import Generic, TypeVar, Optional, Any, Dict
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
@@ -28,10 +28,19 @@ class ErrorResponse(BaseModel):
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="UTC timestamp")
 
 
+class DatabaseHealth(BaseModel):
+    """Database connection status."""
+    status: str = Field(default="connected", description="Database health status ('connected', 'degraded', 'error')")
+    engine: str = Field(default="sqlite", description="Database engine type")
+    location: str = Field(..., description="Database URI or file location")
+
+
 class HealthStatus(BaseModel):
-    """System health check payload."""
-    status: str = Field(default="healthy", description="System health status")
+    """Comprehensive system health & diagnostic status."""
+    status: str = Field(default="healthy", description="Overall system health status")
     version: str = Field(..., description="API Sentinel version")
+    environment: str = Field(..., description="Active environment (development/production)")
+    uptime_seconds: float = Field(..., description="Server uptime in seconds")
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), description="Server UTC time")
-    database: str = Field(default="connected", description="Database connection state")
-    ai_engine: str = Field(default="ready", description="AI Diagnostic engine state")
+    database: DatabaseHealth = Field(..., description="Persistence layer health details")
+    ai_engine: str = Field(default="heuristic_fallback", description="AI Diagnostic status (enabled/heuristic_fallback)")

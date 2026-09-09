@@ -1,4 +1,5 @@
 """API Sentinel — FastAPI Main Entry Point."""
+import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -6,20 +7,27 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 from app.core.config import get_settings
+from app.core.logging import setup_logging
+from app.core.middleware import RequestCorrelationMiddleware
 from app.api.v1.api import api_router
 from app.models.schemas.response import ErrorResponse, ErrorDetail
 
 settings = get_settings()
 
+# Initialize structured logging
+setup_logging(log_level=settings.LOG_LEVEL, json_format=not settings.DEBUG)
+logger = logging.getLogger("app.main")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifecycle hook (startup and shutdown)."""
-    # Startup actions
-    print(f"[{settings.PROJECT_NAME} v{settings.VERSION}] Starting up in {'DEBUG' if settings.DEBUG else 'PRODUCTION'} mode...")
+    logger.info(
+        f"Starting {settings.PROJECT_NAME} v{settings.VERSION} "
+        f"[Env: {settings.ENVIRONMENT}, Debug: {settings.DEBUG}]"
+    )
     yield
-    # Shutdown actions
-    print(f"[{settings.PROJECT_NAME}] Shutting down cleanly...")
+    logger.info(f"Shutting down {settings.PROJECT_NAME} cleanly...")
 
 
 app = FastAPI(
@@ -32,7 +40,10 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS Middleware
+# 1. Request Correlation & Latency Logging Middleware
+app.add_middleware(RequestCorrelationMiddleware)
+
+# 2. CORS Middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -45,6 +56,7 @@ app.add_middleware(
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     """Format request validation errors into standard JSON error envelope."""
+    logger.warning(f"Validation failure on {request.method} {request.url.path}: {exc.errors()}")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         content=ErrorResponse(
@@ -64,6 +76,7 @@ async def root():
     return {
         "name": settings.PROJECT_NAME,
         "version": settings.VERSION,
+        "environment": settings.ENVIRONMENT,
         "status": "active",
         "documentation": "/docs",
         "api_v1": settings.API_V1_PREFIX
