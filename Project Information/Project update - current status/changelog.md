@@ -1,5 +1,34 @@
 # API Sentinel — Changelog
 
+## [Stage 18 - Failure Analysis Engine] - 2026-09-09
+- **Completed**: Structured Evidence Packaging, Credential Masking, cURL Reproduction Generator, 13-Category Root-Cause Taxonomy, and Run Failure Reporting (Stage 18 Complete).
+- Created `app/models/schemas/failure_analysis.py` with:
+  - `RootCauseCategory` (`MISSING_INPUT_VALIDATION`, `SERVER_EXCEPTION`, `RESPONSE_CONTRACT_MISMATCH`, `PERFORMANCE_SLA_BREACH`, `NETWORK_TIMEOUT`, `AUTHENTICATION_FAILURE`, `AUTHORIZATION_FAILURE`, `RATE_LIMITED`, `ENDPOINT_NOT_FOUND`, `METHOD_NOT_ALLOWED`, `STATUS_CODE_MISMATCH`, `BODY_ASSERTION_FAILURE`, `UNKNOWN_FAILURE`).
+  - `FailureSeverity` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `INFO`).
+  - `HistoricalRecurrenceContext`, `RequestEvidence`, `ResponseEvidence`, `AssertionFailureDetail`, `RootCauseAssessment`, `FailureEvidence`, `PackageEvidenceRequest`, `CategorizeFailureRequest`, `RunFailureAnalysisReport`.
+- Created `app/utils/evidence_packager.py` with:
+  - `mask_sensitive_headers()`: Redacts passwords, API keys, Bearer tokens, and cookies (`***REDACTED***`).
+  - `snippet_body()`: Safe payload truncation (4KB) with length tracking.
+  - `build_curl_command()`: Copy-pasteable reproducible cURL command generator with masked credentials and serialized bodies.
+  - `build_historical_context()`: Recurrence classifier (`CHRONIC`, `INTERMITTENT`, `NEW`, `RESOLVED`, `HEALTHY`).
+  - `build_evidence_id()`: Deterministic SHA-256 fingerprint hash generator (`EV-...`).
+  - `categorize_root_cause()`: 13-category root-cause classifier with confidence percentage and actionable remediation hints.
+  - `derive_severity()`: Multi-factor severity evaluator.
+- Implemented `FailureAnalysisService` in `app/services/failure_analysis_service.py`:
+  - `categorize()`: Ad-hoc failure categorization from raw signals.
+  - `package_adhoc()`: Constructs complete evidence bundles on the fly.
+  - `package_from_result()`: Translates persisted `TestResult` database records into structured `FailureEvidence`.
+  - `analyze_run()`: Analyzes and packages all failures across an entire `TestRun`.
+- Implemented REST API router in `app/api/v1/failure_analysis.py`:
+  - `POST /api/v1/failure-analysis/package`
+  - `POST /api/v1/failure-analysis/categorize`
+  - `GET /api/v1/results/{result_id}/evidence`
+  - `GET /api/v1/runs/{run_id}/failure-analysis`
+- Mounted `failure_analysis_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_failure_analysis.py` (10 new tests passing).
+- Total test suite count increased to 230 passing tests with 100% pass rate.
+- Marked Stage 18: Failure Analysis Engine as 100% COMPLETE.
+
 ## [Stage 17 - Result Classification Engine] - 2026-09-09
 - **Completed**: 4-Tier Result Decision Matrix (PASS/FAIL/WARNING/ERROR), Multi-Factor Failure Severity Classifier (LOW/MEDIUM/HIGH/CRITICAL), Health Score Index, and Prioritized Failure Queue (Stage 17 Complete).
 - Created `app/models/schemas/result_classification.py` with:

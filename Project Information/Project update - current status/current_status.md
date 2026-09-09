@@ -20,8 +20,9 @@
   - **Stage 15: Automatic Test Generation (100% Complete)**
   - **Stage 16: Safety & Execution Controls (100% Complete)**
   - **Stage 17: Result Classification Engine (100% Complete)**
-- **Next Sub-Stage**: Stage 18: Failure Analysis Engine
-- **Latest Build Status**: Passing (220/220 unit tests green, 100% pass rate)
+  - **Stage 18: Failure Analysis Engine (100% Complete)**
+- **Next Sub-Stage**: Stage 19: AI Recommendation Layer
+- **Latest Build Status**: Passing (230/230 unit tests green, 100% pass rate)
 
 
 
@@ -80,7 +81,9 @@
 - [x] **Stage 17: Result Classification Engine (COMPLETED - 9/9 tests passing)**
   - [x] **Sub-Stage 01: 4-Tier Result Decision Matrix**: Standardized outcome matrix (`PASS`, `FAIL`, `WARNING`, `ERROR`), root failure categorization (`HTTP_500_SERVER_CRASH`, `STATUS_CODE_MISMATCH`, `SCHEMA_VIOLATION`, `LATENCY_SLA_BREACH`, `NETWORK_CONNECTIVITY_ERROR`, `AUTH_SECURITY_FAILURE`), and single execution evaluation (`/api/v1/classification/classify`).
   - [x] **Sub-Stage 02: Failure Severity Scoring (LOW to CRITICAL)**: Multi-factor severity scoring (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NONE`), priority ranking queue (1=Highest to 5=None), composite health score index (0-100%), batch classification (`/api/v1/classification/classify-batch`), run breakdown (`/api/v1/runs/{id}/classification`), and latest project report (`/api/v1/projects/{id}/classification/latest`).
-- [ ] Stage 18: Failure Analysis Engine
+- [x] **Stage 18: Failure Analysis Engine (COMPLETED - 10/10 tests passing)**
+  - [x] **Sub-Stage 01: Structured Evidence Packaging**: Credential masking (`Authorization`, `Cookie`, `X-API-Key`), bounded 4KB body snippets, reproducible cURL command generator, deterministic SHA-256 evidence IDs (`EV-...`), and historical recurrence context.
+  - [x] **Sub-Stage 02: Root Cause Deduction & Categorization**: 13-category root-cause taxonomy with confidence scoring and troubleshooting recommendations (`/api/v1/failure-analysis/package`, `/api/v1/failure-analysis/categorize`, `/api/v1/results/{id}/evidence`, `/api/v1/runs/{id}/failure-analysis`).
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API
