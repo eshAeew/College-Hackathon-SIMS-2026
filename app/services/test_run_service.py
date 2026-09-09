@@ -215,9 +215,18 @@ class TestRunService:
         test_run.warning_tests = warnings
         test_run.error_tests = errors
         test_run.duration_ms = dur_ms
-
         db.commit()
         db.refresh(test_run)
+
+        # Auto-generate AI recommendations for any failed or error test results
+        for r in results:
+            if r.status in [TestResultStatus.FAIL.value, TestResultStatus.ERROR.value]:
+                try:
+                    from app.services.ai_recommendation_service import AIRecommendationService
+                    AIRecommendationService.recommend_for_result(db, r.id, persist=True)
+                except Exception as e:
+                    logger.debug(f"Could not generate AI recommendation for TestResult #{r.id}: {e}")
+
         logger.info(f"TestRun #{test_run.id} finished with status '{test_run.status}' in {dur_ms}ms (Pass: {passed}/{total})")
         return test_run
 

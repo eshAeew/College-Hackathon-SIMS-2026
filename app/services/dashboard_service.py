@@ -61,12 +61,28 @@ class DashboardService:
             avg_latency = 0.0
             p95_latency = 0.0
 
-        # Active critical issues (remediations with CRITICAL or HIGH severity)
+        # Auto-generate AI recommendations for recent failed test results if not already created
+        recent_failed_results = (
+            db.query(TestResult)
+            .filter(TestResult.status.in_(["FAIL", "ERROR"]))
+            .order_by(TestResult.id.desc())
+            .limit(10)
+            .all()
+        )
+        for fr in recent_failed_results:
+            existing_rec = db.query(AIRecommendation).filter(AIRecommendation.test_result_id == fr.id).first()
+            if not existing_rec:
+                try:
+                    from app.services.ai_recommendation_service import AIRecommendationService
+                    AIRecommendationService.recommend_for_result(db, fr.id, persist=True)
+                except Exception as e:
+                    logger.debug(f"Could not auto-generate AI recommendation for TestResult #{fr.id}: {e}")
+
+        # Active critical issues and remediation cards (top 15)
         crit_records = (
             db.query(AIRecommendation)
-            .filter(AIRecommendation.severity.in_(["CRITICAL", "HIGH"]))
             .order_by(AIRecommendation.created_at.desc())
-            .limit(10)
+            .limit(15)
             .all()
         )
         critical_alerts: List[CriticalIssueAlert] = []
