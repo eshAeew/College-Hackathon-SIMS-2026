@@ -1,7 +1,11 @@
 """API v1 Router Hub with Enhanced Health & Diagnostics and Projects Router."""
 import time
 from fastapi import APIRouter
+import logging
+from sqlalchemy import text
+
 from app.core.config import get_settings
+from app.core.database import engine
 from app.models.schemas.response import StandardResponse, HealthStatus, DatabaseHealth
 from app.api.v1.projects import router as projects_router
 from app.api.v1.endpoints import router as endpoints_router
@@ -22,6 +26,7 @@ from app.api.v1.classification import router as classification_router
 
 settings = get_settings()
 api_router = APIRouter()
+logger = logging.getLogger("app.api.health")
 
 # Server start timestamp recorded when module loads
 SERVER_START_TIME = time.time()
@@ -37,8 +42,14 @@ async def health_check():
     """Verify backend health, persistence connectivity, uptime, and AI service readiness."""
     uptime = time.time() - SERVER_START_TIME
     
-    # Check SQLite accessibility
+    # Probe actual database connectivity rather than assuming it
     db_status = "connected"
+    try:
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as exc:  # pragma: no cover - exercised via failure injection
+        db_status = "unavailable"
+        logger.error(f"Health probe: database unreachable - {exc}")
     if settings.DATABASE_URL.startswith("sqlite"):
         db_engine = "SQLite 3"
     elif settings.DATABASE_URL.startswith("postgresql"):

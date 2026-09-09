@@ -23,6 +23,9 @@ def extract_field_value(data: Any, path: str) -> Tuple[bool, Any]:
         return False, None
 
     normalized_path = re.sub(r'\[(\d+)\]', r'.\1', path.strip())
+    # Accept JSONPath-style roots ("$.a.b") as well as bare dot paths ("a.b")
+    if normalized_path.startswith('$'):
+        normalized_path = normalized_path[1:]
     if normalized_path.startswith('.'):
         normalized_path = normalized_path[1:]
 

@@ -38,6 +38,11 @@ class Settings(BaseSettings):
     # Safety & Security Controls
     ALLOW_DESTRUCTIVE_OPERATIONS: bool = False
     ALLOWED_TARGET_HOSTS: List[str] = ["localhost", "127.0.0.1", "0.0.0.0", "testserver"]
+    ENFORCE_TARGET_SAFETY: bool = True
+    STRICT_TARGET_ALLOWLIST: bool = False
+    ALLOW_LOCALHOST_TARGETS: bool = True
+    ALLOW_PRIVATE_NETWORK_TARGETS: bool = True
+    BLOCK_CLOUD_METADATA: bool = True
     
     # AI Diagnostic Engine (Optional - system falls back to heuristics if omitted)
     GEMINI_API_KEY: str = ""

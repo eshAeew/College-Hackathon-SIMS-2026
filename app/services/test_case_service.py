@@ -15,6 +15,7 @@ from app.models.schemas.test_case import (
     TestCaseExecutionEvaluationResponse,
     TestCaseUpdate
 )
+from app.models.schemas.execution import ExecutionOptions
 from app.services.http_dispatcher import HttpDispatcherService
 from app.services.request_builder_service import RequestBuilderService
 from app.utils.assertion_engine import evaluate_assertions
@@ -262,7 +263,7 @@ class TestCaseService:
         # Dispatch execution
         exec_res = await HttpDispatcherService.dispatch_httpx_request(
             request=httpx_req,
-            options=None,
+            options=ExecutionOptions(),
             client=client
         )
 

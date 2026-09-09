@@ -22,6 +22,17 @@ logger = logging.getLogger("app.utils.safety_guard")
 DESTRUCTIVE_PATH_KEYWORDS = {"truncate", "drop", "purge", "reset", "cleanup", "destroy", "wipe", "flush"}
 DESTRUCTIVE_TAGS = {"destructive", "data-purge", "state-mutating", "cleanup"}
 
+# Cloud instance metadata endpoints. Reaching these from a user-supplied target URL is the
+# classic SSRF credential-theft vector, so they are refused regardless of private-network policy.
+CLOUD_METADATA_HOSTS = {
+    "169.254.169.254",              # AWS / Azure / GCP / DigitalOcean IMDS
+    "metadata.google.internal",     # GCP
+    "metadata.goog",                # GCP
+    "100.100.100.200",              # Alibaba Cloud
+    "192.0.0.192",                  # Oracle Cloud
+    "fd00:ec2::254",                # AWS IPv6 IMDS
+}
+
 
 def is_localhost_host(host: str) -> bool:
     """Determine if a hostname represents localhost or loopback."""
@@ -382,3 +393,66 @@ def audit_test_suite_safety(
         is_run_permitted=is_permitted,
         warnings=warnings
     )
+
+
+def is_cloud_metadata_host(host: str) -> bool:
+    """Return True if the host is a cloud instance-metadata endpoint or link-local address."""
+    if not host:
+        return False
+    h = host.lower().split("]")[0].lstrip("[").strip()
+    h = h.split(":")[0] if h.count(":") <= 1 else h
+    if h in CLOUD_METADATA_HOSTS:
+        return True
+    try:
+        return ipaddress.ip_address(h).is_link_local
+    except ValueError:
+        return False
+
+
+def build_runtime_policy() -> SafetyPolicy:
+    """Assemble the active SafetyPolicy from application settings."""
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    return SafetyPolicy(
+        allowed_hosts=list(settings.ALLOWED_TARGET_HOSTS),
+        allow_localhost=settings.ALLOW_LOCALHOST_TARGETS,
+        allow_private_networks=settings.ALLOW_PRIVATE_NETWORK_TARGETS,
+        strict_host_allowlist=settings.STRICT_TARGET_ALLOWLIST,
+        allow_destructive_operations=settings.ALLOW_DESTRUCTIVE_OPERATIONS,
+        environment=EnvironmentTier(settings.ENVIRONMENT)
+        if settings.ENVIRONMENT in {t.value for t in EnvironmentTier}
+        else EnvironmentTier.DEVELOPMENT,
+    )
+
+
+def enforce_target_authorization(target_url: str) -> Optional[ValidateTargetResponse]:
+    """Authorize an outbound target URL immediately before dispatch.
+
+    Returns None when enforcement is disabled, otherwise a ValidateTargetResponse whose
+    `is_authorized` flag the caller must honour.
+    """
+    from app.core.config import get_settings
+
+    settings = get_settings()
+    if not settings.ENFORCE_TARGET_SAFETY:
+        return None
+
+    host = (urlparse(target_url).netloc or "").split("@")[-1]
+    bare_host = host.split(":")[0].lower() if not host.startswith("[") else host
+    if settings.BLOCK_CLOUD_METADATA and is_cloud_metadata_host(host):
+        return ValidateTargetResponse(
+            url=target_url,
+            normalized_host=bare_host,
+            is_authorized=False,
+            authorization_status=TargetHostAuthorizationStatus.BLOCKED_DISALLOWED_HOST,
+            is_localhost=False,
+            is_private_network=True,
+            is_https=urlparse(target_url).scheme.lower() == "https",
+            message=(
+                f"Host '{bare_host}' is a cloud instance-metadata / link-local endpoint and is "
+                "permanently blocked to prevent SSRF credential exposure."
+            ),
+        )
+
+    return validate_target_host(target_url, build_runtime_policy())

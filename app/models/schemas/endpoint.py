@@ -2,7 +2,9 @@
 from enum import Enum
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from pydantic import BaseModel, Field, field_validator, ConfigDict
+from pydantic import computed_field, BaseModel, Field, field_validator, ConfigDict
+
+from app.utils.contract_parser import extract_path_variables
 
 
 class HTTPMethod(str, Enum):
@@ -131,6 +133,12 @@ class EndpointResponse(EndpointBase):
     project_id: int = Field(..., description="ID of associated Project workspace")
     created_at: datetime = Field(..., description="Timestamp when endpoint was registered")
     updated_at: datetime = Field(..., description="Timestamp when endpoint was last modified")
+
+    @computed_field(description="Variable placeholders declared in the path template")
+    @property
+    def path_variables(self) -> List[str]:
+        """Placeholders declared by the path template, e.g. ['user_id', 'order_id']."""
+        return extract_path_variables(self.path or "")
 
     model_config = ConfigDict(from_attributes=True)
 

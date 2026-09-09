@@ -20,6 +20,7 @@ from app.models.schemas.request_config import (
     DirectRequestBuilderRequest,
     RequestCompileOverride,
 )
+from app.models.schemas.execution import ExecutionOptions
 from app.services.http_dispatcher import HttpDispatcherService
 from app.services.request_builder_service import RequestBuilderService
 from app.utils.performance_calculator import (
@@ -192,7 +193,7 @@ class PerformanceService:
 
                 exec_res = await HttpDispatcherService.dispatch_httpx_request(
                     request=clone_req,
-                    options=None,
+                    options=ExecutionOptions(),
                     client=client
                 )
 
@@ -222,7 +223,7 @@ class PerformanceService:
                     )
                     exec_res = await HttpDispatcherService.dispatch_httpx_request(
                         request=clone_req,
-                        options=None,
+                        options=ExecutionOptions(),
                         client=client
                     )
                     lat = exec_res.elapsed_ms

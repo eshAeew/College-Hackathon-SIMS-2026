@@ -54,10 +54,18 @@ app = FastAPI(
 app.add_middleware(RequestCorrelationMiddleware)
 
 # 2. CORS Middleware
+# A wildcard origin combined with credentials lets any site drive this API with the
+# viewer's cookies, so credentials are disabled unless explicit origins are configured.
+_cors_is_wildcard = "*" in settings.CORS_ORIGINS
+if _cors_is_wildcard and settings.CORS_ALLOW_CREDENTIALS:
+    logger.warning(
+        "CORS_ORIGINS is '*' - disabling allow_credentials. "
+        "Set explicit origins to enable credentialed cross-origin requests."
+    )
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS and not _cors_is_wildcard,
     allow_methods=settings.CORS_ALLOW_METHODS,
     allow_headers=settings.CORS_ALLOW_HEADERS,
 )

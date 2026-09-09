@@ -22,6 +22,7 @@ from app.services.project_service import ProjectService
 from app.services.endpoint_service import EndpointService
 from app.services.request_builder_service import RequestBuilderService
 from app.utils.preflight_validator import execute_preflight_check
+from app.utils.safety_guard import enforce_target_authorization
 from app.utils.telemetry_extractor import (
     extract_cookies,
     extract_redirect_history,
@@ -40,12 +41,33 @@ class HttpDispatcherService:
     async def dispatch_httpx_request(
         cls,
         request: httpx.Request,
-        options: ExecutionOptions
+        options: Optional[ExecutionOptions] = None,
+        client: Optional[httpx.AsyncClient] = None
     ) -> ExecutionResultResponse:
-        """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse with high-precision telemetry."""
+        """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse with high-precision telemetry.
+
+        `options` falls back to standard ExecutionOptions when omitted. `client` lets callers
+        (benchmark loops, suite runners) reuse an already-open pooled AsyncClient.
+        """
         start_time = time.perf_counter()
         url_str = str(request.url)
         method_str = request.method
+
+        # Stage 16 enforcement: refuse to dispatch at unauthorized targets.
+        authorization = enforce_target_authorization(url_str)
+        if authorization is not None and not authorization.is_authorized:
+            logger.warning(f"BLOCKED [{method_str}] {url_str}: {authorization.message}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail={
+                    "message": "Target host blocked by safety policy.",
+                    "authorization_status": authorization.authorization_status.value,
+                    "reason": authorization.message,
+                    "host": authorization.normalized_host
+                }
+            )
+
+        options = options or ExecutionOptions()
 
         logger.info(f"Dispatching [{method_str}] {url_str} (timeout={options.timeout_seconds}s, redirects={options.follow_redirects})")
 
@@ -53,24 +75,26 @@ class HttpDispatcherService:
         timeout = httpx.Timeout(options.timeout_seconds, connect=min(5.0, options.timeout_seconds))
         request.extensions["timeout"] = timeout.as_dict()
 
-        # Select client based on SSL verification requirement
-        client: httpx.AsyncClient
+        # Select client: transient (SSL disabled) > caller-supplied pool > shared pool
+        active_client: httpx.AsyncClient
         is_transient_client = False
 
         if not options.verify_ssl:
             # Create a dedicated non-verifying client if SSL verification is disabled
-            client = httpx.AsyncClient(
+            active_client = httpx.AsyncClient(
                 verify=False,
                 timeout=timeout,
                 follow_redirects=options.follow_redirects
             )
             is_transient_client = True
+        elif client is not None and not client.is_closed:
+            active_client = client
         else:
-            client = get_async_client()
+            active_client = get_async_client()
 
         try:
             # Send request asynchronously
-            response = await client.send(
+            response = await active_client.send(
                 request,
                 follow_redirects=options.follow_redirects
             )
@@ -130,7 +154,7 @@ class HttpDispatcherService:
 
         finally:
             if is_transient_client:
-                await client.aclose()
+                await active_client.aclose()
 
     @classmethod
     async def dispatch_direct(cls, req: DirectExecutionRequest) -> ExecutionResultResponse:

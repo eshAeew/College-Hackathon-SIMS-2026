@@ -80,3 +80,18 @@ def validate_contract_specification(
         "missing_path_params": missing_params,
         "errors": errors
     }
+
+
+def merge_declared_path_params(
+    path: Optional[str],
+    supplied: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Ensure every {placeholder} declared in a path template appears in path_params.
+
+    Placeholders the caller did not supply a value for are recorded with an empty string,
+    so the stored contract always advertises which variables an endpoint requires.
+    """
+    merged: Dict[str, Any] = dict(supplied or {})
+    for variable in extract_path_variables(path or ""):
+        merged.setdefault(variable, "")
+    return merged
