@@ -95,6 +95,13 @@ async def root():
     }
 
 
+@app.get("/health", tags=["System"], summary="Liveness Health Probe")
+async def top_level_health():
+    """Top-level health check probe forwarding to standard v1 health diagnostic."""
+    from app.api.v1.api import health_check
+    return await health_check()
+
+
 @app.get("/redoc", include_in_schema=False)
 async def custom_redoc_html():
     """Custom ReDoc page utilizing modern Redocly bundle compatible with OpenAPI 3.1."""
