@@ -7,9 +7,9 @@ Generate adversarial test payloads from valid baseline schemas (null values, emp
 Combinatorial payload mutation engine creating negative test cases programmatically.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Implement missing-required-field mutator (omits mandatory keys one-by-one).
-- [ ] Implement invalid-type mutator (replaces int with str, object with array).
-- [ ] Implement boundary mutator (empty string, huge string, negative numbers).
+- [x] Implement missing-required-field mutator (omits mandatory keys one-by-one).
+- [x] Implement invalid-type mutator (replaces int with str, object with array).
+- [x] Implement boundary mutator (empty string, huge string, negative numbers).
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Combinatorial payload mutation engine creating negative test cases programmatica
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Mutation engine creates a comprehensive suite of negative test cases from any baseline request schema.**

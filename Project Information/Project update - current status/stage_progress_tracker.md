@@ -11,7 +11,7 @@
 | **Stage 07** | Functional Validation Engine | Tier 1 | `COMPLETED` | Status code matcher, MIME normalizer, payload syntax, Draft-7 JSON schema & data type validator (27/27 tests OK) |
 
 
-| **Stage 08** | Negative / Adversarial Testing | Tier 2 | `PLANNED` | Fuzzing mutations, 4xx vs 500 leak detection |
+| **Stage 08** | Negative / Adversarial Testing | Tier 2 | `COMPLETED` | Combinatorial payload mutator (missing/types/boundaries/nulls), 4xx vs 500 unhandled exception detector, automated endpoint fuzz scan (13/13 tests OK) |
 | **Stage 09** | Inconsistent Behavior Detection | Tier 2 | `PLANNED` | Multi-run executor, variance & flakiness analyzer |
 | **Stage 10** | Performance Analysis | Tier 2 | `PLANNED` | Latency benchmarking (P50, P95, P99), SLA rules |
 | **Stage 11** | Recurring Failure Detection | Tier 2 | `PLANNED` | Historical aggregator, failure pattern clustering |

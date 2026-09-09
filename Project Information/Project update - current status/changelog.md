@@ -1,5 +1,28 @@
 # API Sentinel — Changelog
 
+## [Stage 08 - Negative & Adversarial Testing Engine] - 2026-09-09
+- **Completed**: Combinatorial Payload Mutation, 4xx vs 500 Crash Classifier, and Automated Endpoint Fuzz Scanner (Stage 08 Complete).
+- Created `app/utils/mutation_engine.py` with:
+  - `mutate_missing_fields()`: Generates payload variants omitting top-level and nested required/mandatory properties one by one.
+  - `mutate_type_inversions()`: Inverts data types (integers, strings, booleans, arrays, objects).
+  - `mutate_boundaries()`: Injects boundary, overflow, and extreme values (empty strings, whitespace, null bytes, 10k character buffers, 32/64-bit int overflows, negative numbers, SQLi/XSS fuzz probes).
+  - `mutate_null_injections()`: Injects `null`/`None` into non-nullable fields.
+  - `generate_all_mutations()`: Master generator producing deduplicated, uniquely ID'd `MutatedPayload` models with strategy filtering and concurrency limits.
+- Created `app/utils/adversarial_classifier.py` with `classify_negative_response()`:
+  - Classifies 4xx status codes as `PROPERLY_HANDLED_4XX` (PASS).
+  - Classifies 5xx status codes as `UNHANDLED_SERVER_EXCEPTION_5XX` (CRITICAL vulnerability defect) with remediation recommendations.
+  - Classifies 2xx status codes on corrupted inputs as `UNVALIDATED_ACCEPTANCE_2XX` (HIGH vulnerability defect).
+- Added Pydantic DTO schemas in `app/models/schemas/adversarial.py` (`MutationStrategy`, `MutatedPayload`, `PayloadMutationRequest`, `PayloadMutationResponse`, `NegativeTestEvaluationRequest`, `NegativeTestEvaluationReport`, `AdversarialEndpointScanRequest`, `AdversarialScanItemResult`, `AdversarialScanReport`).
+- Implemented `AdversarialService` in `app/services/adversarial_service.py` supporting standalone mutation generation, negative evaluation, and automated end-to-end endpoint fuzz scanning with safety scores.
+- Implemented REST adversarial router in `app/api/v1/adversarial.py`:
+  - `POST /api/v1/adversarial/mutate`
+  - `POST /api/v1/adversarial/evaluate-response`
+  - `POST /api/v1/adversarial/endpoints/{endpoint_id}/scan`
+- Mounted `adversarial_router` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_adversarial_testing.py` (13 new tests passing).
+- Total test suite count increased to 135 passing tests with 100% pass rate.
+- Marked Stage 08: Negative & Adversarial Testing Engine as 100% COMPLETE.
+
 ## [Stage 07 - Sub-Stage 02] - 2026-09-09
 - **Completed**: JSON Schema & Strict Data Type Validator (Stage 07 Complete).
 - Created `app/utils/schema_validator.py` with:
