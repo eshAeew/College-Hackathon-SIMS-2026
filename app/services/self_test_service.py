@@ -25,9 +25,10 @@ logger = logging.getLogger("app.services.self_test")
 SUBSYSTEM_MAP: Dict[str, Dict[str, Any]] = {
     "core_foundation": {
         "name": "Core Foundation & Request Pipeline",
-        "description": "Base app, projects, endpoints, request builder, and preflight checks.",
+        "description": "Base app, configuration, projects, endpoints, request builder, and preflight checks.",
         "files": [
             "test_main.py",
+            "test_config.py",
             "test_logging_and_health.py",
             "test_projects.py",
             "test_endpoints.py",
@@ -76,13 +77,15 @@ SUBSYSTEM_MAP: Dict[str, Dict[str, Any]] = {
     },
     "resilience_data_audit": {
         "name": "Resilience, Reports, Database & Auditability",
-        "description": "Reports engine, database DAL, circuit breakers, error handlers, and audit trail.",
+        "description": "Reports engine, database DAL, circuit breakers, error handlers, audit trail, landing page, and regression fixes.",
         "files": [
             "test_reports.py",
             "test_database_layer.py",
             "test_resilience_and_errors.py",
             "test_logging_tracing_and_audit.py",
             "test_dashboard_ui.py",
+            "test_welcome_landing_page.py",
+            "test_stage_fixes_regression.py",
         ],
     },
 }
