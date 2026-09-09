@@ -1,16 +1,23 @@
-"""TestCase Service Layer managing test scenarios, filtering, cloning, and state toggles."""
 import json
 import logging
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
+import httpx
 from sqlalchemy.orm import Session
 
 from app.models.entities.endpoint import Endpoint
+from app.models.entities.project import Project
 from app.models.entities.test_case import TestCase
+from app.models.schemas.request_config import RequestCompileOverride
 from app.models.schemas.test_case import (
+    TestCaseAssertions,
     TestCaseCreate,
+    TestCaseExecutionEvaluationResponse,
     TestCaseUpdate
 )
+from app.services.http_dispatcher import HttpDispatcherService
+from app.services.request_builder_service import RequestBuilderService
+from app.utils.assertion_engine import evaluate_assertions
 
 logger = logging.getLogger("app.services.test_case")
 
@@ -189,3 +196,98 @@ class TestCaseService:
         db.refresh(cloned)
         logger.info(f"Duplicated TestCase #{test_case_id} -> New TestCase #{cloned.id}: '{cloned.name}'")
         return cloned
+
+    @classmethod
+    def get_test_case_assertions(cls, db: Session, test_case_id: int) -> Optional[TestCaseAssertions]:
+        """Fetch parsed TestCaseAssertions for a specific test case."""
+        test_case = cls.get_test_case_by_id(db, test_case_id)
+        if not test_case:
+            return None
+        return TestCaseAssertions(**test_case.assertions)
+
+    @classmethod
+    def update_test_case_assertions(
+        cls,
+        db: Session,
+        test_case_id: int,
+        dto: TestCaseAssertions
+    ) -> Optional[TestCase]:
+        """Update structured assertion rules for a test scenario."""
+        test_case = cls.get_test_case_by_id(db, test_case_id)
+        if not test_case:
+            return None
+
+        test_case.assertions_json = json.dumps(dto.model_dump(exclude_unset=True))
+        test_case.updated_at = datetime.now(timezone.utc)
+        db.commit()
+        db.refresh(test_case)
+        logger.info(f"Updated assertions for TestCase #{test_case_id}")
+        return test_case
+
+    @classmethod
+    async def evaluate_test_case(
+        cls,
+        db: Session,
+        test_case_id: int,
+        client: Optional[httpx.AsyncClient] = None
+    ) -> TestCaseExecutionEvaluationResponse:
+        """Execute a test case scenario and evaluate all assertion rules against the live response telemetry."""
+        test_case = cls.get_test_case_by_id(db, test_case_id)
+        if not test_case:
+            raise ValueError(f"TestCase #{test_case_id} not found.")
+
+        endpoint = db.query(Endpoint).filter(Endpoint.id == test_case.endpoint_id).first()
+        if not endpoint:
+            raise ValueError(f"Parent Endpoint #{test_case.endpoint_id} not found.")
+
+        project = db.query(Project).filter(Project.id == endpoint.project_id).first()
+        if not project:
+            raise ValueError(f"Parent Project #{endpoint.project_id} not found.")
+
+        # Build runtime request override using test case configurations
+        override = RequestCompileOverride(
+            path_params=test_case.path_params,
+            query_params=test_case.query_params,
+            headers=test_case.headers,
+            body_type=test_case.body_type,
+            body=test_case.body
+        )
+
+        httpx_req, compiled_req = RequestBuilderService.compile_endpoint_request(
+            project=project,
+            endpoint=endpoint,
+            overrides=override
+        )
+
+        # Dispatch execution
+        exec_res = await HttpDispatcherService.dispatch_httpx_request(
+            request=httpx_req,
+            options=None,
+            client=client
+        )
+
+        # Run assertion evaluation
+        assertion_report = evaluate_assertions(
+            assertions=test_case.assertions,
+            status_code=exec_res.status_code,
+            latency_ms=exec_res.elapsed_ms,
+            headers=exec_res.headers,
+            body=exec_res.body,
+            content_type=exec_res.content_type or exec_res.headers.get("content-type") or exec_res.headers.get("Content-Type"),
+            test_case_id=test_case.id,
+            test_case_name=test_case.name
+        )
+
+        return TestCaseExecutionEvaluationResponse(
+            test_case_id=test_case.id,
+            test_case_name=test_case.name,
+            endpoint_id=endpoint.id,
+            http_method=compiled_req.method,
+            target_url=compiled_req.url,
+            status_code=exec_res.status_code,
+            latency_ms=exec_res.elapsed_ms,
+            response_headers=exec_res.headers,
+            response_body=exec_res.body,
+            assertion_report=assertion_report
+        )
+

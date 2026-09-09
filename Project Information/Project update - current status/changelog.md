@@ -1,5 +1,44 @@
 # API Sentinel — Changelog
 
+## [Stage 10 - Performance Analysis Engine] - 2026-09-09
+- **Completed**: Sub-Millisecond Percentile Aggregator (P50, P90, P95, P99), Latency Tier Bucketing, and SLA Threshold Grading & Benchmarking (Stage 10 Complete).
+- Created `app/models/schemas/performance.py` with:
+  - `LatencyBucket` (`FAST <200ms`, `ACCEPTABLE 200-500ms`, `SLOW 500-1000ms`, `CRITICAL >1000ms`).
+  - `SLAPerformanceRating` (`OPTIMAL`, `ACCEPTABLE`, `DEGRADED`, `BREACHED`).
+  - `SLAPolicy` (`target_p95_ms`, `target_p99_ms`, `max_acceptable_latency_ms`, `warn_threshold_ms`, `max_error_rate_pct`).
+  - `LatencyPercentileMetrics`, `LatencyDistributionSummary`, `SLAEvaluationResult`, `PerformanceBenchmarkIteration`, `PerformanceReport`, `DirectBenchmarkRequest`, `EndpointBenchmarkRequest`, `AnalyzeLatencyBatchRequest`.
+- Created `app/utils/performance_calculator.py` with:
+  - `calculate_percentile()`: Linear interpolation percentile computation across arbitrary float arrays.
+  - `classify_latency_bucket()`: Latency response time tier classifier.
+  - `compute_latency_percentiles()`: Min, max, mean, P50, P90, P95, P99, standard deviation, jitter, and CV% calculator.
+  - `evaluate_sla_policy()`: Evaluates percentile metrics and error rates against configured SLA criteria with granular breach and recommendation diagnostics.
+- Implemented `PerformanceService` in `app/services/performance_service.py` supporting sequential (with delay) and concurrent (with semaphore rate-limits) live benchmarks against direct URLs and stored endpoints, plus batch latency analysis.
+- Implemented REST router in `app/api/v1/performance.py`:
+  - `POST /api/v1/performance/benchmark-direct`
+  - `POST /api/v1/performance/endpoints/{endpoint_id}/benchmark`
+  - `POST /api/v1/performance/analyze`
+- Mounted `performance_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_performance_analysis.py` (8 new tests passing).
+- Marked Stage 10: Performance Analysis Engine as 100% COMPLETE.
+
+## [Stage 06 - Sub-Stage 02] - 2026-09-09
+- **Completed**: Assertion Rules & Expectation Setup Engine (Stage 06 Complete).
+- Created `app/utils/assertion_engine.py` with:
+  - `extract_field_value()`: Multi-tier dot and bracket notation JSONPath extractor supporting nested dicts, array indices, and complex composite paths (`data.orders[0].items[1].name`).
+  - `evaluate_operator()`: Comprehensive evaluation across 14 operators (`EQUALS`, `NOT_EQUALS`, `CONTAINS`, `NOT_CONTAINS`, `GREATER_THAN`, `LESS_THAN`, `GREATER_EQUAL`, `LESS_EQUAL`, `EXISTS`, `NOT_EXISTS`, `TYPE_MATCH`, `REGEX_MATCH`, `IS_EMPTY`, `IS_NOT_EMPTY`).
+  - `evaluate_assertions()`: Master assertion evaluator checking expected status codes, maximum latency threshold (ms), Content-Type matchers, response header matchers, JSON body field operators, and JSON Schema Draft-7 validation.
+- Extended Pydantic DTO schemas in `app/models/schemas/test_case.py`:
+  - `ComparisonOperator`, `HeaderAssertionRule`, `BodyFieldAssertionRule`, `TestCaseAssertions`, `AssertionRuleResult`, `TestCaseAssertionReport`, `AdHocAssertionEvaluationRequest`, `TestCaseExecutionEvaluationResponse`.
+- Extended `TestCaseService` in `app/services/test_case_service.py` with `get_test_case_assertions()`, `update_test_case_assertions()`, and live `evaluate_test_case()`.
+- Implemented REST assertion endpoints in `app/api/v1/test_cases.py`:
+  - `GET /api/v1/test-cases/{test_case_id}/assertions`
+  - `PUT /api/v1/test-cases/{test_case_id}/assertions`
+  - `POST /api/v1/test-cases/{test_case_id}/evaluate`
+  - `POST /api/v1/assertions/evaluate`
+- Added unit and integration test suite in `tests/test_assertion_rules.py` (7 new tests passing).
+- Total test suite count increased to 161 passing tests with 100% pass rate.
+- Marked Stage 06: Test Case Management as 100% COMPLETE.
+
 ## [Stage 09 - Inconsistent Behavior Detection] - 2026-09-09
 - **Completed**: Multi-Execution Repetitive Runner, Statistical Variance & Flakiness Analyzer (Stage 09 Complete).
 - Created `app/utils/statistics_calculator.py` with:

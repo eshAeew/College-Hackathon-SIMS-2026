@@ -7,9 +7,9 @@ Configure expected status codes, response time limits, header matchers, and JSON
 Structured assertion configuration stored in JSON format inside TestCase records.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Implement status code assertion definition (exact match or list, e.g. [200, 201]).
-- [ ] Implement maximum response time threshold definition in milliseconds.
-- [ ] Implement header presence and value expectation configuration.
+- [x] Implement status code assertion definition (exact match or list, e.g. [200, 201]).
+- [x] Implement maximum response time threshold definition in milliseconds.
+- [x] Implement header presence and value expectation configuration.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Structured assertion configuration stored in JSON format inside TestCase records
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Each test case stores clear, unambiguous assertion rules for automated validation.**

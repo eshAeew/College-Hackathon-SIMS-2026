@@ -8,12 +8,13 @@
   - **Stage 03: API Endpoint Management (100% Complete)**
   - **Stage 04: Request Configuration Engine (100% Complete)**
   - **Stage 05: Core API Execution Engine (100% Complete)**
-  - **Stage 06: Test Case Management (Sub-Stage 01 Complete)**
+  - **Stage 06: Test Case Management (100% Complete)**
   - **Stage 07: Functional Validation Engine (100% Complete)**
   - **Stage 08: Negative & Adversarial Testing Engine (100% Complete)**
   - **Stage 09: Inconsistent Behavior Detection (100% Complete)**
-- **Next Sub-Stage**: Stage 06 — Sub-Stage 02: Assertion Rules & Expectation Setup / Stage 10: Performance Analysis Engine
-- **Latest Build Status**: Passing (146/146 unit tests green, 100% pass rate)
+  - **Stage 10: Performance Analysis Engine (100% Complete)**
+- **Next Sub-Stage**: Stage 11: Recurring Failure Detection / Stage 12: Test Run Management
+- **Latest Build Status**: Passing (161/161 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -34,9 +35,9 @@
 - [x] **Stage 05: Core API Execution Engine (COMPLETED - 23/23 tests)**
   - [x] **Sub-Stage 01: Asynchronous HTTP Dispatcher**: `httpx.AsyncClient` connection pool lifecycle, configurable timeouts, redirect following, SSL verification controls, and dispatch REST endpoints (`/api/v1/executions/dispatch`, `/api/v1/projects/{p_id}/endpoints/{e_id}/execute`, `/api/v1/executions/client-info`).
   - [x] **Sub-Stage 02: Response & Network Telemetry Capture**: Sub-millisecond latency measurement, response payload parsing (text/JSON/binary Base64), cookie extraction, redirect history tracking, and categorized network exception diagnostics (`DNSLookupError`, `ConnectTimeout`, `ReadTimeout`, `ConnectionRefused`, `SSLValidationError`, `TooManyRedirects`).
-- [ ] **Stage 06: Test Case Management (IN PROGRESS - 9/9 tests passing)**
+- [x] **Stage 06: Test Case Management (COMPLETED - 16/16 tests passing)**
   - [x] **Sub-Stage 01: Test Case CRUD Operations**: SQLite `TestCase` model, endpoint cascade relationship, tags (`smoke`, `regression`, `security`, `negative`), severity ratings, cloning, active toggle, and REST endpoints (`/api/v1/endpoints/{id}/test-cases`, `/api/v1/test-cases/{id}`).
-  - [ ] **Sub-Stage 02: Assertion Rules & Expectation Setup**: Configurable expected status codes, latency ceilings, header matchers, and JSON body field expectations.
+  - [x] **Sub-Stage 02: Assertion Rules & Expectation Setup**: Configurable expected status codes, latency ceilings, header matchers, JSONPath/bracket body field operators (14 operators), JSON Schema draft-7 validation, ad-hoc evaluation, and live execution validation (`/api/v1/test-cases/{id}/assertions`, `/api/v1/test-cases/{id}/evaluate`, `/api/v1/assertions/evaluate`).
 - [x] **Stage 07: Functional Validation Engine (COMPLETED - 27/27 tests passing)**
   - [x] **Sub-Stage 01: Status Code & Content-Type Validator**: Exact/range/class status matcher (`2xx`, `200-299`), MIME type normalizer & alias resolver, safe JSON/XML/Text payload syntax validator (`/api/v1/validations/status-code`, `/api/v1/validations/content-type`, `/api/v1/validations/payload-syntax`, `/api/v1/validations/protocol`).
   - [x] **Sub-Stage 02: JSON Schema & Strict Type Validator**: Draft-7 schema validation, field presence, data type mismatches, range/enum/regex constraint checking, and endpoint response schema validation (`/api/v1/validations/json-schema`, `/api/v1/validations/endpoints/{endpoint_id}/response-schema`).
@@ -46,6 +47,9 @@
 - [x] **Stage 09: Inconsistent Behavior Detection (COMPLETED - 11/11 tests passing)**
   - [x] **Sub-Stage 01: Multi-Execution Repetitive Runner**: Sequential and concurrent batch loop runners with configurable repetition counts, execution delays, and concurrency rate-limiting semaphores (`/api/v1/inconsistency/execute-direct`, `/api/v1/inconsistency/endpoints/{endpoint_id}/execute`).
   - [x] **Sub-Stage 02: Variance & Flakiness Analyzer**: High-precision statistical calculations (Shannon status code entropy, transition chains, latency jitter/percentiles, SHA-256 payload body drift) and composite flakiness scoring / classification (`DETERMINISTIC_PASS`, `MODERATE_FLAKINESS_WARN`, `CRITICAL_INTERMITTENT_FAILURE`) via `/api/v1/inconsistency/analyze`.
+- [x] **Stage 10: Performance Analysis Engine (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Latency Statistical Aggregator**: Sub-millisecond percentile calculations (P50/median, P90, P95, P99, min, max, mean, stddev, jitter, CV%) and distribution tier bucketing (`FAST <200ms`, `ACCEPTABLE 200-500ms`, `SLOW 500-1000ms`, `CRITICAL >1000ms`).
+  - [x] **Sub-Stage 02: SLA Threshold Classification & Alerting**: Configurable SLA policy rules, multi-tier compliance evaluation (`OPTIMAL`, `ACCEPTABLE`, `DEGRADED`, `BREACHED`), and live benchmark dispatchers (`/api/v1/performance/benchmark-direct`, `/api/v1/performance/endpoints/{id}/benchmark`, `/api/v1/performance/analyze`).
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API

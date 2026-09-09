@@ -6,14 +6,19 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.schemas.response import StandardResponse
 from app.models.schemas.test_case import (
+    AdHocAssertionEvaluationRequest,
+    TestCaseAssertions,
+    TestCaseAssertionReport,
     TestCaseCreate,
-    TestCaseUpdate,
     TestCaseDuplicate,
+    TestCaseExecutionEvaluationResponse,
     TestCaseResponse,
-    TestCaseSeverity
+    TestCaseSeverity,
+    TestCaseUpdate,
 )
 from app.services.endpoint_service import EndpointService
 from app.services.test_case_service import TestCaseService
+from app.utils.assertion_engine import evaluate_assertions
 
 router = APIRouter(tags=["Test Case Management"])
 
@@ -241,3 +246,111 @@ async def duplicate_test_case(
         data=_format_test_case_response(cloned),
         message=f"Duplicated test case #{test_case_id} as new test case #{cloned.id} ('{cloned.name}')"
     )
+
+
+@router.get(
+    "/test-cases/{test_case_id}/assertions",
+    response_model=StandardResponse[TestCaseAssertions],
+    summary="Get Test Case Assertions",
+    description="Retrieves the structured assertion rules and expectation configuration for a test scenario."
+)
+async def get_test_case_assertions(
+    test_case_id: int,
+    db: Session = Depends(get_db)
+):
+    """Retrieve assertion rules for a test case."""
+    assertions = TestCaseService.get_test_case_assertions(db, test_case_id)
+    if assertions is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Test case #{test_case_id} not found"
+        )
+
+    return StandardResponse(
+        success=True,
+        data=assertions,
+        message=f"Retrieved assertions for test case #{test_case_id}"
+    )
+
+
+@router.put(
+    "/test-cases/{test_case_id}/assertions",
+    response_model=StandardResponse[TestCaseResponse],
+    summary="Update Test Case Assertions",
+    description="Configures or replaces the structured assertion rules and expectations for a test scenario."
+)
+async def update_test_case_assertions(
+    test_case_id: int,
+    assertions_dto: TestCaseAssertions,
+    db: Session = Depends(get_db)
+):
+    """Update assertion rules for a test case."""
+    updated = TestCaseService.update_test_case_assertions(db, test_case_id, assertions_dto)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Test case #{test_case_id} not found"
+        )
+
+    return StandardResponse(
+        success=True,
+        data=_format_test_case_response(updated),
+        message=f"Updated assertions for test case #{test_case_id}"
+    )
+
+
+@router.post(
+    "/test-cases/{test_case_id}/evaluate",
+    response_model=StandardResponse[TestCaseExecutionEvaluationResponse],
+    summary="Execute Test Case & Evaluate Assertions",
+    description="Dispatches the test case HTTP request against the live endpoint and evaluates all configured assertions."
+)
+async def execute_and_evaluate_test_case(
+    test_case_id: int,
+    db: Session = Depends(get_db)
+):
+    """Execute test case and verify assertion rules against the response telemetry."""
+    try:
+        result = await TestCaseService.evaluate_test_case(db=db, test_case_id=test_case_id)
+        return StandardResponse(
+            success=True,
+            data=result,
+            message=f"Executed TestCase #{test_case_id} - {'ALL ASSERTIONS PASSED' if result.assertion_report.all_passed else f'{result.assertion_report.failed_rules} ASSERTION(S) FAILED'}"
+        )
+    except ValueError as val_err:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(val_err)
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Test case execution/evaluation failed: {str(exc)}"
+        )
+
+
+@router.post(
+    "/assertions/evaluate",
+    response_model=StandardResponse[TestCaseAssertionReport],
+    summary="Ad-Hoc Assertion Evaluation",
+    description="Evaluates arbitrary assertion specifications against provided HTTP response telemetry."
+)
+async def evaluate_adhoc_assertions(
+    request: AdHocAssertionEvaluationRequest
+):
+    """Evaluate assertions on provided response telemetry without needing a database entity."""
+    report = evaluate_assertions(
+        assertions=request.assertions,
+        status_code=request.status_code,
+        latency_ms=request.latency_ms,
+        headers=request.headers,
+        body=request.body,
+        content_type=request.content_type
+    )
+
+    return StandardResponse(
+        success=True,
+        data=report,
+        message=f"Evaluated {report.total_rules} assertion(s): {report.passed_rules} passed, {report.failed_rules} failed"
+    )
+

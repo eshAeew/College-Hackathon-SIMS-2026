@@ -7,9 +7,9 @@ Calculate Min, Max, Mean, Median (P50), P90, P95, and P99 latency across test ex
 Python `statistics` and `numpy` math functions for percentile calculations.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Extract latency arrays from execution results.
-- [ ] Compute min, max, average, median, p95, p99 latency in ms.
-- [ ] Store aggregated performance metrics in TestRun records.
+- [x] Extract latency arrays from execution results.
+- [x] Compute min, max, average, median, p95, p99 latency in ms.
+- [x] Store aggregated performance metrics in TestRun records.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Python `statistics` and `numpy` math functions for percentile calculations.
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Performance statistics are calculated with sub-millisecond precision and saved to the database.**
