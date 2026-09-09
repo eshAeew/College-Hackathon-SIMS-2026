@@ -1,20 +1,25 @@
-"""Application configuration and environment settings."""
+"""Application configuration and environment settings management using Pydantic Settings."""
 from functools import lru_cache
-from typing import List
+from typing import List, Literal
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """Application settings schema."""
+    """Application settings and runtime environment parameters."""
+    
+    # Project Identity
     PROJECT_NAME: str = "API Sentinel"
     VERSION: str = "0.1.0"
     DESCRIPTION: str = "Automated REST API Testing, Regression Detection & AI Diagnostic Platform"
     API_V1_PREFIX: str = "/api/v1"
     
-    # Server configuration
+    # Environment & Server
+    ENVIRONMENT: Literal["development", "testing", "staging", "production"] = "development"
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     DEBUG: bool = True
+    LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     
     # CORS Configuration
     CORS_ORIGINS: List[str] = ["*"]
@@ -22,17 +27,49 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: List[str] = ["*"]
     CORS_ALLOW_HEADERS: List[str] = ["*"]
     
-    # Persistence
+    # Database Persistence
     DATABASE_URL: str = "sqlite:///./api_sentinel.db"
     
-    # Execution Defaults
+    # HTTP Execution Engine Defaults
     DEFAULT_TIMEOUT_SECONDS: float = 10.0
     MAX_CONCURRENCY: int = 10
+    MAX_REDIRECTS: int = 5
     
-    # AI Engine (Optional - system falls back to heuristics if omitted)
+    # Safety & Security Controls
+    ALLOW_DESTRUCTIVE_OPERATIONS: bool = False
+    ALLOWED_TARGET_HOSTS: List[str] = ["localhost", "127.0.0.1", "0.0.0.0", "testserver"]
+    
+    # AI Diagnostic Engine (Optional - system falls back to heuristics if omitted)
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-2.5-flash"
     
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        """Ensure DATABASE_URL starts with a supported scheme."""
+        allowed_prefixes = ("sqlite://", "sqlite+aiosqlite://", "postgresql://", "postgresql+asyncpg://")
+        if not any(v.startswith(prefix) for prefix in allowed_prefixes):
+            raise ValueError(f"DATABASE_URL must start with one of: {allowed_prefixes}")
+        return v
+
+    @field_validator("DEFAULT_TIMEOUT_SECONDS")
+    @classmethod
+    def validate_timeout(cls, v: float) -> float:
+        """Ensure execution timeout is positive."""
+        if v <= 0:
+            raise ValueError("DEFAULT_TIMEOUT_SECONDS must be greater than 0")
+        return v
+
+    @property
+    def is_ai_enabled(self) -> bool:
+        """Return True if an external Gemini API key is configured."""
+        return bool(self.GEMINI_API_KEY and self.GEMINI_API_KEY.strip())
+
+    @property
+    def is_production(self) -> bool:
+        """Return True if running in production mode."""
+        return self.ENVIRONMENT == "production"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -43,5 +80,10 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings() -> Settings:
-    """Return cached settings instance."""
+    """Return cached application settings instance."""
     return Settings()
+
+
+def clear_settings_cache() -> None:
+    """Clear settings cache to reload environment values (useful for tests)."""
+    get_settings.cache_clear()

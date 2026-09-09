@@ -3,8 +3,8 @@
 ## 1. Project Health & Stage Progress Summary
 - **Current Phase**: Phase A — Foundation & Workspace Management
 - **Active Stage**: Stage 01 — Project Foundation
-- **Current Sub-Stage**: Sub-Stage 02 — Configuration & Environment Management (Sub-Stage 01 COMPLETED)
-- **Latest Build Status**: Passing (3/3 unit tests green)
+- **Current Sub-Stage**: Sub-Stage 03 — Structured Logging & Health Check (Sub-Stages 01 & 02 COMPLETED)
+- **Latest Build Status**: Passing (9/9 unit tests green)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -17,7 +17,12 @@
   - [x] FastAPI entry point with CORS middleware and lifespan lifecycle hooks
   - [x] Standardized API JSON response envelopes (`StandardResponse[T]`, `ErrorResponse`, `HealthStatus`)
   - [x] Automated test suite in `tests/test_main.py` verified
-- [ ] **Stage 01 - Sub-Stage 02: Configuration & Environment Management**
+- [x] **Stage 01 - Sub-Stage 02: Configuration & Environment Management**
+  - [x] Pydantic Settings class in `app/core/config.py` with custom field validators
+  - [x] Support for `DATABASE_URL`, `PORT`, `HOST`, `GEMINI_API_KEY`, `LOG_LEVEL`, `DEFAULT_TIMEOUT`
+  - [x] Settings singleton caching via `@lru_cache` and `clear_settings_cache()` helper
+  - [x] Fully documented `.env.example` template
+  - [x] Unit test suite in `tests/test_config.py` (6/6 tests passing)
 - [ ] **Stage 01 - Sub-Stage 03: Structured Logging & Health Check Enhancements**
 - [ ] Stage 02: Project & Workspace Management
 - [ ] Stage 05: Core Async Testing Engine

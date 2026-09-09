@@ -2,7 +2,7 @@
 
 | Stage # | Stage Name | Tier | Status | Notes / Deliverables |
 | :--- | :--- | :--- | :--- | :--- |
-| **Stage 01** | Project Foundation | Tier 1 | `IN_PROGRESS` | Sub-stage 01 completed (FastAPI scaffolding, CORS, response envelopes, tests) |
+| **Stage 01** | Project Foundation | Tier 1 | `IN_PROGRESS` | Sub-stages 01 & 02 completed (App scaffolding, Pydantic settings & validation) |
 | **Stage 02** | Project / Workspace Management | Tier 1 | `PLANNED` | Project CRUD, environment profiles |
 | **Stage 03** | API Endpoint Management | Tier 1 | `PLANNED` | Endpoint registry, method & path specs |
 | **Stage 04** | Request Configuration Engine | Tier 1 | `PLANNED` | Request builder, param & body serializer |
