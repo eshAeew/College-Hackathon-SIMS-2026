@@ -6,117 +6,351 @@
   <title>API Sentinel — Autonomous API Quality, Telemetry & AI Remediation</title>
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    /* Living Green - the welcome page palette mapped onto the dashboard's
+       existing semantic tokens, so the retheme cascades without touching
+       the hundred-odd class attributes in the markup below. */
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            'brand-primary': 'rgb(0, 195, 201)',
-            'brand-glow': 'rgba(0, 195, 201, 0.35)',
-            'neutral-background': 'rgb(9, 9, 11)',
-            'neutral-surface': 'rgb(15, 15, 17)',
-            'neutral-card': 'rgb(18, 18, 22)',
-            'text-primary': 'rgb(255, 255, 255)',
-            'text-secondary': 'rgb(150, 150, 150)',
-            'tier-pass': '#10b981',
-            'tier-fail': '#ef4444',
-            'tier-warn': '#f59e0b',
-            'tier-error': '#a855f7',
+            /* the cream the welcome cards and dock mark are cut from,
+               standing in for the old neon cyan */
+            'brand-primary': '#e4ead6',
+            'brand-glow': 'rgba(228, 234, 214, 0.28)',
+
+            /* ground and glass. The surfaces are deliberately translucent:
+               panes of the same dark glass the welcome dock is made of, with
+               the drifting light behind them reading straight through. */
+            'neutral-background': '#383b34',
+            'neutral-surface': 'rgba(38, 44, 34, 0.46)',
+            'neutral-card': 'rgba(31, 37, 28, 0.54)',
+
+            'text-primary': '#ffffff',
+            'text-secondary': 'rgba(255, 255, 255, 0.52)',
+
+            /* status hues pulled toward lichen, clay and ochre so they sit in
+               the same light as the moss instead of screaming out of it */
+            'tier-pass': '#a3c47f',
+            'tier-fail': '#d98b6a',
+            'tier-warn': '#dcb166',
+            'tier-error': '#b6a3cf',
+
+            emerald: { 300:'#c2d9a8', 400:'#a3c47f', 500:'#86ab63', 600:'#6d9150' },
+            green:   { 300:'#c2d9a8', 400:'#a3c47f', 500:'#86ab63' },
+            rose:    { 300:'#e8b09a', 400:'#d98b6a', 500:'#c26f4e' },
+            red:     { 300:'#e8b09a', 400:'#d98b6a', 500:'#c26f4e' },
+            amber:   { 300:'#ecc98d', 400:'#dcb166', 500:'#c9974a' },
+            yellow:  { 300:'#ecc98d', 400:'#dcb166', 500:'#c9974a' },
+            purple:  { 300:'#cdc0e0', 400:'#b6a3cf', 500:'#9c86ba' },
+            violet:  { 300:'#cdc0e0', 400:'#b6a3cf', 500:'#9c86ba' },
+            blue:    { 300:'#b3cfd0', 400:'#8fb6b8', 500:'#719a9d' },
+            sky:     { 300:'#b3cfd0', 400:'#8fb6b8', 500:'#719a9d' },
+            teal:    { 300:'#b3cfd0', 400:'#8fb6b8', 500:'#719a9d' },
+            cyan:    { 300:'#dfe7d2', 400:'#e4ead6', 500:'#cdd8bb', 700:'#7f8a72' },
+            neutral: { 200:'#eef1e7', 800:'#2b3027', 900:'#23271f' },
           },
           fontFamily: {
-            'sans': ['DM Sans', 'Inter', 'sans-serif'],
-            'mono': ['JetBrains Mono', 'monospace'],
+            'sans': ['Lexend', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
+            'mono': ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          borderRadius: {
+            /* the welcome cards are cut at 46u, which is a very generous
+               curve; the dashboard carries far denser content, so the panes
+               take the same gesture at about half the sweep */
+            'lg': '11px', 'xl': '16px', '2xl': '22px',
           },
           boxShadow: {
-            'dashboard': 'inset 0 1px 2px 0 rgba(255, 255, 255, 0.12), 0 30px 60px -15px rgba(0, 0, 0, 0.6)',
-            'glow-cyan': '0 0 25px -5px rgba(0, 195, 201, 0.4)',
-          }
+            'dashboard': '0 8px 22px rgba(10,14,8,.30), inset 0 1px 0 rgba(255,255,255,.07)',
+            'glow-cyan': '0 10px 26px -8px rgba(10,14,8,.55)',
+          },
         }
       }
     }
   </script>
   <style>
-    body { background-color: rgb(9, 9, 11); }
+    @font-face{
+      font-family:'Lexend';
+      src:url('/inner-green-assets/lexend-latin.woff2') format('woff2');
+      font-weight:100 900; font-style:normal; font-display:swap;
+    }
+
+    :root{
+      --ground:      #383b34;
+      --ground-lit:  #4f524a;
+      --ink:         #ffffff;
+      --ink-soft:    rgba(255,255,255,.62);
+      --ink-faint:   rgba(255,255,255,.44);
+      --rule:        rgba(255,255,255,.055);
+      --card:        #f2f3ef;
+      --card-ink:    #23261f;
+
+      /* the dock material, reused as the dashboard pane */
+      --glass-lip:   rgba(255,255,255,.055);
+      --glass-brd:   rgba(255,255,255,.11);
+
+      --ease:     cubic-bezier(.22,.61,.36,1);
+      --ease-out: cubic-bezier(.16,1,.3,1);
+    }
+
+    html{ background:var(--ground); }
+    body{
+      background:var(--ground);
+      font-weight:300;
+      letter-spacing:.005em;
+    }
+    /* Lexend's lighter grades carry the welcome page voice; the dashboard's
+       bold utilities would otherwise render this as a much heavier face. */
+    .font-bold, .font-semibold{ font-weight:500; }
+    .tracking-tight{ letter-spacing:-.01em; }
+
+    /* -- the ground the panes float on -------------------------------
+       The welcome hero light pool, restated: a bright floor low and centre,
+       a cool sink top right, over the same olive. Fixed, so the panes slide
+       across it as the dashboard scrolls. */
+    .ground{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(64% 52% at 27% 84%, rgba(232,238,222,.085) 0%, rgba(232,238,222,0) 72%),
+        radial-gradient(70% 60% at 92% 8%,  rgba(24,28,20,.10) 0%, rgba(24,28,20,0) 68%),
+        var(--ground-lit);
+    }
+    .ground::after{
+      content:''; position:absolute; inset:0;
+      background:
+        radial-gradient(72% 44% at 50% 117%, rgba(238,243,231,.42) 0%, rgba(238,243,231,.18) 42%, rgba(238,243,231,.035) 72%, rgba(238,243,231,0) 88%),
+        linear-gradient(180deg, rgba(238,243,231,0) 54%, rgba(238,243,231,.028) 78%, rgba(238,243,231,.075) 100%);
+    }
+    /* the drifting light, painted in JS */
+    #ambient{
+      position:fixed; inset:0; z-index:0; width:100%; height:100%;
+      pointer-events:none; opacity:0; transition:opacity 1.2s var(--ease);
+    }
+    .amb-ready #ambient{ opacity:1; }
+
+    /* a whisper of the welcome page column guides */
+    .ground-guides{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background-image:linear-gradient(to right, var(--rule) 1px, transparent 1px);
+      background-size:calc(100vw / 12) 100%;
+      -webkit-mask-image:linear-gradient(180deg, transparent 0%, #000 14%, #000 76%, transparent 100%);
+              mask-image:linear-gradient(180deg, transparent 0%, #000 14%, #000 76%, transparent 100%);
+    }
+
+    /* -- panes --------------------------------------------------------
+       Every surface the dashboard already marks as a card becomes a pane of
+       dock glass: a lit top lip, a hairline edge, and the ground blurred
+       through it. Targeted by attribute so the existing class attributes
+       stay exactly as they are. */
+    [class*="bg-neutral-surface"],
+    [class*="bg-neutral-card"]{
+      background-image:linear-gradient(180deg, var(--glass-lip), rgba(255,255,255,0) 42%);
+      -webkit-backdrop-filter:blur(16px) saturate(1.18);
+              backdrop-filter:blur(16px) saturate(1.18);
+      box-shadow:0 8px 22px rgba(10,14,8,.28), inset 0 1px 0 rgba(255,255,255,.06);
+      border-color:var(--glass-brd);
+    }
+    /* a nested pane sits on already-blurred glass; blurring twice muddies it */
+    [class*="bg-neutral-surface"] [class*="bg-neutral-surface"],
+    [class*="bg-neutral-card"] [class*="bg-neutral-card"],
+    [class*="bg-neutral-surface"] [class*="bg-neutral-card"]{
+      -webkit-backdrop-filter:none; backdrop-filter:none;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.05);
+    }
+    [class*="bg-neutral-surface"]:hover{
+      box-shadow:0 14px 32px rgba(10,14,8,.34), inset 0 1px 0 rgba(255,255,255,.09);
+    }
+
+    /* modal scrims become deep glass rather than holes cut in the page */
+    .fixed[class*="bg-black/"]{
+      background-color:rgba(20,25,18,.62) !important;
+      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+    }
+
+    /* -- specular rim -------------------------------------------------
+       The welcome dock conic edge-light, masked down to the border. Its
+       start angle points at the pointer, so a pane edge lights where the
+       cursor passes it. Opt-in via data-spec. */
+    [data-spec]{ --spec-angle:2.4rad; --spec-bright:0; position:relative; }
+    [data-spec]::after{
+      content:''; position:absolute; inset:-1px; z-index:5;
+      padding:1px; border-radius:inherit; pointer-events:none;
+      opacity:var(--spec-bright);
+      transition:opacity .45s var(--ease);
+      background:conic-gradient(from var(--spec-angle) at 50% 50%,
+        rgba(240,246,232,0) 0deg, rgba(240,246,232,.08) 14deg, rgba(240,246,232,.85) 28deg,
+        rgba(240,246,232,.16) 46deg, rgba(240,246,232,0) 68deg, rgba(240,246,232,0) 180deg,
+        rgba(240,246,232,.08) 194deg, rgba(240,246,232,.85) 208deg, rgba(240,246,232,.16) 226deg,
+        rgba(240,246,232,0) 248deg, rgba(240,246,232,0) 360deg);
+      -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+              mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      -webkit-mask-composite:xor; mask-composite:exclude;
+    }
+
+    /* -- the dock -----------------------------------------------------
+       The header restated as the welcome page floating capsule. */
+    .dock-bar{
+      background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,0) 42%), rgba(34,40,31,.74);
+      border:1px solid rgba(255,255,255,.11);
+      box-shadow:0 10px 26px rgba(10,14,8,.32), inset 0 1px rgba(255,255,255,.06);
+      -webkit-backdrop-filter:blur(18px) saturate(1.2); backdrop-filter:blur(18px) saturate(1.2);
+      border-radius:16px;
+    }
+    .dock-mark{
+      background:#eef1e7; color:#23261f;
+      box-shadow:0 6px 16px rgba(12,17,9,.28);
+    }
+    /* the header pills, lifting as the pointer nears them */
+    .dock-pill{
+      color:var(--ink-faint);
+      background:rgba(255,255,255,.04);
+      border:1px solid transparent;
+      transform-origin:50% 50%;
+      transition:color .18s var(--ease), border-color .2s var(--ease),
+                 background .2s var(--ease), transform .24s var(--ease-out);
+    }
+    .dock-pill:hover{
+      color:var(--ink);
+      border-color:rgba(255,255,255,.19);
+      background:rgba(31,37,28,.94);
+      box-shadow:0 7px 16px rgba(10,14,8,.30);
+      transform:translateY(-1px);
+    }
+    /* the primary action wears the cards paper, as the active dock key does */
+    .dock-pill--solid{
+      background:var(--card); border-color:var(--card); color:var(--card-ink);
+      box-shadow:0 6px 16px rgba(12,17,9,.24);
+    }
+    .dock-pill--solid:hover{ background:#fff; border-color:#fff; color:#1b1e18; }
+
+    .no-bar{ scrollbar-width:none; -ms-overflow-style:none; }
+    .no-bar::-webkit-scrollbar{ display:none; }
+
+    /* -- type details -------------------------------------------------
+       The welcome page small-caps label: wide-tracked and faint. */
+    .uppercase{ letter-spacing:.14em; }
+
+    /* -- inner surfaces ------------------------------------------------
+       The panels are lit from the front, so anything sunk into them reads
+       as a well rather than a hole: the same olive, pushed darker, never
+       neutral black. A true black inset on a warm ground looks like a
+       missing tile. */
+    [class*="bg-black/"]:not(.fixed){
+      background-color:rgba(22,27,19,.42) !important;
+    }
+    [class*="bg-black/8"]:not(.fixed),
+    [class*="bg-black/6"]:not(.fixed){
+      background-color:rgba(20,25,18,.52) !important;
+    }
+
+    /* The runtime log keeps its depth - a terminal needs the contrast to
+       stay readable - but it is tinted into the same olive and let just
+       translucent enough that the drifting light moves behind the text. */
+    [class*="bg-[rgb(12,12,14)]"]{
+      background-color:rgba(21,26,19,.60) !important;
+      background-image:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,0) 38%);
+      -webkit-backdrop-filter:blur(18px) saturate(1.15);
+              backdrop-filter:blur(18px) saturate(1.15);
+      border-color:var(--glass-brd) !important;
+      box-shadow:0 10px 26px rgba(10,14,8,.32), inset 0 1px 0 rgba(255,255,255,.06) !important;
+    }
+
+    /* Every modal shell is a slab of the same glass, floated above a
+       blurred page rather than a black card dropped on top of it. */
+    [class*="bg-[rgb(15,15,18)]"]{
+      background-color:rgba(34,40,31,.82) !important;
+      background-image:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 34%);
+      -webkit-backdrop-filter:blur(22px) saturate(1.2);
+              backdrop-filter:blur(22px) saturate(1.2);
+      border-color:rgba(255,255,255,.13) !important;
+      box-shadow:0 30px 70px rgba(10,14,8,.46), inset 0 1px 0 rgba(255,255,255,.07) !important;
+    }
+
+    /* the report preview frame is a white document on a dark page; give it
+       the cards paper so it lands as a card rather than a light leak */
+    iframe{ background:var(--card); border-radius:12px; }
+
+    /* -- scrollbars ---------------------------------------------------- */
     .custom-scrollbar::-webkit-scrollbar { width: 5px; height: 5px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.02); }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 6px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 195, 201, 0.4); }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255,255,255,.02); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(228,234,214,.42); }
+
+    /* form controls inherit the glass rather than the browser chrome */
+    select, input, textarea{
+      background-color:rgba(24,29,21,.55) !important;
+      color:var(--ink);
+    }
+    select option{ background:#2b3027; color:#fff; }
+
+    @media (prefers-reduced-motion:reduce){
+      #ambient{ display:none; }
+    }
   </style>
 </head>
 <body class="bg-neutral-background text-text-primary font-sans antialiased min-h-screen flex flex-col relative overflow-x-hidden">
 
-  <!-- Ambient Grid Overlay & Focused Top Glow -->
-  <div class="fixed inset-0 z-0 pointer-events-none">
-    <!-- Subtle Grid Lines -->
-    <div class="absolute inset-0 bg-[linear-gradient(to_bottom,#ffffff06_1px,transparent_1px)] bg-[size:100%_48px]"></div>
-    <div class="absolute inset-0 bg-[linear-gradient(to_right,#ffffff06_1px,transparent_1px)] bg-[size:48px_100%]"></div>
-    
-    <!-- Top Focused Neon Cyan Ambient Glow -->
-    <div class="absolute -top-[140px] left-1/2 -translate-x-1/2 w-[800px] h-[300px] flex items-center justify-center">
-      <div class="absolute w-[700px] h-[240px] bg-brand-primary/25 blur-[110px] rounded-full"></div>
-      <div class="absolute w-[450px] h-[140px] bg-[#d0f5ff]/20 blur-[80px] rounded-full"></div>
-      <div class="absolute w-[200px] h-[40px] bg-white/40 blur-[40px] rounded-full"></div>
-    </div>
-    <!-- Top Rim Highlight Line -->
-    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-[70%] h-[1.5px] bg-gradient-to-r from-transparent via-brand-primary/80 to-transparent"></div>
-  </div>
+  <!-- Ambient ground: the welcome page light pool, plus the drifting light -->
+  <div class="ground"></div>
+  <canvas id="ambient" aria-hidden="true"></canvas>
+  <div class="ground-guides"></div>
 
   <!-- Header Navigation -->
-  <header class="sticky top-0 z-50 h-[72px] flex items-center justify-between px-6 lg:px-12 border-b border-white/10 backdrop-blur-md bg-neutral-background/90">
-    <div class="flex items-center gap-4">
-      <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-brand-primary to-cyan-700 flex items-center justify-center shadow-glow-cyan">
-        <svg class="w-5 h-5 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+  <header class="dock-bar sticky top-3 z-50 mx-3 lg:mx-6 mt-3 h-[64px] flex items-center justify-between gap-4 px-4 lg:px-5 overflow-hidden" data-spec>
+    <div class="flex items-center gap-3 flex-none min-w-0">
+      <div class="dock-mark w-9 h-9 rounded-[10px] flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.25">
           <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
         </svg>
       </div>
       <div>
         <div class="flex items-center gap-2">
-          <span class="text-xl font-bold tracking-tight text-white">API Sentinel</span>
+          <span class="text-lg font-bold tracking-tight text-white whitespace-nowrap">API Sentinel</span>
           <span class="text-[10px] px-2 py-0.5 rounded-full bg-brand-primary/15 text-brand-primary border border-brand-primary/30 font-mono font-semibold">JP-009</span>
         </div>
-        <p class="text-[11px] text-text-secondary hidden sm:block">Automated Quality, Profiling & AI Remediation</p>
+        <p class="text-[11px] text-text-secondary hidden 2xl:block whitespace-nowrap">Automated Quality, Profiling & AI Remediation</p>
       </div>
     </div>
 
     <!-- Right Controls -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2 min-w-0 overflow-x-auto no-bar">
       <!-- AI Engine Status Badge -->
-      <div id="aiStatusPill" class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs">
+      <div id="aiStatusPill" class="hidden 2xl:flex items-center gap-2 px-3 py-1.5 rounded-[10px] bg-white/5 border border-white/10 text-xs flex-none whitespace-nowrap">
         <span class="w-2 h-2 rounded-full bg-brand-primary animate-pulse"></span>
         <span id="aiEngineLabel" class="text-text-secondary">AI: Deterministic Heuristic + Gemini</span>
       </div>
 
       <!-- Quick Action Buttons -->
-      <a href="/welcome" class="px-3.5 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-xs font-medium text-emerald-300 transition-all flex items-center gap-1.5" title="View 3D Welcome Landing Page">
+      <a href="/welcome" class="dock-pill px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all flex items-center gap-1.5 flex-none whitespace-nowrap" title="View 3D Welcome Landing Page">
         <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
         <span>Welcome 3D</span>
       </a>
 
-      <button onclick="openReportModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5" title="Generate and export comprehensive quality reports">
+      <button onclick="openReportModal()" class="dock-pill px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all flex items-center gap-1.5 flex-none whitespace-nowrap" title="Generate and export comprehensive quality reports">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         <span>Reports</span>
       </button>
 
-      <button onclick="openRunCompareModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
+      <button onclick="openRunCompareModal()" class="dock-pill px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all flex items-center gap-1.5 flex-none whitespace-nowrap">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
         <span>Compare Runs</span>
       </button>
 
 
-      <button onclick="openOpenApiModal()" class="px-3.5 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-white transition-all flex items-center gap-1.5">
+      <button onclick="openOpenApiModal()" class="dock-pill px-3.5 py-1.5 rounded-[10px] text-xs font-medium transition-all flex items-center gap-1.5 flex-none whitespace-nowrap">
         <svg class="w-3.5 h-3.5 text-brand-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
         <span>Import OpenAPI</span>
       </button>
 
-      <button onclick="triggerTestSuiteRun()" id="runSuiteBtn" class="px-4 py-1.5 rounded-lg bg-white hover:bg-neutral-200 text-black text-xs font-semibold transition-all shadow-glow-cyan flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5 text-black" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <button onclick="triggerTestSuiteRun()" id="runSuiteBtn" class="dock-pill dock-pill--solid px-4 py-1.5 rounded-[10px] text-xs font-semibold transition-all flex items-center gap-1.5 flex-none whitespace-nowrap">
+        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
         <span>Run All Tests</span>
       </button>
 
-      <a href="/docs" target="_blank" class="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-text-secondary hover:text-white transition-all" title="Swagger API Documentation">
+      <a href="/docs" target="_blank" class="dock-pill p-2 rounded-[10px] transition-all flex-none" title="Swagger API Documentation">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
       </a>
     </div>
@@ -817,7 +1051,7 @@
       const iframe = document.getElementById("reportPreviewIframe");
 
       if (!runId) {
-        iframe.srcdoc = '<body style="background:#09090b;color:#94a3b8;font-family:sans-serif;text-align:center;padding:60px 20px;"><div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">No Run Selected</div><div>Select a test run to synthesize and preview the comprehensive report.</div></body>';
+        iframe.srcdoc = '<body style="background:#383b34;color:rgba(255,255,255,.52);font-family:sans-serif;text-align:center;padding:60px 20px;"><div style="font-size:16px;font-weight:600;color:#fff;margin-bottom:8px;">No Run Selected</div><div>Select a test run to synthesize and preview the comprehensive report.</div></body>';
         return;
       }
 
@@ -1378,6 +1612,167 @@
     </div>
   </div>
 
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       Ambient light + specular rim.
+
+       The welcome page earns its atmosphere with three.js and a mossy 3D
+       root. That is the wrong instrument here: this page repaints live
+       telemetry on a poll, so the background has to cost almost nothing.
+       What actually reads as "the welcome page" is not the geometry, it is
+       the light — a warm floor pool, a cool sink up and right, and slow
+       movement you notice only when you stop looking at it. That is six
+       drifting radial gradients, which is cheap enough to be free.
+       ────────────────────────────────────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* ---- drifting light ------------------------------------------------
+       Painted at a fraction of device resolution and scaled up by the
+       compositor. Every mark here is a soft radial falloff, so the
+       resample is invisible, and it makes the fill rate a non-issue. */
+    var SCALE = 0.34;
+    var cv = document.getElementById('ambient');
+    var ctx = cv && cv.getContext('2d');
+
+    /* Sampled off the welcome hero: the pale floor light, the cool sink it
+       is balanced against, and the green bounce coming off the moss. */
+    var BLOBS = [
+      { c:[238,243,231], a:0.34, r:0.82, x:0.50, y:0.98, ax:0.12, ay:0.06, px:41, py:33, ph:0.0 },
+      { c:[232,238,222], a:0.22, r:0.62, x:0.20, y:0.66, ax:0.11, ay:0.08, px:53, py:37, ph:1.7 },
+      { c:[176,201,146], a:0.16, r:0.46, x:0.80, y:0.70, ax:0.13, ay:0.07, px:61, py:47, ph:3.1 },
+      { c:[143,182,184], a:0.11, r:0.38, x:0.88, y:0.26, ax:0.09, ay:0.09, px:67, py:43, ph:4.4 },
+      { c:[ 24, 28, 20], a:0.16, r:0.46, x:0.94, y:0.02, ax:0.06, ay:0.05, px:73, py:59, ph:2.2 },
+      { c:[ 20, 24, 17], a:0.12, r:0.40, x:0.04, y:0.04, ax:0.07, ay:0.06, px:79, py:51, ph:5.0 }
+    ];
+
+    var w = 0, h = 0;
+    function size() {
+      if (!cv) return;
+      w = Math.max(1, Math.round(window.innerWidth  * SCALE));
+      h = Math.max(1, Math.round(window.innerHeight * SCALE));
+      cv.width = w; cv.height = h;
+    }
+
+    function paint(t) {
+      if (!ctx) return;
+      ctx.clearRect(0, 0, w, h);
+      var span = Math.max(w, h);
+      for (var i = 0; i < BLOBS.length; i++) {
+        var b = BLOBS[i];
+        /* Lissajous drift on long, mutually prime periods, so the field
+           never visibly loops back to a pose you have already seen. */
+        var x = (b.x + Math.sin(t / b.px + b.ph) * b.ax) * w;
+        var y = (b.y + Math.cos(t / b.py + b.ph) * b.ay) * h;
+        var r = b.r * span;
+        var g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        var rgb = b.c[0] + ',' + b.c[1] + ',' + b.c[2];
+        g.addColorStop(0,   'rgba(' + rgb + ',' + b.a + ')');
+        g.addColorStop(0.5, 'rgba(' + rgb + ',' + (b.a * 0.34).toFixed(4) + ')');
+        g.addColorStop(1,   'rgba(' + rgb + ',0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+    }
+
+    var raf = 0, last = 0;
+    function frame(now) {
+      raf = requestAnimationFrame(frame);
+      /* The light moves slowly enough that a third of the display rate is
+         indistinguishable from all of it, and leaves the main thread to
+         the telemetry that actually needs it. */
+      if (now - last < 42) return;
+      last = now;
+      paint(now / 1000);
+    }
+
+    function startLight() {
+      if (!ctx) return;
+      size();
+      paint(0);
+      document.documentElement.classList.add('amb-ready');
+      if (!reduce.matches) raf = requestAnimationFrame(frame);
+      window.addEventListener('resize', function () { size(); paint(last / 1000); }, { passive: true });
+      /* a background tab should not be paying for weather nobody is watching */
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
+        else if (!raf && !reduce.matches) raf = requestAnimationFrame(frame);
+      });
+    }
+
+    /* ---- specular rim --------------------------------------------------
+       The welcome dock lights the edge of its glass where the pointer
+       passes. Same trick, same conic gradient: point its start angle at the
+       cursor and fade it out with distance. Written to CSS custom
+       properties so the paint stays entirely on the compositor. */
+    var SEL = 'main > section > div, main [class*="bg-neutral-surface"], header';
+
+    function grant() {
+      Array.prototype.forEach.call(document.querySelectorAll(SEL), function (el) {
+        if (!el.hasAttribute('data-spec')) el.setAttribute('data-spec', '');
+      });
+    }
+
+    function startRim() {
+      var panes = [];
+      /* The panels already carry their own surface classes, so rather than
+         mark up a hundred elements the rim is granted to the top-level
+         panes and KPI tiles after the fact. */
+      grant();
+      panes = Array.prototype.slice.call(document.querySelectorAll('[data-spec]'));
+
+      var px = 0, py = 0, queued = false;
+      function apply() {
+        queued = false;
+        for (var i = 0; i < panes.length; i++) {
+          var el = panes[i];
+          var r = el.getBoundingClientRect();
+          if (r.bottom < -200 || r.top > window.innerHeight + 200) continue;
+          var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+          var dx = px - cx, dy = py - cy;
+          /* Distance is measured from the pane edge, not its centre, so a
+             wide panel lights along its whole length instead of only when
+             the pointer is near the middle of it. */
+          var ex = Math.max(0, Math.abs(dx) - r.width / 2);
+          var ey = Math.max(0, Math.abs(dy) - r.height / 2);
+          var d = Math.sqrt(ex * ex + ey * ey);
+          var bright = Math.max(0, 1 - d / 260);
+          el.style.setProperty('--spec-bright', bright.toFixed(3));
+          if (bright > 0) el.style.setProperty('--spec-angle', (Math.atan2(dy, dx) + Math.PI / 2).toFixed(3) + 'rad');
+        }
+      }
+
+      window.addEventListener('pointermove', function (e) {
+        px = e.clientX; py = e.clientY;
+        if (!queued) { queued = true; requestAnimationFrame(apply); }
+      }, { passive: true });
+
+      window.addEventListener('pointerleave', function () {
+        for (var i = 0; i < panes.length; i++) panes[i].style.setProperty('--spec-bright', '0');
+      }, { passive: true });
+
+      /* Panels are created and destroyed as workspaces load, so re-collect
+         when the tree changes rather than caching a stale node list. */
+      var pending = 0;
+      var mo = new MutationObserver(function () {
+        if (pending) return;
+        pending = requestAnimationFrame(function () {
+          pending = 0;
+          grant();
+          panes = Array.prototype.slice.call(document.querySelectorAll('[data-spec]'));
+        });
+      });
+      mo.observe(document.body, { childList: true, subtree: true });
+    }
+
+    function boot() { startLight(); startRim(); }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  </script>
 
 </body>
 </html>

@@ -483,14 +483,51 @@ class ReportService:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>API Sentinel Report — Run #{s.run_id} ({s.project_name})</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script>
+    /* the same lichen / clay / ochre the cockpit uses, so a pass reads as a
+       pass without the stock palette shouting over the page */
+    tailwind.config = {{ theme: {{ extend: {{ colors: {{
+      emerald: {{ 300:'#c2d9a8', 400:'#a3c47f', 500:'#86ab63' }},
+      green:   {{ 300:'#c2d9a8', 400:'#a3c47f', 500:'#86ab63' }},
+      rose:    {{ 300:'#e8b09a', 400:'#d98b6a', 500:'#c26f4e' }},
+      red:     {{ 300:'#e8b09a', 400:'#d98b6a', 500:'#c26f4e' }},
+      amber:   {{ 300:'#ecc98d', 400:'#dcb166', 500:'#c9974a' }},
+      yellow:  {{ 300:'#ecc98d', 400:'#dcb166', 500:'#c9974a' }},
+      cyan:    {{ 300:'#dfe7d2', 400:'#e4ead6', 500:'#cdd8bb' }},
+    }} }} }} }}
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    body {{ font-family: 'DM Sans', sans-serif; background-color: rgb(9, 9, 11); color: rgb(244, 244, 245); }}
-    .font-mono {{ font-family: 'JetBrains Mono', monospace; }}
-    .bg-neutral-surface {{ background-color: rgb(15, 15, 18); }}
-    .text-brand-primary {{ color: rgb(0, 195, 201); }}
-    .border-brand-primary {{ border-color: rgb(0, 195, 201); }}
-    .text-text-secondary {{ color: rgb(161, 161, 170); }}
+    /* Living Green — the same palette the cockpit and the landing page are
+       cut from, so an exported report still reads as this product. */
+    @font-face {{
+      font-family: 'Lexend';
+      src: url('/inner-green-assets/lexend-latin.woff2') format('woff2');
+      font-weight: 100 900; font-style: normal; font-display: swap;
+    }}
+    body {{
+      font-family: 'Lexend', system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-weight: 300;
+      background-color: #383b34;
+      color: #ffffff;
+      background-image:
+        radial-gradient(64% 44% at 50% 104%, rgba(238,243,231,.10) 0%, rgba(238,243,231,0) 72%),
+        radial-gradient(60% 50% at 94% 2%, rgba(24,28,20,.14) 0%, rgba(24,28,20,0) 68%);
+      background-attachment: fixed;
+    }}
+    .font-mono {{ font-family: 'JetBrains Mono', ui-monospace, monospace; }}
+    .bg-neutral-surface {{
+      background-color: rgba(38,44,34,.55);
+      background-image: linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,0) 42%);
+      backdrop-filter: blur(16px) saturate(1.18);
+      border-color: rgba(255,255,255,.11);
+      box-shadow: 0 8px 22px rgba(10,14,8,.28), inset 0 1px 0 rgba(255,255,255,.06);
+    }}
+    .text-brand-primary {{ color: #e4ead6; }}
+    .border-brand-primary {{ border-color: #e4ead6; }}
+    .text-text-secondary {{ color: rgba(255,255,255,.52); }}
+    .uppercase {{ letter-spacing: .14em; }}
+    .font-bold, .font-semibold {{ font-weight: 500; }}
   </style>
 </head>
 <body class="p-6 md:p-12 max-w-5xl mx-auto space-y-8">
