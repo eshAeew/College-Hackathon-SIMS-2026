@@ -13,8 +13,9 @@
   - **Stage 08: Negative & Adversarial Testing Engine (100% Complete)**
   - **Stage 09: Inconsistent Behavior Detection (100% Complete)**
   - **Stage 10: Performance Analysis Engine (100% Complete)**
-- **Next Sub-Stage**: Stage 11: Recurring Failure Detection / Stage 12: Test Run Management
-- **Latest Build Status**: Passing (161/161 unit tests green, 100% pass rate)
+  - **Stage 11: Recurring Failure Detection (100% Complete)**
+- **Next Sub-Stage**: Stage 12: Test Run Management
+- **Latest Build Status**: Passing (171/171 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -50,6 +51,9 @@
 - [x] **Stage 10: Performance Analysis Engine (COMPLETED - 8/8 tests passing)**
   - [x] **Sub-Stage 01: Latency Statistical Aggregator**: Sub-millisecond percentile calculations (P50/median, P90, P95, P99, min, max, mean, stddev, jitter, CV%) and distribution tier bucketing (`FAST <200ms`, `ACCEPTABLE 200-500ms`, `SLOW 500-1000ms`, `CRITICAL >1000ms`).
   - [x] **Sub-Stage 02: SLA Threshold Classification & Alerting**: Configurable SLA policy rules, multi-tier compliance evaluation (`OPTIMAL`, `ACCEPTABLE`, `DEGRADED`, `BREACHED`), and live benchmark dispatchers (`/api/v1/performance/benchmark-direct`, `/api/v1/performance/endpoints/{id}/benchmark`, `/api/v1/performance/analyze`).
+- [x] **Stage 11: Recurring Failure Detection (COMPLETED - 10/10 tests passing)**
+  - [x] **Sub-Stage 01: Historical Failure Aggregator**: Historical test execution aggregator, consecutive failure streak tracking, failure rate calculation, and flapping state transitions.
+  - [x] **Sub-Stage 02: Failure Pattern Clustering & Fingerprinting**: Error trace normalization (stripping UUIDs, timestamps, hex pointers, numeric IDs), root cause categorization (Server Crash, Auth, Validation, Timeout, Schema Mismatch, Assertion, Network), SHA-256 deterministic fingerprinting, and persistence ratings (`CHRONIC`, `INTERMITTENT`, `NEW`, `RESOLVED`, `HEALTHY`) via `/api/v1/recurring-failures/analyze`, `/api/v1/recurring-failures/projects/{id}`, and `/api/v1/recurring-failures/endpoints/{id}`.
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API

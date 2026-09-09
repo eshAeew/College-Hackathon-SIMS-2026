@@ -1,5 +1,30 @@
 # API Sentinel — Changelog
 
+## [Stage 11 - Recurring Failure Detection] - 2026-09-09
+- **Completed**: Historical Failure Aggregator, Root Cause Categorizer, SHA-256 Error Trace Fingerprinter, and Failure Pattern Clustering Engine (Stage 11 Complete).
+- Created `app/models/schemas/recurring_failure.py` with:
+  - `PersistenceRating` (`CHRONIC`, `INTERMITTENT`, `NEW`, `RESOLVED`, `HEALTHY`).
+  - `FailureCategory` (`SERVER_CRASH`, `AUTH_FAILURE`, `VALIDATION_ERROR`, `TIMEOUT`, `SCHEMA_MISMATCH`, `ASSERTION_FAILED`, `NETWORK_ERROR`, `UNKNOWN`).
+  - `HistoricalExecutionSample`, `EndpointFailureRecurrence`, `TestCaseFailureRecurrence`, `FailureCluster`, `ProjectRecurringFailureReport`, `AnalyzeHistoricalFailuresRequest`.
+- Created `app/utils/failure_fingerprinter.py` with:
+  - `normalize_error_message()`: Strips ISO timestamps, UUIDs, hex memory pointers, and large numeric IDs to produce stable normalized error signatures.
+  - `categorize_failure()`: Multi-factor root-cause classifier based on HTTP status codes and error traces.
+  - `generate_failure_fingerprint()`: SHA-256 fingerprint hash generator producing unique human-readable Cluster IDs (`FC-<CATEGORY>-<CODE>-<HASH>`).
+  - `calculate_persistence_rating()`: Calculates consecutive failure streak, failure rate percentage, state transition flapping detection, and persistence rating.
+  - `cluster_failure_samples()`: Aggregates historical failure samples across endpoints and test cases into clustered problem statements with remediation suggestions.
+- Implemented `RecurringFailureService` in `app/services/recurring_failure_service.py`:
+  - `analyze_batch_samples()`: Evaluates collections of historical execution telemetry samples.
+  - `analyze_project_recurrence()`: Database-backed analysis of registered project endpoints and test scenarios.
+  - `analyze_endpoint_recurrence()`: Single endpoint failure history and persistence rating.
+- Implemented REST router in `app/api/v1/recurring_failures.py`:
+  - `POST /api/v1/recurring-failures/analyze`
+  - `GET /api/v1/recurring-failures/projects/{project_id}`
+  - `GET /api/v1/recurring-failures/endpoints/{endpoint_id}`
+- Mounted `recurring_failures_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_recurring_failures.py` (10 new tests passing).
+- Total test suite count increased to 171 passing tests with 100% pass rate.
+- Marked Stage 11: Recurring Failure Detection as 100% COMPLETE.
+
 ## [Stage 10 - Performance Analysis Engine] - 2026-09-09
 - **Completed**: Sub-Millisecond Percentile Aggregator (P50, P90, P95, P99), Latency Tier Bucketing, and SLA Threshold Grading & Benchmarking (Stage 10 Complete).
 - Created `app/models/schemas/performance.py` with:
