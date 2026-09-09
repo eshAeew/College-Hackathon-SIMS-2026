@@ -5,7 +5,7 @@
 | **Stage 01** | Project Foundation | Tier 1 | `COMPLETED` | FastAPI app, env settings, structured logging, healthcheck (13/13 tests OK) |
 | **Stage 02** | Project / Workspace Management | Tier 1 | `COMPLETED` | Project CRUD, workspace summary stats, environment presets (9/9 tests OK) |
 | **Stage 03** | API Endpoint Management | Tier 1 | `COMPLETED` | Endpoint registry, CRUD, path variable extraction, JSON schema contracts, ad-hoc validator (22/22 tests OK) |
-| **Stage 04** | Request Configuration Engine | Tier 1 | `PLANNED` | Request builder, param & body serializer |
+| **Stage 04** | Request Configuration Engine | Tier 1 | `IN PROGRESS` | Sub-Stage 01 Complete: Dynamic HTTP request builder, path interpolation, header merger, body serialization (10/10 tests OK) |
 | **Stage 05** | Core API Execution Engine | Tier 1 | `PLANNED` | `httpx` async dispatcher, metrics capture |
 | **Stage 06** | Test Case Management | Tier 1 | `PLANNED` | Test scenario CRUD, assertions & rules |
 | **Stage 07** | Functional Validation Engine | Tier 1 | `PLANNED` | Status, JSON Schema, type & field validators |

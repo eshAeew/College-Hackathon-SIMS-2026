@@ -1,5 +1,21 @@
 # API Sentinel — Changelog
 
+## [Stage 04 - Sub-Stage 01] - 2026-09-09
+- **Completed**: Dynamic HTTP Request Builder & Payload Serializers.
+- Created `app/models/schemas/request_config.py` with `BodyType`, `RequestCompileOverride`, `DirectRequestBuilderRequest`, and `CompiledRequestResponse` DTOs.
+- Created `RequestBuilderService` in `app/services/request_builder_service.py` with:
+  - Path variable interpolation and URL-encoding (`resolve_path()`).
+  - Query parameter encoding with support for lists, booleans, and special characters (`encode_query_params()`).
+  - Hierarchical, case-insensitive header merging with standard defaults (`merge_headers()`).
+  - Multi-format body serializer for JSON, form-data, raw text/XML, and empty bodies (`serialize_body()`).
+  - Automated cURL command generator (`generate_curl_command()`).
+  - Concrete `httpx.Request` constructor (`build_httpx_request()`).
+- Implemented Request Configuration REST APIs in `app/api/v1/requests.py`:
+  - `POST /api/v1/projects/{project_id}/endpoints/{endpoint_id}/build-request`
+  - `POST /api/v1/requests/build`
+- Added comprehensive unit and integration test suite in `tests/test_request_builder.py` (10 new tests passing).
+- Total test suite count increased to 55 passing tests with 100% pass rate.
+
 ## [Stage 03 - Sub-Stage 02] - 2026-09-09
 - **Completed**: Parameter, Header & Body Contracts Specification (Stage 03 Complete).
 - Created `app/utils/contract_parser.py` with `extract_path_variables()`, `validate_json_schema()`, and `validate_contract_specification()`.

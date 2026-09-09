@@ -7,9 +7,9 @@ Interpolate path variables, query parameters, headers, and serialize payload bod
 Python request builder utility compiling URL paths and serializing JSON/XML/raw bodies.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Implement path parameter template resolver (replacing `{id}` with concrete values).
-- [ ] Implement query parameter encoder with support for arrays and special characters.
-- [ ] Implement body serializer supporting JSON, form-data, XML, and empty bodies.
+- [x] Implement path parameter template resolver (replacing `{id}` with concrete values).
+- [x] Implement query parameter encoder with support for arrays and special characters.
+- [x] Implement body serializer supporting JSON, form-data, XML, and empty bodies.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Python request builder utility compiling URL paths and serializing JSON/XML/raw 
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Request builder takes endpoint + test parameters and produces a concrete `httpx.Request` object.**
