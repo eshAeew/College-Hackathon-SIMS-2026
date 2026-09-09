@@ -24,12 +24,18 @@ class Endpoint(Base):
     query_params_json = Column(Text, default="{}", nullable=False)
     path_params_json = Column(Text, default="{}", nullable=False)
     body_schema_json = Column(Text, default="{}", nullable=False)
+    response_schema_json = Column(Text, default="{}", nullable=False)
 
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc), nullable=False)
 
     # Database Relationships
     project = relationship("Project", back_populates="endpoints")
+
+    def extract_path_variables(self) -> list:
+        """Extract variable parameter names defined inside path brackets (e.g. {id})."""
+        from app.utils.contract_parser import extract_path_variables
+        return extract_path_variables(self.path)
 
     @property
     def headers(self) -> dict:
@@ -82,3 +88,16 @@ class Endpoint(Base):
     def body_schema(self, value: dict) -> None:
         """Serialize body schema dictionary into JSON string."""
         self.body_schema_json = json.dumps(value or {})
+
+    @property
+    def response_schema(self) -> dict:
+        """Parse expected response schema JSON string into dictionary."""
+        try:
+            return json.loads(self.response_schema_json) if self.response_schema_json else {}
+        except Exception:
+            return {}
+
+    @response_schema.setter
+    def response_schema(self, value: dict) -> None:
+        """Serialize expected response schema dictionary into JSON string."""
+        self.response_schema_json = json.dumps(value or {})

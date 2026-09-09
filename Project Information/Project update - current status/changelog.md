@@ -1,5 +1,19 @@
 # API Sentinel — Changelog
 
+## [Stage 03 - Sub-Stage 02] - 2026-09-09
+- **Completed**: Parameter, Header & Body Contracts Specification (Stage 03 Complete).
+- Created `app/utils/contract_parser.py` with `extract_path_variables()`, `validate_json_schema()`, and `validate_contract_specification()`.
+- Added `response_schema_json` column and getter/setter to `Endpoint` entity model in `app/models/entities/endpoint.py`.
+- Added `response_schema`, `ContractSpecification`, `ContractUpdateRequest`, `ContractValidationRequest`, and `ContractValidationResponse` DTOs in `app/models/schemas/endpoint.py`.
+- Enhanced `EndpointService` in `app/services/endpoint_service.py` with `get_endpoint_contract()` and `update_endpoint_contract()`.
+- Added contract inspection, updating, and ad-hoc validation endpoints to `app/api/v1/endpoints.py`:
+  - `GET /api/v1/endpoints/{endpoint_id}/contract`
+  - `PUT /api/v1/endpoints/{endpoint_id}/contract`
+  - `POST /api/v1/endpoints/validate-contract`
+- Added comprehensive unit and integration test suite in `tests/test_contract_spec.py` (8 new tests passing).
+- Total test suite count increased to 45 passing tests with 100% pass rate.
+- Marked Stage 03: API Endpoint Management as 100% COMPLETE.
+
 ## [Stage 03 - Sub-Stage 01] - 2026-09-09
 - **Completed**: Endpoint Registration & CRUD Operations.
 - Created `Endpoint` entity model in `app/models/entities/endpoint.py` with cascade foreign key to `Project` and JSON serializers for headers, query params, path params, and body schema.

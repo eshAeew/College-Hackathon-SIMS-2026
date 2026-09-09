@@ -1,7 +1,7 @@
-"""Pydantic DTO models for API Endpoint registration, updates, and responses."""
+"""Pydantic DTO models for API Endpoint registration, contract specification, updates, and responses."""
 from enum import Enum
 from datetime import datetime
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 
@@ -24,10 +24,11 @@ class EndpointBase(BaseModel):
     path: str = Field(..., min_length=1, max_length=500, description="URL path starting with / e.g. /api/v1/products/{id}")
     expected_status: int = Field(default=200, ge=100, le=599, description="Expected HTTP Status Code")
     is_active: bool = Field(default=True, description="Whether endpoint is active for testing")
-    headers: Dict[str, str] = Field(default_factory=dict, description="Custom headers sent with request")
+    headers: Dict[str, str] = Field(default_factory=dict, description="Custom headers sent with request (Content-Type, Accept, Auth)")
     query_params: Dict[str, Any] = Field(default_factory=dict, description="Default query parameters")
-    path_params: Dict[str, Any] = Field(default_factory=dict, description="Path variable definitions")
-    body_schema: Dict[str, Any] = Field(default_factory=dict, description="Request/response payload JSON schema")
+    path_params: Dict[str, Any] = Field(default_factory=dict, description="Path variable sample values")
+    body_schema: Dict[str, Any] = Field(default_factory=dict, description="Request payload JSON Schema")
+    response_schema: Dict[str, Any] = Field(default_factory=dict, description="Expected response payload JSON Schema")
 
     @field_validator("path")
     @classmethod
@@ -60,7 +61,8 @@ class EndpointCreate(EndpointBase):
                 "expected_status": 200,
                 "is_active": True,
                 "headers": {
-                    "Accept": "application/json"
+                    "Accept": "application/json",
+                    "Content-Type": "application/json"
                 },
                 "query_params": {
                     "include_reviews": "true"
@@ -68,7 +70,16 @@ class EndpointCreate(EndpointBase):
                 "path_params": {
                     "id": "101"
                 },
-                "body_schema": {}
+                "body_schema": {},
+                "response_schema": {
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "integer"},
+                        "title": {"type": "string"},
+                        "price": {"type": "number"}
+                    },
+                    "required": ["id", "title", "price"]
+                }
             }
         }
     )
@@ -85,7 +96,8 @@ class EndpointUpdate(BaseModel):
     headers: Optional[Dict[str, str]] = Field(None, description="Updated request headers")
     query_params: Optional[Dict[str, Any]] = Field(None, description="Updated query parameters")
     path_params: Optional[Dict[str, Any]] = Field(None, description="Updated path parameters")
-    body_schema: Optional[Dict[str, Any]] = Field(None, description="Updated body schema")
+    body_schema: Optional[Dict[str, Any]] = Field(None, description="Updated request body schema")
+    response_schema: Optional[Dict[str, Any]] = Field(None, description="Updated response schema")
 
     @field_validator("path")
     @classmethod
@@ -121,3 +133,56 @@ class EndpointResponse(EndpointBase):
     updated_at: datetime = Field(..., description="Timestamp when endpoint was last modified")
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ContractSpecification(BaseModel):
+    """Comprehensive contract specification for an API Endpoint."""
+    endpoint_id: int = Field(..., description="Target Endpoint ID")
+    path: str = Field(..., description="URL path with variable placeholders")
+    method: str = Field(..., description="HTTP Method")
+    path_variables: List[str] = Field(default_factory=list, description="Extracted variable placeholders from path")
+    path_params: Dict[str, Any] = Field(default_factory=dict, description="Mapped path variable sample values")
+    query_params: Dict[str, Any] = Field(default_factory=dict, description="Configured query parameters")
+    headers: Dict[str, str] = Field(default_factory=dict, description="Configured request headers")
+    body_schema: Dict[str, Any] = Field(default_factory=dict, description="Request payload JSON Schema")
+    response_schema: Dict[str, Any] = Field(default_factory=dict, description="Expected response JSON Schema")
+    expected_status: int = Field(200, description="Expected HTTP Status Code")
+    is_valid: bool = Field(True, description="Whether the contract is completely resolved and structurally valid")
+    missing_path_params: List[str] = Field(default_factory=list, description="Path variables declared in URL but missing sample values")
+    validation_errors: List[str] = Field(default_factory=list, description="Schema syntax errors if any")
+
+
+class ContractUpdateRequest(BaseModel):
+    """Payload for directly updating endpoint contract specifications."""
+    headers: Optional[Dict[str, str]] = Field(None, description="Request headers (Content-Type, Accept, Auth, etc.)")
+    query_params: Optional[Dict[str, Any]] = Field(None, description="Default query parameters")
+    path_params: Optional[Dict[str, Any]] = Field(None, description="Sample path parameter values")
+    body_schema: Optional[Dict[str, Any]] = Field(None, description="Request payload JSON Schema")
+    response_schema: Optional[Dict[str, Any]] = Field(None, description="Expected response payload JSON Schema")
+    expected_status: Optional[int] = Field(None, ge=100, le=599, description="Expected HTTP Status code")
+
+
+class ContractValidationRequest(BaseModel):
+    """Ad-hoc contract validation request."""
+    path: str = Field(..., min_length=1, description="URL path to inspect (e.g. /api/v1/orders/{id})")
+    path_params: Dict[str, Any] = Field(default_factory=dict, description="Path parameter sample values")
+    headers: Dict[str, str] = Field(default_factory=dict, description="Request headers")
+    query_params: Dict[str, Any] = Field(default_factory=dict, description="Query parameters")
+    body_schema: Dict[str, Any] = Field(default_factory=dict, description="Request body JSON Schema")
+    response_schema: Dict[str, Any] = Field(default_factory=dict, description="Response payload JSON Schema")
+
+    @field_validator("path")
+    @classmethod
+    def validate_path(cls, v: str) -> str:
+        v = v.strip()
+        if not v.startswith("/"):
+            raise ValueError("Endpoint path must start with a leading slash '/'")
+        return v
+
+
+class ContractValidationResponse(BaseModel):
+    """Validation report output for contract specifications."""
+    is_valid: bool = Field(..., description="Whether the contract is valid")
+    path_variables: List[str] = Field(default_factory=list, description="Extracted path variables from URL")
+    missing_path_params: List[str] = Field(default_factory=list, description="Path variables declared but unassigned")
+    errors: List[str] = Field(default_factory=list, description="Detailed JSON schema validation error messages")
