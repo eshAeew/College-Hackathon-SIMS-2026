@@ -142,8 +142,8 @@
       <div class="bg-neutral-surface/80 border border-white/10 rounded-xl p-4 flex flex-col justify-between hover:border-brand-primary/40 transition-all">
         <span class="text-xs uppercase tracking-wider text-text-secondary font-medium">Pass Rate</span>
         <div class="flex items-baseline justify-between mt-2">
-          <span id="kpiPassRate" class="text-2xl font-bold text-tier-pass tracking-tight">--%</span>
-          <span class="text-[10px] text-tier-pass bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono">Nominal</span>
+          <span id="kpiPassRate" class="text-2xl font-bold tracking-tight">--%</span>
+          <span id="kpiPassRateBadge" class="text-[10px] px-1.5 py-0.5 rounded font-mono">Nominal</span>
         </div>
       </div>
 
@@ -241,7 +241,7 @@
             <div class="flex gap-2">
               <span class="text-brand-primary">[SYSTEM]</span>
               <span class="text-white/40">Ready</span>
-              <span class="text-text-secondary">API Sentinel core engine initialized. 242 tests verified.</span>
+              <span class="text-text-secondary">API Sentinel core engine initialized. 247 tests verified.</span>
             </div>
             <div class="flex gap-2">
               <span class="text-brand-primary">[PERSISTENCE]</span>
@@ -419,7 +419,25 @@
       document.getElementById("kpiProjects").innerText = data.kpi.total_projects;
       document.getElementById("kpiEndpoints").innerText = data.kpi.total_endpoints;
       document.getElementById("kpiTestCases").innerText = data.kpi.total_test_cases;
-      document.getElementById("kpiPassRate").innerText = data.kpi.global_pass_rate_pct + "%";
+      
+      const passRateElem = document.getElementById("kpiPassRate");
+      const passBadgeElem = document.getElementById("kpiPassRateBadge");
+      const pr = data.kpi.global_pass_rate_pct;
+      passRateElem.innerText = pr + "%";
+      if (pr >= 90) {
+        passRateElem.className = "text-2xl font-bold tracking-tight text-emerald-400";
+        passBadgeElem.className = "text-[10px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded font-mono border border-emerald-500/20";
+        passBadgeElem.innerText = "Nominal";
+      } else if (pr >= 60) {
+        passRateElem.className = "text-2xl font-bold tracking-tight text-amber-400";
+        passBadgeElem.className = "text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded font-mono border border-amber-500/20";
+        passBadgeElem.innerText = "Degraded";
+      } else {
+        passRateElem.className = "text-2xl font-bold tracking-tight text-rose-400";
+        passBadgeElem.className = "text-[10px] text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded font-mono border border-rose-500/20";
+        passBadgeElem.innerText = "Critical";
+      }
+
       document.getElementById("kpiLatency").innerText = data.kpi.avg_latency_ms + "ms";
       document.getElementById("kpiP95").innerText = data.kpi.p95_latency_ms;
       document.getElementById("kpiRemediations").innerText = data.kpi.ai_remediations_count;
@@ -436,7 +454,8 @@
           sel.appendChild(opt);
         });
         if (!currentProjectId) {
-          currentProjectId = data.projects[0].id;
+          const firstWithEndpoints = data.projects.find(p => p.total_endpoints > 0);
+          currentProjectId = firstWithEndpoints ? firstWithEndpoints.id : data.projects[0].id;
         }
         sel.value = currentProjectId;
         updateSelectedProjectView();
@@ -673,7 +692,7 @@
         });
         const json = await res.json();
         if (res.ok) {
-          logToTerminal("[OPENAPI_SUCCESS]", `Imported ${json.data.imported_endpoints_count} endpoints and generated ${json.data.generated_smoke_tests_count} test scenarios.`);
+          logToTerminal("[OPENAPI_SUCCESS]", `Imported ${json.data.created_count} endpoints (out of ${json.data.total_discovered} discovered).`);
           closeOpenApiModal();
           fetchDashboardOverview();
         } else {
