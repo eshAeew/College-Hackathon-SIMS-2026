@@ -599,7 +599,7 @@ class DemoWorkflowService:
         ]
 
         return DemoPitchPlaybookResponse(
-            title="API Sentinel — 3-Minute Live Hackathon Presentation Playbook",
+            title="API Sentinel --- 3-Minute Live Hackathon Presentation Playbook",
             target_time_limit="3 Minutes (180 Seconds)",
             elevator_pitch="API Sentinel is an autonomous, AI-augmented API quality engineering and diagnostic platform that detects runtime defects, pinpoints root causes with actionable code fixes, and verifies regression-free releases.",
             the_problem="Modern API development suffers from silent schema drift, intermittent flakiness, unhandled 500 crashes, and tedious manual test writing.",

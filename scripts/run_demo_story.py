@@ -25,8 +25,8 @@ def main():
             return
 
         print("\n" + "=" * 76)
-        print("  API SENTINEL — 14-STEP AUTONOMOUS DEMO WORKFLOW & PITCH")
-        print("  Case Study JP-009 — Autonomous API Quality & Telemetry Engine")
+        print("  API SENTINEL --- 14-STEP AUTONOMOUS DEMO WORKFLOW & PITCH")
+        print("  Case Study JP-009 --- Autonomous API Quality & Telemetry Engine")
         print("=" * 76 + "\n")
 
         story = DemoWorkflowService.run_complete_story(db)

@@ -35,7 +35,7 @@ def main():
 
     # Pretty Console Output
     print("\n" + "=" * 70)
-    print(f"  API SENTINEL — PLATFORM SELF-TESTING SUITE [{report.run_id}]")
+    print(f"  API SENTINEL --- PLATFORM SELF-TESTING SUITE [{report.run_id}]")
     print(f"  Target Subsystem: {report.subsystem.upper()}")
     print("=" * 70)
     print(f"  Verdict:       {report.verdict}")
