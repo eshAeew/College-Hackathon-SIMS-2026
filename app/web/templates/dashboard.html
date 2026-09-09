@@ -511,6 +511,107 @@
     }
     button:disabled{ cursor:progress; opacity:.72; transform:none; }
 
+    /* -- notifications -------------------------------------------------
+       alert() and confirm() are drawn by the browser chrome, not by us:
+       a white OS slab with a system-blue button, dropped on top of a page
+       made of olive glass. These replace both - toasts for things the
+       operator only needs to be told, and a real dialog for the two
+       destructive actions that need an answer before proceeding. */
+    .sx-toasts{
+      position:fixed; z-index:300; right:18px; bottom:18px;
+      display:flex; flex-direction:column-reverse; gap:10px;
+      width:min(390px, calc(100vw - 36px)); pointer-events:none;
+    }
+    .sx-toast{
+      --sx-accent:#e4ead6;
+      pointer-events:auto; position:relative; overflow:hidden;
+      display:flex; gap:11px; align-items:flex-start;
+      padding:12px 13px 13px; border-radius:14px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 38%), rgba(36,42,32,.96);
+      border:1px solid rgba(255,255,255,.13);
+      box-shadow:0 20px 44px rgba(10,14,8,.46), inset 0 1px 0 rgba(255,255,255,.07);
+      -webkit-backdrop-filter:blur(20px) saturate(1.2); backdrop-filter:blur(20px) saturate(1.2);
+      opacity:0; transform:translateX(14px) scale(.98);
+      transition:opacity .26s var(--ease), transform .3s var(--ease-out);
+    }
+    .sx-toast.is-in{ opacity:1; transform:none; }
+    .sx-toast.is-out{ opacity:0; transform:translateX(14px) scale(.98); }
+    /* the accent stripe carries the severity without shouting it */
+    .sx-toast::before{
+      content:''; position:absolute; left:0; top:0; bottom:0; width:2px;
+      background:var(--sx-accent); opacity:.85;
+    }
+    .sx-toast .ic{
+      flex:none; width:19px; height:19px; margin-top:1px; color:var(--sx-accent);
+    }
+    .sx-toast .ic svg{ width:100%; height:100%; display:block; }
+    .sx-toast .bd{ flex:1 1 auto; min-width:0; }
+    .sx-toast .ti{ font-size:12.5px; font-weight:500; color:var(--ink); letter-spacing:-.005em; }
+    .sx-toast .ms{ margin-top:2px; font-size:12px; line-height:1.45; color:var(--ink-soft); word-break:break-word; }
+    .sx-toast .x{
+      flex:none; width:22px; height:22px; margin:-2px -3px 0 0; padding:0;
+      display:grid; place-items:center; border:0; border-radius:7px;
+      background:transparent; color:var(--ink-faint); cursor:pointer; font-size:15px; line-height:1;
+    }
+    .sx-toast .x:hover{ background:rgba(255,255,255,.08); color:var(--ink); }
+    .sx-toast .bar{
+      position:absolute; left:0; bottom:0; height:2px; width:100%;
+      background:var(--sx-accent); opacity:.4; transform-origin:left center;
+      animation:sx-drain linear forwards;
+    }
+    @keyframes sx-drain{ from{ transform:scaleX(1); } to{ transform:scaleX(0); } }
+    .sx-toast--success{ --sx-accent:#a3c47f; }
+    .sx-toast--warn{    --sx-accent:#dcb166; }
+    .sx-toast--error{   --sx-accent:#d98b6a; }
+
+    /* -- confirm dialog ------------------------------------------------ */
+    .sx-scrim{
+      position:fixed; inset:0; z-index:320; display:grid; place-items:center; padding:20px;
+      background:rgba(20,25,18,.62);
+      -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px);
+      opacity:0; transition:opacity .2s var(--ease);
+    }
+    .sx-scrim.is-in{ opacity:1; }
+    .sx-dialog{
+      width:min(430px, 100%); border-radius:20px; padding:22px 22px 18px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 34%), rgba(36,42,32,.97);
+      border:1px solid rgba(255,255,255,.14);
+      box-shadow:0 34px 76px rgba(10,14,8,.5), inset 0 1px 0 rgba(255,255,255,.08);
+      -webkit-backdrop-filter:blur(24px) saturate(1.2); backdrop-filter:blur(24px) saturate(1.2);
+      transform:translateY(8px) scale(.985); transition:transform .28s var(--ease-out);
+    }
+    .sx-scrim.is-in .sx-dialog{ transform:none; }
+    .sx-dialog .hd{ display:flex; gap:12px; align-items:flex-start; }
+    .sx-dialog .mk{
+      flex:none; width:36px; height:36px; border-radius:11px; display:grid; place-items:center;
+      background:rgba(217,139,106,.14); color:#d98b6a; border:1px solid rgba(217,139,106,.28);
+    }
+    .sx-dialog.is-neutral .mk{ background:rgba(228,234,214,.12); color:var(--card); border-color:rgba(228,234,214,.26); }
+    .sx-dialog .mk svg{ width:18px; height:18px; }
+    .sx-dialog h3{ margin:0; font-size:15px; font-weight:500; color:var(--ink); letter-spacing:-.01em; }
+    .sx-dialog p{ margin:6px 0 0; font-size:12.5px; line-height:1.55; color:var(--ink-soft); word-break:break-word; }
+    .sx-dialog .ft{ display:flex; justify-content:flex-end; gap:9px; margin-top:20px; }
+    .sx-btn{
+      padding:8px 15px; border-radius:10px; font-size:12.5px; font-weight:500;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05);
+      color:var(--ink-soft); cursor:pointer;
+    }
+    .sx-btn:hover{ background:rgba(255,255,255,.09); color:var(--ink); border-color:rgba(255,255,255,.24); }
+    .sx-btn--go{
+      background:var(--card); border-color:var(--card); color:var(--card-ink); font-weight:600;
+      background-image:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,0) 58%);
+    }
+    .sx-btn--go:hover{ background:#fff; border-color:#fff; color:#1b1e18; }
+    .sx-btn--danger{
+      background:#d98b6a; border-color:#d98b6a; color:#241009; font-weight:600;
+      background-image:linear-gradient(180deg, rgba(255,255,255,.42), rgba(255,255,255,0) 58%);
+    }
+    .sx-btn--danger:hover{ background:#e29a7b; border-color:#e29a7b; }
+
+    @media (max-width:520px){
+      .sx-toasts{ right:12px; left:12px; bottom:12px; width:auto; }
+    }
+
     @media (prefers-reduced-motion:reduce){
       #ambient{ display:none; }
       .grove-scene, .grove .fade, .grove-title i{ opacity:1 !important; transform:none !important; transition:none !important; }
@@ -1352,7 +1453,7 @@
         if (sel && sel.value) currentReportRunId = sel.value;
       }
       if (!currentReportRunId) {
-        alert("Please select a test run first.");
+        sentinelToast("Choose a test run from the list before exporting a report.", { kind: "warn", title: "No run selected" });
         return;
       }
       const baseId = document.getElementById("reportBaselineSelect").value;
@@ -1566,13 +1667,13 @@
     async function submitOpenApiSpec() {
       const targetProjId = parseInt(document.getElementById("openApiProjectSelect").value) || currentProjectId;
       if (!targetProjId) {
-        alert("Please select or create a target workspace first.");
+        sentinelToast("Choose a target workspace before importing a specification.", { kind: "warn", title: "No workspace selected" });
         return;
       }
       let content = document.getElementById("openApiContent").value.trim();
       const autoGen = document.getElementById("generateSmokeTestsCheck").checked;
       if (!content) {
-        alert("Please paste OpenAPI/Swagger JSON or YAML content.");
+        sentinelToast("Paste an OpenAPI or Swagger document (JSON or YAML) to import.", { kind: "warn", title: "Nothing to import" });
         return;
       }
 
@@ -1609,11 +1710,11 @@
         } else {
           const errMsg = json.detail || json.message || "Invalid specification format";
           logToTerminal("[OPENAPI_ERROR]", `Import failed: ${errMsg}`);
-          alert(`OpenAPI Import Failed: ${errMsg}`);
+          sentinelToast(errMsg, { kind: "error", title: "OpenAPI import failed" });
         }
       } catch (err) {
         logToTerminal("[OPENAPI_ERROR]", `Ingestion network error: ${err.message}`);
-        alert(`OpenAPI Import Network Error: ${err.message}`);
+        sentinelToast(err.message, { kind: "error", title: "Could not reach the import endpoint" });
       } finally {
         btn.disabled = false;
         btn.innerText = "Import & Generate";
@@ -1675,7 +1776,7 @@
       const baseUrl = document.getElementById("newProjectBaseUrl").value.trim() || "http://127.0.0.1:8000";
       const env = document.getElementById("newProjectEnv").value;
       if (!name) {
-        alert("Please enter a workspace name.");
+        sentinelToast("Give the workspace a name so you can tell it apart later.", { kind: "warn", title: "Name required" });
         return;
       }
       try {
@@ -1687,11 +1788,12 @@
         const json = await res.json();
         if (res.ok) {
           logToTerminal("[PROJECT_CREATED]", `Created new workspace '${name}' (#${json.data.id}).`);
+          sentinelToast(`Workspace '${name}' is ready.`, { kind: "success", title: "Workspace created" });
           closeNewProjectModal();
           currentProjectId = json.data.id;
           fetchDashboardOverview();
         } else {
-          alert(`Failed to create project: ${json.detail || json.message}`);
+          sentinelToast(json.detail || json.message, { kind: "error", title: "Could not create workspace" });
         }
       } catch (err) {
         logToTerminal("[ERROR]", `Failed to create workspace: ${err.message}`);
@@ -1702,7 +1804,11 @@
       if (!currentProjectId) return;
       const proj = globalOverviewData && globalOverviewData.projects && globalOverviewData.projects.find(p => p.id === currentProjectId);
       const name = proj ? proj.name : `#${currentProjectId}`;
-      if (!confirm(`Are you sure you want to permanently delete workspace '${name}' and all its registered endpoints and test cases?`)) {
+      const okDelete = await sentinelConfirm(
+        `'${name}' and every endpoint, test case and run recorded against it will be removed. This cannot be undone.`,
+        { title: "Delete this workspace?", confirmLabel: "Delete workspace" }
+      );
+      if (!okDelete) {
         return;
       }
       try {
@@ -1715,7 +1821,7 @@
           fetchDashboardOverview();
         } else {
           const json = await res.json();
-          alert(`Failed to delete workspace: ${json.detail || json.message}`);
+          sentinelToast(json.detail || json.message, { kind: "error", title: "Could not delete workspace" });
         }
       } catch (err) {
         logToTerminal("[ERROR]", `Failed to delete workspace: ${err.message}`);
@@ -1723,15 +1829,19 @@
     }
 
     async function deleteEndpointDirect(endpointId, method, path) {
-      if (!confirm(`Delete endpoint [${method}] ${path}?`)) return;
+      const okEndpoint = await sentinelConfirm(
+        `[${method}] ${path} and its test scenarios will be removed from this workspace.`,
+        { title: "Delete this endpoint?", confirmLabel: "Delete endpoint" }
+      );
+      if (!okEndpoint) return;
       try {
         const res = await fetch(`/api/v1/endpoints/${endpointId}`, {
           method: "DELETE"
         });
         if (res.ok) {
           logToTerminal("[ENDPOINT_DELETED]", `Deleted endpoint [${method}] ${path}.`);
-          fetchProjectDetail(currentProjectId);
-          fetchDashboardOverview();
+          sentinelToast(`[${method}] ${path} removed.`, { kind: "success", title: "Endpoint deleted" });
+          await fetchDashboardOverview();
         } else {
           const json = await res.json();
           logToTerminal("[ERROR]", `Failed to delete endpoint: ${json.detail || json.message}`);
@@ -1872,7 +1982,7 @@
             <span>HTML</span>
           </button>
 
-          <button onclick="downloadCurrentReport('markdown')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download GitHub-flavored Markdown report">
+          <button onclick="downloadCurrentReport('md')" class="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 border border-white/10 text-white font-medium text-xs transition-all flex items-center gap-1.5" title="Download GitHub-flavored Markdown report">
             <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
             <span>Markdown</span>
           </button>
@@ -2058,6 +2168,143 @@
     function boot() { startLight(); startRim(); }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
     else boot();
+  })();
+  </script>
+
+  <!-- ──────────────────────────────────────────────────────────────────
+       Notifications. sentinelToast() replaces alert(): non-blocking, stacked,
+       colour-coded by severity, dismissible. sentinelConfirm() replaces
+       confirm() for the destructive actions - it returns a promise rather than
+       blocking the thread, which is why its callers await it. window.alert is
+       redirected too, so any stray call still lands in the theme rather than
+       the OS chrome.
+       ────────────────────────────────────────────────────────────────── -->
+  <script>
+  (function () {
+    'use strict';
+
+    var ICONS = {
+      info:    '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="10" cy="10" r="7.4"/><path d="M10 9.2v4.2"/><path d="M10 6.6v.1"/></svg>',
+      success: '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="7.4"/><path d="m6.9 10.2 2.1 2.1 4.1-4.4"/></svg>',
+      warn:    '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3.4 2.9 15.8h14.2z"/><path d="M10 8.2v3.4"/><path d="M10 13.9v.1"/></svg>',
+      error:   '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10" cy="10" r="7.4"/><path d="m7.6 7.6 4.8 4.8"/><path d="m12.4 7.6-4.8 4.8"/></svg>'
+    };
+    var TITLES = { info: 'Notice', success: 'Done', warn: 'Check this', error: 'Something went wrong' };
+    var CALM = window.matchMedia('(prefers-reduced-motion: reduce)');
+    var host = null;
+
+    function stack() {
+      if (!host) {
+        host = document.createElement('div');
+        host.className = 'sx-toasts';
+        /* polite: these narrate progress, they should not interrupt a reader */
+        host.setAttribute('role', 'status');
+        host.setAttribute('aria-live', 'polite');
+        document.body.appendChild(host);
+      }
+      return host;
+    }
+
+    function toast(message, opts) {
+      opts = opts || {};
+      var kind = opts.kind || 'info';
+      var ms = opts.duration != null ? opts.duration : (kind === 'error' ? 9000 : kind === 'warn' ? 6500 : 4800);
+
+      var el = document.createElement('div');
+      el.className = 'sx-toast sx-toast--' + kind;
+      el.innerHTML =
+        '<span class="ic">' + (ICONS[kind] || ICONS.info) + '</span>' +
+        '<span class="bd"><span class="ti"></span><span class="ms"></span></span>' +
+        '<button class="x" type="button" aria-label="Dismiss">&#215;</button>' +
+        (ms ? '<span class="bar"></span>' : '');
+      el.querySelector('.ti').textContent = opts.title || TITLES[kind] || TITLES.info;
+      el.querySelector('.ms').textContent = String(message == null ? '' : message);
+
+      stack().appendChild(el);
+      /* oldest falls off rather than letting the column run off screen */
+      while (host.children.length > 4) host.firstChild.remove();
+
+      var bar = el.querySelector('.bar');
+      if (bar && ms) bar.style.animationDuration = ms + 'ms';
+      requestAnimationFrame(function () { el.classList.add('is-in'); });
+
+      var timer = null;
+      function close() {
+        if (!el.isConnected) return;
+        clearTimeout(timer);
+        el.classList.add('is-out');
+        setTimeout(function () { el.remove(); }, CALM.matches ? 0 : 260);
+      }
+      el.querySelector('.x').addEventListener('click', close);
+      if (ms) {
+        timer = setTimeout(close, ms);
+        /* hovering to read it should not race the timer */
+        el.addEventListener('mouseenter', function () { clearTimeout(timer); if (bar) bar.style.animationPlayState = 'paused'; });
+        el.addEventListener('mouseleave', function () { timer = setTimeout(close, 1800); if (bar) bar.style.animationPlayState = 'running'; });
+      }
+      return { close: close };
+    }
+
+    function confirmDialog(message, opts) {
+      opts = opts || {};
+      return new Promise(function (resolve) {
+        var danger = opts.danger !== false;
+        var prev = document.activeElement;
+
+        var scrim = document.createElement('div');
+        scrim.className = 'sx-scrim';
+        scrim.innerHTML =
+          '<div class="sx-dialog' + (danger ? '' : ' is-neutral') + '" role="alertdialog" aria-modal="true">' +
+            '<div class="hd"><span class="mk">' + (danger ? ICONS.warn : ICONS.info) + '</span>' +
+            '<div><h3></h3><p></p></div></div>' +
+            '<div class="ft">' +
+              '<button class="sx-btn" type="button" data-no></button>' +
+              '<button class="sx-btn ' + (danger ? 'sx-btn--danger' : 'sx-btn--go') + '" type="button" data-yes></button>' +
+            '</div>' +
+          '</div>';
+        var dlg = scrim.querySelector('.sx-dialog');
+        var h3 = scrim.querySelector('h3'), pEl = scrim.querySelector('p');
+        h3.textContent = opts.title || (danger ? 'Confirm deletion' : 'Confirm');
+        pEl.textContent = String(message == null ? '' : message);
+        var no = scrim.querySelector('[data-no]'), yes = scrim.querySelector('[data-yes]');
+        no.textContent = opts.cancelLabel || 'Cancel';
+        yes.textContent = opts.confirmLabel || (danger ? 'Delete' : 'Confirm');
+        dlg.setAttribute('aria-label', h3.textContent);
+
+        document.body.appendChild(scrim);
+        requestAnimationFrame(function () { scrim.classList.add('is-in'); });
+        /* a destructive default should not be one stray Enter away */
+        (danger ? no : yes).focus();
+
+        function done(v) {
+          if (!scrim.isConnected) return;
+          document.removeEventListener('keydown', key, true);
+          scrim.classList.remove('is-in');
+          setTimeout(function () { scrim.remove(); }, CALM.matches ? 0 : 200);
+          if (prev && prev.focus) { try { prev.focus(); } catch (e) {} }
+          resolve(v);
+        }
+        function key(e) {
+          if (e.key === 'Escape') { e.preventDefault(); done(false); }
+          else if (e.key === 'Tab') {
+            /* two buttons, so the focus trap is just a toggle */
+            e.preventDefault();
+            (document.activeElement === yes ? no : yes).focus();
+          }
+        }
+        document.addEventListener('keydown', key, true);
+        yes.addEventListener('click', function () { done(true); });
+        no.addEventListener('click', function () { done(false); });
+        scrim.addEventListener('mousedown', function (e) { if (e.target === scrim) done(false); });
+      });
+    }
+
+    window.sentinelToast = toast;
+    window.sentinelConfirm = confirmDialog;
+    /* Safety net for anything that still calls alert(). confirm() is
+       deliberately NOT patched: it must return a boolean synchronously, which
+       a themed dialog cannot do without blocking the thread. */
+    window.alert = function (m) { toast(m, { kind: 'warn' }); };
   })();
   </script>
 
