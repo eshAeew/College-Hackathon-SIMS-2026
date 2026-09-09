@@ -1,6 +1,5 @@
-"""Asynchronous HTTP Dispatcher and Execution Service."""
+"""Asynchronous HTTP Dispatcher and Execution Service with High-Precision Telemetry."""
 import logging
-import ssl
 import time
 from typing import Any, Dict, Optional
 import httpx
@@ -8,7 +7,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 
 from app.core.config import get_settings
-from app.core.http_client import get_async_client, create_async_client
+from app.core.http_client import get_async_client
 from app.models.schemas.execution import (
     DirectExecutionRequest,
     EndpointExecutionRequest,
@@ -17,13 +16,18 @@ from app.models.schemas.execution import (
 )
 from app.models.schemas.request_config import (
     DirectRequestBuilderRequest,
-    RequestCompileOverride,
-    CompiledRequestResponse
+    RequestCompileOverride
 )
 from app.services.project_service import ProjectService
 from app.services.endpoint_service import EndpointService
 from app.services.request_builder_service import RequestBuilderService
 from app.utils.preflight_validator import execute_preflight_check
+from app.utils.telemetry_extractor import (
+    extract_cookies,
+    extract_redirect_history,
+    parse_response_payload,
+    classify_network_exception
+)
 
 logger = logging.getLogger("app.services.http_dispatcher")
 settings = get_settings()
@@ -38,7 +42,7 @@ class HttpDispatcherService:
         request: httpx.Request,
         options: ExecutionOptions
     ) -> ExecutionResultResponse:
-        """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse."""
+        """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse with high-precision telemetry."""
         start_time = time.perf_counter()
         url_str = str(request.url)
         method_str = request.method
@@ -72,102 +76,56 @@ class HttpDispatcherService:
             )
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
 
-            # Count redirects if any
+            # Extract telemetry components
+            cookies = extract_cookies(response)
+            redirect_history = extract_redirect_history(response)
             redirect_count = len(response.history)
+            parsed_body, is_binary, raw_b64, content_type = parse_response_payload(response)
 
             logger.info(
                 f"Completed [{method_str}] {url_str} -> HTTP {response.status_code} "
-                f"in {elapsed_ms:.2f}ms (redirects: {redirect_count})"
+                f"in {elapsed_ms:.3f}ms (redirects: {redirect_count})"
             )
             return ExecutionResultResponse.from_httpx_response(
                 response=response,
                 elapsed_ms=elapsed_ms,
-                redirect_count=redirect_count
-            )
-
-        except httpx.TimeoutException as exc:
-            elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            error_msg = f"Request timed out after {options.timeout_seconds}s"
-            logger.warning(f"Timeout on [{method_str}] {url_str}: {error_msg}")
-            return ExecutionResultResponse(
-                url=url_str,
-                method=method_str,
-                status_code=None,
-                status_text=None,
-                headers={},
-                body=None,
-                is_success=False,
-                elapsed_ms=round(elapsed_ms, 2),
-                error=error_msg,
-                error_type="TimeoutException"
-            )
-
-        except (httpx.ConnectError, httpx.NetworkError) as exc:
-            elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            error_msg = f"Connection failed to target host: {str(exc) or 'Network unreachable'}"
-            logger.warning(f"Connect error on [{method_str}] {url_str}: {error_msg}")
-            return ExecutionResultResponse(
-                url=url_str,
-                method=method_str,
-                status_code=None,
-                status_text=None,
-                headers={},
-                body=None,
-                is_success=False,
-                elapsed_ms=round(elapsed_ms, 2),
-                error=error_msg,
-                error_type="ConnectError"
-            )
-
-        except (httpx.TooManyRedirects, httpx.DecodingError) as exc:
-            elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            error_type = exc.__class__.__name__
-            logger.warning(f"{error_type} on [{method_str}] {url_str}: {str(exc)}")
-            return ExecutionResultResponse(
-                url=url_str,
-                method=method_str,
-                status_code=None,
-                status_text=None,
-                headers={},
-                body=None,
-                is_success=False,
-                elapsed_ms=round(elapsed_ms, 2),
-                error=str(exc),
-                error_type=error_type
-            )
-
-        except ssl.SSLError as exc:
-            elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            error_msg = f"SSL Certificate Verification Error: {str(exc)}"
-            logger.warning(f"SSL error on [{method_str}] {url_str}: {error_msg}")
-            return ExecutionResultResponse(
-                url=url_str,
-                method=method_str,
-                status_code=None,
-                status_text=None,
-                headers={},
-                body=None,
-                is_success=False,
-                elapsed_ms=round(elapsed_ms, 2),
-                error=error_msg,
-                error_type="SSLError"
+                redirect_count=redirect_count,
+                redirect_history=redirect_history,
+                cookies=cookies,
+                body=parsed_body,
+                is_binary=is_binary,
+                raw_body_base64=raw_b64,
+                content_type=content_type
             )
 
         except Exception as exc:
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
-            error_msg = f"Unexpected execution failure: {str(exc)}"
-            logger.error(f"Unexpected error on [{method_str}] {url_str}: {error_msg}", exc_info=True)
+            error_detail = classify_network_exception(exc, url_str, options.timeout_seconds)
+            logger.warning(f"{error_detail.error_type} on [{method_str}] {url_str}: {error_detail.message}")
+
             return ExecutionResultResponse(
                 url=url_str,
                 method=method_str,
                 status_code=None,
                 status_text=None,
                 headers={},
+                cookies={},
                 body=None,
+                is_binary=False,
+                raw_body_base64=None,
                 is_success=False,
-                elapsed_ms=round(elapsed_ms, 2),
-                error=error_msg,
-                error_type=exc.__class__.__name__
+                is_redirect=False,
+                is_client_error=False,
+                is_server_error=False,
+                http_version="HTTP/1.1",
+                elapsed_ms=round(elapsed_ms, 3),
+                redirect_count=0,
+                redirect_history=[],
+                content_length=0,
+                content_type=None,
+                error=error_detail.message,
+                error_type=error_detail.error_type,
+                error_detail=error_detail
             )
 
         finally:

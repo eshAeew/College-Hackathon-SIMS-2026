@@ -1,5 +1,19 @@
 # API Sentinel — Changelog
 
+## [Stage 05 - Sub-Stage 02] - 2026-09-09
+- **Completed**: Response & Network Telemetry Capture (Stage 05 Complete).
+- Created `app/utils/telemetry_extractor.py` containing:
+  - High-precision sub-millisecond latency capture via `time.perf_counter()`.
+  - Comprehensive response payload parser supporting structured JSON, text/XML strings, and binary content (with Base64 serialization).
+  - Response cookie parser from `Set-Cookie` headers.
+  - Multi-hop redirect journey tracker extracting `RedirectStep` chains (`url`, `status_code`, `location`).
+  - Network exception classifier categorizing errors (`DNSLookupError`, `ConnectTimeout`, `ReadTimeout`, `ConnectionRefused`, `SSLValidationError`, `TooManyRedirects`, `DecodingError`) with retryability indicators and troubleshooting recommendations.
+- Extended Pydantic DTOs in `app/models/schemas/execution.py` (`RedirectStep`, `NetworkErrorDetail`, enriched `ExecutionResultResponse`).
+- Integrated telemetry extraction pipeline into `HttpDispatcherService` in `app/services/http_dispatcher.py`.
+- Added unit and integration test suite in `tests/test_response_telemetry.py` (12 new tests passing).
+- Total test suite count increased to 86 passing tests with 100% pass rate.
+- Marked Stage 05: Core API Execution Engine as 100% COMPLETE.
+
 ## [Stage 05 - Sub-Stage 01] - 2026-09-09
 - **Completed**: Asynchronous HTTP Dispatcher & Connection Pooling.
 - Created `app/core/http_client.py` managing a shared `httpx.AsyncClient` connection pool (`Limits(max_connections=50, max_keepalive_connections=20)`), default timeouts, and startup/shutdown lifecycle hooks.

@@ -7,9 +7,9 @@
   - **Stage 02: Project / Workspace Management (100% Complete)**
   - **Stage 03: API Endpoint Management (100% Complete)**
   - **Stage 04: Request Configuration Engine (100% Complete)**
-  - **Stage 05: Core API Execution Engine (Sub-Stage 01 Complete)**
-- **Next Sub-Stage**: Stage 05 — Sub-Stage 02: Response & Network Telemetry Capture
-- **Latest Build Status**: Passing (74/74 unit tests green, 100% pass rate)
+  - **Stage 05: Core API Execution Engine (100% Complete)**
+- **Next Stage**: Stage 06 — Test Case Management
+- **Latest Build Status**: Passing (86/86 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -27,9 +27,10 @@
 - [x] **Stage 04: Request Configuration Engine (COMPLETED - 18/18 tests)**
   - [x] **Sub-Stage 01: Dynamic HTTP Request Builder**: Path parameter template interpolation, case-insensitive hierarchical header merging, array query encoding, JSON/form-data/raw-text body serializers, cURL command generator, and `httpx.Request` compiler (`/api/v1/projects/{p_id}/endpoints/{e_id}/build-request`, `/api/v1/requests/build`).
   - [x] **Sub-Stage 02: Pre-flight Syntax & Configuration Validation**: Pre-flight validation catching malformed URLs, port ranges, missing path parameters, and payload syntax errors (`/api/v1/requests/preflight-check`, `/api/v1/projects/{p_id}/endpoints/{e_id}/preflight-check`).
-- [ ] **Stage 05: Core API Execution Engine (IN PROGRESS - 11/11 tests passing)**
+- [x] **Stage 05: Core API Execution Engine (COMPLETED - 23/23 tests)**
   - [x] **Sub-Stage 01: Asynchronous HTTP Dispatcher**: `httpx.AsyncClient` connection pool lifecycle, configurable timeouts, redirect following, SSL verification controls, and dispatch REST endpoints (`/api/v1/executions/dispatch`, `/api/v1/projects/{p_id}/endpoints/{e_id}/execute`, `/api/v1/executions/client-info`).
-  - [ ] **Sub-Stage 02: Response & Network Telemetry Capture**: High-precision latency measurement, response payload capture, and network exception handlers.
+  - [x] **Sub-Stage 02: Response & Network Telemetry Capture**: Sub-millisecond latency measurement, response payload parsing (text/JSON/binary Base64), cookie extraction, redirect history tracking, and categorized network exception diagnostics (`DNSLookupError`, `ConnectTimeout`, `ReadTimeout`, `ConnectionRefused`, `SSLValidationError`, `TooManyRedirects`).
+- [ ] Stage 06: Test Case Management
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API
