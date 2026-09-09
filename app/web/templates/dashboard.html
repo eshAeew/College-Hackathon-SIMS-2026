@@ -745,7 +745,7 @@
                 <span class="px-2 py-0.5 rounded text-[10px] font-mono border ${statusBadge}">${r.status}</span>
               </div>
               <div class="text-[11px] text-text-secondary mt-1">
-                ${r.passed_tests}/${r.total_tests} passed (${r.pass_rate_pct}%) • ${r.duration_ms ? r.duration_ms.toFixed(1) + 'ms' : '0ms'}
+                ${r.passed_tests}/${r.total_tests} passed (${r.pass_rate_pct}%) • ${r.duration_ms !== undefined && r.duration_ms !== null ? Number(r.duration_ms).toFixed(1) + 'ms' : '0ms'}
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -835,8 +835,9 @@
           })
         });
         const json = await res.json();
-        if (res.ok) {
-          logToTerminal("[SUCCESS]", `TestRun #${json.data.id} completed: ${json.data.passed_tests}/${json.data.total_tests} passed in ${json.data.duration_ms.toFixed(1)}ms.`);
+        if (res.ok && json.data) {
+          const duration = json.data.duration_ms !== undefined ? json.data.duration_ms : (json.data.elapsed_ms || 0);
+          logToTerminal("[SUCCESS]", `TestRun #${json.data.id} completed: ${json.data.passed_tests}/${json.data.total_tests} passed in ${Number(duration).toFixed(1)}ms.`);
           fetchDashboardOverview();
         } else {
           logToTerminal("[ERROR]", `TestRun failed: ${json.message || 'Unknown error'}`);
@@ -859,10 +860,20 @@
           body: JSON.stringify({})
         });
         const json = await res.json();
-        if (res.ok) {
-          logToTerminal("[HTTP_RESPONSE]", `Status: ${json.data.status_code || 'Err'} in ${json.data.latency_ms.toFixed(1)}ms. Response: ${JSON.stringify(json.data.body_parsed || json.data.body_raw).slice(0, 80)}...`);
+        if (res.ok && json.data) {
+          const lat = json.data.elapsed_ms !== undefined ? json.data.elapsed_ms : (json.data.latency_ms !== undefined ? json.data.latency_ms : 0);
+          const statusCode = json.data.status_code || (json.data.error ? 'ERR' : 'OK');
+          let preview = "";
+          if (json.data.body !== undefined && json.data.body !== null) {
+            preview = typeof json.data.body === "object" ? JSON.stringify(json.data.body) : String(json.data.body);
+          } else if (json.data.error) {
+            preview = `Error: ${json.data.error}`;
+          } else {
+            preview = "Empty response";
+          }
+          logToTerminal("[HTTP_RESPONSE]", `Status: ${statusCode} in ${Number(lat).toFixed(1)}ms. ${preview.slice(0, 80)}${preview.length > 80 ? '...' : ''}`);
         } else {
-          logToTerminal("[HTTP_ERROR]", `Execution probe failed with status ${res.status}`);
+          logToTerminal("[HTTP_ERROR]", `Execution probe failed: ${json.detail || json.message || ('Status ' + res.status)}`);
         }
       } catch (err) {
         logToTerminal("[HTTP_ERROR]", `Execution error: ${err.message}`);
