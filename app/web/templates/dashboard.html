@@ -668,7 +668,7 @@
           body: JSON.stringify({
             spec_content: content,
             overwrite_existing: true,
-            generate_smoke_tests: autoGen
+            create_smoke_tests: autoGen
           })
         });
         const json = await res.json();

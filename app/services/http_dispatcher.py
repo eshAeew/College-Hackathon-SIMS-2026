@@ -40,9 +40,13 @@ class HttpDispatcherService:
     async def dispatch_httpx_request(
         cls,
         request: httpx.Request,
-        options: ExecutionOptions
+        options: Optional[ExecutionOptions] = None,
+        client: Optional[httpx.AsyncClient] = None
     ) -> ExecutionResultResponse:
         """Dispatch a prepared httpx.Request and return a detailed ExecutionResultResponse with high-precision telemetry."""
+        if options is None:
+            options = ExecutionOptions()
+
         start_time = time.perf_counter()
         url_str = str(request.url)
         method_str = request.method
@@ -54,23 +58,25 @@ class HttpDispatcherService:
         request.extensions["timeout"] = timeout.as_dict()
 
         # Select client based on SSL verification requirement
-        client: httpx.AsyncClient
+        active_client: httpx.AsyncClient
         is_transient_client = False
 
-        if not options.verify_ssl:
+        if client is not None:
+            active_client = client
+        elif not options.verify_ssl:
             # Create a dedicated non-verifying client if SSL verification is disabled
-            client = httpx.AsyncClient(
+            active_client = httpx.AsyncClient(
                 verify=False,
                 timeout=timeout,
                 follow_redirects=options.follow_redirects
             )
             is_transient_client = True
         else:
-            client = get_async_client()
+            active_client = get_async_client()
 
         try:
             # Send request asynchronously
-            response = await client.send(
+            response = await active_client.send(
                 request,
                 follow_redirects=options.follow_redirects
             )
@@ -130,7 +136,7 @@ class HttpDispatcherService:
 
         finally:
             if is_transient_client:
-                await client.aclose()
+                await active_client.aclose()
 
     @classmethod
     async def dispatch_direct(cls, req: DirectExecutionRequest) -> ExecutionResultResponse:
