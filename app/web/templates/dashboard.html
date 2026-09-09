@@ -99,6 +99,11 @@
     }
 
     html{ background:var(--ground); }
+    /* Keep <html> as the page's only scroller. Tailwind's overflow-x-hidden on
+       <body> promotes overflow-y to auto, leaving a second, permanently stuck
+       scroll container that swallows wheel events. clip does the same horizontal
+       job without becoming a scroll container. */
+    body{ overflow-x:clip !important; overflow-y:visible !important; }
     body{
       background:var(--ground);
       font-weight:300;
@@ -231,6 +236,42 @@
       box-shadow:0 6px 16px rgba(12,17,9,.24);
     }
     .dock-pill--solid:hover{ background:#fff; border-color:#fff; color:#1b1e18; }
+
+    /* the per-card dismiss stays quiet until the card is hovered */
+    .card-dismiss{
+      width:20px; height:20px; flex:none; display:grid; place-items:center;
+      border:0; border-radius:6px; background:transparent;
+      color:var(--ink-faint); font-size:14px; line-height:1; cursor:pointer;
+      opacity:0; transition:opacity .16s var(--ease), background .16s var(--ease), color .16s var(--ease);
+    }
+    [data-rec]:hover .card-dismiss,
+    .card-dismiss:focus-visible{ opacity:1; }
+    .card-dismiss:hover{ background:rgba(217,139,106,.18); color:#e8b09a; }
+
+    /* The console panels were pinned to 520px whatever the screen was, so on a
+       short display they pushed the page past the fold while still cramming the
+       log into a small internal scroller - two reasons the page felt stuck.
+       They now take what the viewport can spare. */
+    #tabContentTerminal, #tabContentRuns, #tabContentAi{
+      height:clamp(320px, calc(100vh - 336px), 620px) !important;
+    }
+    #endpointsListContainer{ max-height:clamp(280px, calc(100vh - 400px), 560px) !important; }
+
+    /* runtime log: the summary line stays scannable, the payload folds out */
+    .term-line{ padding:1px 0; }
+    .term-actions{ display:flex; gap:7px; margin:3px 0 0 4px; }
+    .term-btn{
+      font:inherit; font-size:10px; padding:2px 8px; border-radius:6px; cursor:pointer;
+      border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.04);
+      color:var(--ink-faint); transition:background .16s var(--ease), color .16s var(--ease), border-color .16s var(--ease);
+    }
+    .term-btn:hover{ background:rgba(255,255,255,.09); color:var(--ink); border-color:rgba(255,255,255,.22); }
+    .term-body{
+      margin:5px 0 8px 4px; padding:9px 11px;
+      border-radius:9px; background:rgba(12,16,10,.55); border:1px solid rgba(255,255,255,.08);
+      color:rgba(255,255,255,.82); font-size:11px; line-height:1.5;
+      white-space:pre-wrap; word-break:break-word;
+    }
 
     .no-bar{ scrollbar-width:none; -ms-overflow-style:none; }
     .no-bar::-webkit-scrollbar{ display:none; }
@@ -913,7 +954,13 @@
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
               Remediation Action Cards
             </h4>
-            <span class="text-[11px] text-text-secondary font-mono">Prime Directive Enforced</span>
+            <span class="flex items-center gap-2">
+              <button onclick="clearWorkspaceRecommendations()" id="clearAiBtn" class="dock-pill px-2.5 py-1 rounded-lg text-[11px] font-medium transition-all flex items-center gap-1.5" title="Dismiss every remediation card in this workspace">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7M10 11v6m4-6v6M4 7h16"/></svg>
+                <span>Clear all</span>
+              </button>
+              <span class="text-[11px] text-text-secondary font-mono hidden xl:inline">Prime Directive Enforced</span>
+            </span>
           </div>
 
           <div id="aiRemediationsList" class="flex-grow overflow-y-auto custom-scrollbar space-y-3">
@@ -1526,10 +1573,13 @@
       }
 
       container.innerHTML = issues.map((iss, idx) => `
-        <div class="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-semibold text-brand-primary font-mono">[${iss.endpoint_method}] ${iss.endpoint_url}</span>
-            <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono font-bold">${iss.severity}</span>
+        <div class="p-4 bg-white/5 rounded-xl border border-white/10 space-y-2.5" data-rec="${iss.recommendation_id}">
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-xs font-semibold text-brand-primary font-mono truncate">[${iss.endpoint_method}] ${iss.endpoint_url}</span>
+            <span class="flex items-center gap-1.5 flex-none">
+              <span class="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono font-bold">${iss.severity}</span>
+              <button onclick="dismissRecommendation(${iss.recommendation_id})" class="card-dismiss" title="Dismiss this card" aria-label="Dismiss this remediation card">&#215;</button>
+            </span>
           </div>
           <p class="text-xs text-white/90 leading-snug">${iss.likely_cause}</p>
           <div class="flex items-center justify-between pt-1">
@@ -1610,6 +1660,63 @@
       }
     }
 
+    // Dismiss a single remediation card. The record is retained as evidence;
+    // it just leaves the feed and the counts.
+    async function dismissRecommendation(recId) {
+      const card = document.querySelector(`[data-rec="${recId}"]`);
+      if (card) card.style.opacity = "0.4";
+      try {
+        const res = await fetch(`/api/v1/ai/recommendations/${recId}`, { method: "DELETE" });
+        if (res.ok) {
+          logToTerminal("[AI_DISMISSED]", `Remediation card #${recId} dismissed.`);
+          await fetchDashboardOverview();
+        } else {
+          const json = await res.json().catch(() => ({}));
+          if (card) card.style.opacity = "";
+          sentinelToast(json.detail || json.message || `Status ${res.status}`, { kind: "error", title: "Could not dismiss card" });
+        }
+      } catch (err) {
+        if (card) card.style.opacity = "";
+        sentinelToast(err.message, { kind: "error", title: "Could not dismiss card" });
+      }
+    }
+
+    // Clear every remediation card in the active workspace.
+    async function clearWorkspaceRecommendations() {
+      if (!currentProjectId) {
+        sentinelToast("Select a workspace before clearing its remediation cards.", { kind: "warn", title: "No workspace selected" });
+        return;
+      }
+      const shown = document.querySelectorAll("#aiRemediationsList [data-rec]").length;
+      if (!shown) {
+        sentinelToast("There are no remediation cards to clear in this workspace.", { kind: "info", title: "Nothing to clear" });
+        return;
+      }
+      const ok = await sentinelConfirm(
+        `${shown} remediation card${shown === 1 ? "" : "s"} will be cleared from this workspace. The underlying evidence records are kept, so reports and audits are unaffected.`,
+        { title: "Clear the remediation feed?", confirmLabel: "Clear cards" }
+      );
+      if (!ok) return;
+      const btn = document.getElementById("clearAiBtn");
+      if (btn) btn.disabled = true;
+      try {
+        const res = await fetch(`/api/v1/projects/${currentProjectId}/ai/recommendations`, { method: "DELETE" });
+        const json = await res.json().catch(() => ({}));
+        if (res.ok) {
+          const n = (json.data && json.data.dismissed_count) || 0;
+          logToTerminal("[AI_CLEARED]", `Dismissed ${n} remediation card(s) for project #${currentProjectId}.`);
+          await fetchDashboardOverview();
+          sentinelToast(`${n} card${n === 1 ? "" : "s"} cleared. Evidence records were kept.`, { kind: "success", title: "Remediation feed cleared" });
+        } else {
+          sentinelToast(json.detail || json.message || `Status ${res.status}`, { kind: "error", title: "Could not clear the feed" });
+        }
+      } catch (err) {
+        sentinelToast(err.message, { kind: "error", title: "Could not clear the feed" });
+      } finally {
+        if (btn) btn.disabled = false;
+      }
+    }
+
     // Direct Endpoint Execution
     async function executeEndpointDirect(endpointId, method, path) {
       logToTerminal("[HTTP_DISPATCH]", `Executing single test probe: [${method}] ${path}...`);
@@ -1631,7 +1738,13 @@
           } else {
             preview = "Empty response";
           }
-          logToTerminal("[HTTP_RESPONSE]", `Status: ${statusCode} in ${Number(lat).toFixed(1)}ms. ${preview.slice(0, 80)}${preview.length > 80 ? '...' : ''}`);
+          const long = preview.length > TERM_PREVIEW;
+          const head = long ? preview.slice(0, TERM_PREVIEW) + "\u2026" : preview;
+          logToTerminal(
+            "[HTTP_RESPONSE]",
+            `Status: ${statusCode} in ${Number(lat).toFixed(1)}ms. ${head}`,
+            long ? preview : null
+          );
         } else {
           logToTerminal("[HTTP_ERROR]", `Execution probe failed: ${json.detail || json.message || ('Status ' + res.status)}`);
         }
@@ -1722,12 +1835,79 @@
     }
 
     // Terminal Logging Utility
-    function logToTerminal(tag, message) {
+    // How much of a payload rides on the summary line before it is folded away.
+    const TERM_PREVIEW = 96;
+
+    // A logged payload comes from a target API we do not control, so every part
+    // of the line is set as text and never as HTML - a response body containing
+    // markup used to be parsed and run by this page. The full payload is kept
+    // in the DOM behind a toggle rather than being thrown away at 80 chars,
+    // pretty-printed when it parses as JSON, and copyable in one click.
+    function logToTerminal(tag, message, detail) {
       const log = document.getElementById("terminalLog");
       const time = new Date().toLocaleTimeString();
+
       const line = document.createElement("div");
-      line.className = "flex gap-2";
-      line.innerHTML = `<span class="text-brand-primary">${tag}</span><span class="text-white/40">${time}</span><span class="text-white">${message}</span>`;
+      line.className = "term-line";
+
+      const head = document.createElement("div");
+      head.className = "flex gap-2 items-start";
+      const tagEl = document.createElement("span");
+      tagEl.className = "text-brand-primary flex-none";
+      tagEl.textContent = tag;
+      const timeEl = document.createElement("span");
+      timeEl.className = "text-white/40 flex-none";
+      timeEl.textContent = time;
+      const msgEl = document.createElement("span");
+      msgEl.className = "text-white flex-1 min-w-0 break-words";
+      msgEl.textContent = message;
+      head.append(tagEl, timeEl, msgEl);
+      line.appendChild(head);
+
+      if (detail) {
+        const full = String(detail);
+        let pretty = full;
+        try { pretty = JSON.stringify(JSON.parse(full), null, 2); } catch (e) { /* not JSON: show it raw */ }
+
+        const label = function (hidden) {
+          return (hidden ? "Show" : "Hide") + " full payload (" + full.length.toLocaleString() + " chars)";
+        };
+
+        const body = document.createElement("pre");
+        body.className = "term-body";
+        body.hidden = true;
+        body.textContent = pretty;
+
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.className = "term-btn";
+        toggle.textContent = label(true);
+        toggle.setAttribute("aria-expanded", "false");
+        toggle.addEventListener("click", function () {
+          body.hidden = !body.hidden;
+          toggle.textContent = label(body.hidden);
+          toggle.setAttribute("aria-expanded", String(!body.hidden));
+          if (!body.hidden) body.scrollIntoView({ block: "nearest" });
+        });
+
+        const copy = document.createElement("button");
+        copy.type = "button";
+        copy.className = "term-btn";
+        copy.textContent = "Copy";
+        copy.addEventListener("click", function () {
+          navigator.clipboard.writeText(pretty).then(function () {
+            sentinelToast("Response payload copied to the clipboard.", { kind: "success", title: "Copied" });
+          }).catch(function () {
+            sentinelToast("The browser blocked clipboard access for this page.", { kind: "warn", title: "Could not copy" });
+          });
+        });
+
+        const bar = document.createElement("div");
+        bar.className = "term-actions";
+        bar.append(toggle, copy);
+        line.append(bar, body);
+      }
+
       log.appendChild(line);
       log.scrollTop = log.scrollHeight;
     }

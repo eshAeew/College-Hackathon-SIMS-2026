@@ -39,6 +39,7 @@ class RecentTestRunCard(BaseModel):
 
 class CriticalIssueAlert(BaseModel):
     """High-priority failure or crash alert for dashboard feed."""
+    recommendation_id: int = Field(..., description="AIRecommendation record ID, used to dismiss the card")
     evidence_id: str = Field(..., description="Diagnostic evidence ID")
     test_result_id: Optional[int] = Field(default=None, description="TestResult record ID")
     project_id: Optional[int] = Field(default=None, description="Project workspace ID")

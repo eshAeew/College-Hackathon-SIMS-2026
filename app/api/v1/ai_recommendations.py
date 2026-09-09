@@ -4,7 +4,12 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timezone
+
 from app.core.database import get_db
+from app.models.entities.ai_recommendation import AIRecommendation
+from app.models.entities.test_result import TestResult
+from app.models.entities.test_run import TestRun
 from app.models.schemas.ai_recommendation import (
     AIEngineStatus,
     FixRecommendation,
@@ -146,4 +151,56 @@ def get_recommendations_for_test_result(result_id: int, db: Session = Depends(ge
         success=True,
         data=serialized,
         message=f"Retrieved {len(serialized)} stored recommendation(s)."
+    )
+
+
+@router.delete(
+    "/ai/recommendations/{recommendation_id}",
+    response_model=StandardResponse[dict],
+    summary="Dismiss a Single Remediation Card",
+    description="Marks one recommendation dismissed so it leaves the dashboard feed and its counts."
+)
+def dismiss_recommendation(recommendation_id: int, db: Session = Depends(get_db)):
+    """Dismiss one remediation card without discarding its evidence record."""
+    record = db.query(AIRecommendation).filter(AIRecommendation.id == recommendation_id).first()
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Recommendation #{recommendation_id} not found."
+        )
+    if record.dismissed_at is None:
+        record.dismissed_at = datetime.now(timezone.utc)
+        db.commit()
+    return StandardResponse(
+        success=True,
+        data={"recommendation_id": recommendation_id, "evidence_id": record.evidence_id},
+        message=f"Recommendation #{recommendation_id} dismissed."
+    )
+
+
+@router.delete(
+    "/projects/{project_id}/ai/recommendations",
+    response_model=StandardResponse[dict],
+    summary="Dismiss Every Remediation Card in a Workspace",
+    description="Clears the remediation feed for one workspace. The records are retained as evidence."
+)
+def dismiss_project_recommendations(project_id: int, db: Session = Depends(get_db)):
+    """Dismiss every live remediation card belonging to one workspace."""
+    records = (
+        db.query(AIRecommendation)
+        .join(TestResult, AIRecommendation.test_result_id == TestResult.id)
+        .join(TestRun, TestResult.run_id == TestRun.id)
+        .filter(TestRun.project_id == project_id)
+        .filter(AIRecommendation.dismissed_at.is_(None))
+        .all()
+    )
+    now = datetime.now(timezone.utc)
+    for record in records:
+        record.dismissed_at = now
+    db.commit()
+    logger.info(f"Dismissed {len(records)} recommendation(s) for Project #{project_id}")
+    return StandardResponse(
+        success=True,
+        data={"project_id": project_id, "dismissed_count": len(records)},
+        message=f"Dismissed {len(records)} remediation card(s)."
     )

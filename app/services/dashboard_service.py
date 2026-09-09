@@ -37,7 +37,14 @@ class DashboardService:
         total_assertions = sum(len(tc.assertions) for tc in test_cases_all)
         
         total_test_runs = db.query(func.count(TestRun.id)).scalar() or 0
-        total_remediations = db.query(func.count(AIRecommendation.id)).scalar() or 0
+        # Only live, undismissed cards count. An orphan (its test result deleted
+        # with the run or workspace) describes evidence that no longer exists.
+        total_remediations = (
+            db.query(func.count(AIRecommendation.id))
+            .filter(AIRecommendation.dismissed_at.is_(None))
+            .filter(AIRecommendation.test_result_id.isnot(None))
+            .scalar() or 0
+        )
 
         # Run-level pass/fail statistics
         completed_runs = db.query(TestRun).filter(TestRun.status == "COMPLETED").all()
@@ -81,6 +88,8 @@ class DashboardService:
         # Active critical issues and remediation cards (top 15)
         crit_records = (
             db.query(AIRecommendation)
+            .filter(AIRecommendation.dismissed_at.is_(None))
+            .filter(AIRecommendation.test_result_id.isnot(None))
             .order_by(AIRecommendation.created_at.desc())
             .limit(15)
             .all()
@@ -106,6 +115,7 @@ class DashboardService:
                 proj_id = ep.project_id
             critical_alerts.append(
                 CriticalIssueAlert(
+                    recommendation_id=cr.id,
                     evidence_id=cr.evidence_id,
                     test_result_id=cr.test_result_id,
                     project_id=proj_id,

@@ -70,7 +70,27 @@ class TestDashboardUI(unittest.TestCase):
         db.commit()
         db.refresh(run)
 
+        # A recommendation is evidence about a specific result, so the fixture
+        # attaches it to one. A card with no test result behind it is an orphan
+        # left by a deleted run, and the dashboard filters those out.
+        result = TestResult(
+            run_id=run.id,
+            test_case_id=tc1.id,
+            endpoint_id=ep1.id,
+            status="FAIL",
+            test_name="Smoke - Create Order",
+            http_method="POST",
+            url="https://api.example.com/orders",
+            response_code=500,
+            response_time_ms=25.4,
+            failure_type="SERVER_ERROR",
+        )
+        db.add(result)
+        db.commit()
+        db.refresh(result)
+
         rec = AIRecommendation(
+            test_result_id=result.id,
             evidence_id="EV-12345",
             root_cause_category="MISSING_INPUT_VALIDATION",
             likely_cause="Server crashed with 500 when sent empty body",

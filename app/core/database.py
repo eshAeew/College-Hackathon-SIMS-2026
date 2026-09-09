@@ -62,8 +62,34 @@ def init_db() -> None:
         import app.models.entities.audit_event  # noqa: F401
 
         Base.metadata.create_all(bind=engine)
+        _ensure_columns()
         logger.info(f"Database schema initialized successfully [{settings.DATABASE_URL.split('@')[-1]}]")
     except Exception as exc:
         logger.error(f"Failed to initialize database: {str(exc)}", exc_info=True)
         raise exc
 
+
+
+# Columns added after a table first shipped. create_all() only creates missing
+# tables, so an existing database needs the ALTER itself. Each entry is applied
+# only when absent, which makes this safe to run on every startup.
+_ADDED_COLUMNS = {
+    "ai_recommendations": {"dismissed_at": "DATETIME"},
+}
+
+
+def _ensure_columns() -> None:
+    """Add post-release columns to tables that predate them."""
+    from sqlalchemy import inspect, text
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table, columns in _ADDED_COLUMNS.items():
+            if table not in existing_tables:
+                continue
+            present = {c["name"] for c in inspector.get_columns(table)}
+            for name, ddl in columns.items():
+                if name in present:
+                    continue
+                conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+                logger.info(f"Schema: added {table}.{name}")

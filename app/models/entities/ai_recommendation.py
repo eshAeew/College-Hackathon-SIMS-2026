@@ -2,7 +2,7 @@
 import json
 from datetime import datetime, timezone
 from sqlalchemy import Column, Integer, String, Text, Float, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 
 from app.core.database import Base
 
@@ -28,6 +28,12 @@ class AIRecommendation(Base):
     source = Column(String(40), nullable=False, default="RULE_BASED_HEURISTIC")
     model_name = Column(String(60), nullable=True)
     references_json = Column(Text, default="[]", nullable=False)
+    # A dismissed card stays on the record - the evidence trail is the point -
+    # but drops out of the dashboard feed and its counts. It also has to remain
+    # a row: the overview regenerates a recommendation for any failed result
+    # that lacks one, so a hard delete would simply grow it back.
+    dismissed_at = Column(DateTime, nullable=True, index=True)
+
     created_at = Column(
         DateTime,
         default=lambda: datetime.now(timezone.utc),
@@ -35,7 +41,13 @@ class AIRecommendation(Base):
     )
 
     # Relationships
-    test_result = relationship("TestResult", backref="ai_recommendations")
+    # passive_deletes hands the cascade to the database. Without it SQLAlchemy
+    # de-associates instead: deleting a run or workspace left its cards behind
+    # with a NULL test_result_id, still counting toward the KPI forever.
+    test_result = relationship(
+        "TestResult",
+        backref=backref("ai_recommendations", cascade="all, delete-orphan", passive_deletes=True)
+    )
 
     @property
     def references(self) -> list:
