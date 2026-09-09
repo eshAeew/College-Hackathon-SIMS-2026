@@ -17,6 +17,7 @@ from app.api.v1.test_runs import router as test_runs_router
 from app.api.v1.regression import router as regression_router
 from app.api.v1.openapi import router as openapi_router
 from app.api.v1.test_generation import router as test_generation_router
+from app.api.v1.safety import router as safety_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -78,6 +79,8 @@ api_router.include_router(test_runs_router)
 api_router.include_router(regression_router)
 api_router.include_router(openapi_router)
 api_router.include_router(test_generation_router)
+api_router.include_router(safety_router)
+
 
 
 

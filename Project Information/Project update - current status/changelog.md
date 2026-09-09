@@ -1,5 +1,35 @@
 # API Sentinel — Changelog
 
+## [Stage 16 - Safety & Execution Controls] - 2026-09-09
+- **Completed**: Target Authorization & Host Allowlisting, Environment Boundary Safeguards, Destructive Method Risk Classifier, and Confirmation Token Enforcement (Stage 16 Complete).
+- Created `app/models/schemas/safety.py` with:
+  - `TargetHostAuthorizationStatus` (`AUTHORIZED`, `BLOCKED_DISALLOWED_HOST`, `BLOCKED_PUBLIC_IP_IN_DEV_MODE`, `BLOCKED_PRODUCTION_SAFEGUARD`, `BLOCKED_MALFORMED_URL`).
+  - `OperationRiskLevel` (`SAFE_READ_ONLY`, `SAFE_IDEMPOTENT_WRITE`, `POTENTIALLY_DESTRUCTIVE`, `CRITICAL_DATA_PURGE`).
+  - `EnvironmentTier` (`DEVELOPMENT`, `STAGING`, `PRODUCTION`).
+  - `SafetyPolicy`, `ValidateTargetRequest`, `ValidateTargetResponse`, `EvaluateOperationRequest`, `EvaluateOperationResponse`, `AuditTestRunRequest`, `AuditTestRunResponse`.
+- Created `app/utils/safety_guard.py` with:
+  - `is_localhost_host()` & `is_private_ip()`: Identifies loopback and RFC-1918 private IPv4/IPv6 networks.
+  - `match_host_pattern()`: Supports wildcard domain matching (`*.example.com`) and port-agnostic normalization.
+  - `validate_target_host()`: Validates target URLs against allowed hosts, blocked hosts, private network permissions, localhost permissions, and production whitelist safeguards.
+  - `classify_operation_risk()`: Classifies operations into read-only, write, destructive (`DELETE`), or critical data purges (`truncate`, `drop`, `purge`, `reset`, `cleanup`, `destroy`, or custom tags).
+  - `generate_confirmation_token()` & `evaluate_execution_safety()`: Enforces SHA-256 confirmation token validation (`CONFIRM-<HASH>`) for critical purge operations.
+  - `audit_test_suite_safety()`: Batch auditor scanning test operations prior to test suite execution.
+- Implemented `SafetyService` in `app/services/safety_service.py`:
+  - `validate_target()`: Checks URL compliance.
+  - `evaluate_operation()`: Evaluates single request risk and gating.
+  - `audit_test_run()`: Audits multi-test suites.
+  - `get_project_safety_policy()` & `update_project_safety_policy()`: Manages persistent project safety policies.
+- Implemented REST API router in `app/api/v1/safety.py`:
+  - `POST /api/v1/safety/validate-target`
+  - `POST /api/v1/safety/evaluate-operation`
+  - `POST /api/v1/safety/audit-test-run`
+  - `GET /api/v1/safety/projects/{project_id}/policy`
+  - `PUT /api/v1/safety/projects/{project_id}/policy`
+- Mounted `safety_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_safety_controls.py` (9 new tests passing).
+- Total test suite count increased to 211 passing tests with 100% pass rate.
+- Marked Stage 16: Safety & Execution Controls as 100% COMPLETE.
+
 ## [Stage 15 - Automatic Test Generation] - 2026-09-09
 - **Completed**: Combinatorial Test Case Generator, Schema-to-Mock Synthesizer, and Test Review Staging Area (Stage 15 Complete).
 - Created `app/models/schemas/test_generation.py` with:

@@ -18,8 +18,10 @@
   - **Stage 13: Regression Testing Engine (100% Complete)**
   - **Stage 14: OpenAPI Specification Support (100% Complete)**
   - **Stage 15: Automatic Test Generation (100% Complete)**
-- **Next Sub-Stage**: Stage 16: Safety & Execution Controls
-- **Latest Build Status**: Passing (202/202 unit tests green, 100% pass rate)
+  - **Stage 16: Safety & Execution Controls (100% Complete)**
+- **Next Sub-Stage**: Stage 17: Result Classification Engine
+- **Latest Build Status**: Passing (211/211 unit tests green, 100% pass rate)
+
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -70,7 +72,13 @@
 - [x] **Stage 15: Automatic Test Generation (COMPLETED - 7/7 tests passing)**
   - [x] **Sub-Stage 01: Combinatorial Test Case Generator**: Schema-to-mock value synthesiser (strings, numbers, enums, objects, arrays), happy path generator, missing required field generator, invalid data type generator, boundary & overflow generator, null injection generator.
   - [x] **Sub-Stage 02: Test Review & Staging Interface**: In-memory staging preview DTOs (`StagedTestCase`), ad-hoc generation (`/api/v1/test-generation/generate-adhoc`), endpoint staging (`/api/v1/endpoints/{id}/generate-tests`), staged approval & persistence (`/api/v1/endpoints/{id}/accept-tests`), and bulk project test synthesizer (`/api/v1/projects/{id}/generate-tests`).
+- [x] **Stage 16: Safety & Execution Controls (COMPLETED - 9/9 tests passing)**
+  - [x] **Sub-Stage 01: Target Authorization & Host Allowlisting**: Host allowlist validator (`/api/v1/safety/validate-target`), localhost & RFC-1918 private network modes, domain wildcard matching (`*.example.com`), environment boundary safeguards (`development`, `staging`, `production`), and prominent advisory banner.
+  - [x] **Sub-Stage 02: Destructive Method (DELETE/PUT) Safeguards**: Destructive risk classifier (`SAFE_READ_ONLY`, `SAFE_IDEMPOTENT_WRITE`, `POTENTIALLY_DESTRUCTIVE`, `CRITICAL_DATA_PURGE`), SHA-256 confirmation token enforcement (`CONFIRM-<HASH>`), operation evaluator (`/api/v1/safety/evaluate-operation`), pre-flight test run audit (`/api/v1/safety/audit-test-run`), and project safety policy management (`/api/v1/safety/projects/{id}/policy`).
+- [ ] Stage 17: Result Classification Engine
+- [ ] Stage 18: Failure Analysis Engine
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API
+
 

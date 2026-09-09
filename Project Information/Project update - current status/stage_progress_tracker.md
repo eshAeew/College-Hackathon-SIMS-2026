@@ -19,7 +19,7 @@
 | **Stage 13** | Regression Testing Engine | Tier 2 | `COMPLETED` | Delta comparator, status/latency diffs, regression alert badges & summary verdict cards (8/8 tests OK) |
 | **Stage 14** | OpenAPI Specification Support | Tier 2 | `COMPLETED` | OpenAPI 3.0/3.1 & Swagger 2.0 parser, $ref dereferencing, endpoint & contract batch importer (8/8 tests OK) |
 | **Stage 15** | Automatic Test Generation | Tier 2 | `COMPLETED` | Combinatorial test generator (happy path, missing fields, type inversion, boundary, nulls), staging review area & bulk approval (7/7 tests OK) |
-| **Stage 16** | Safety & Execution Controls | Tier 1 | `PLANNED` | Target authorization, dangerous method safeguards |
+| **Stage 16** | Safety & Execution Controls | Tier 1 | `COMPLETED` | Target host allowlist, localhost/RFC-1918 modes, destructive risk classifier & confirmation tokens (9/9 tests OK) |
 | **Stage 17** | Result Classification Engine | Tier 1 | `PLANNED` | PASS/FAIL/WARN/ERROR matrix, severity scoring |
 | **Stage 18** | Failure Analysis Engine | Tier 2 | `PLANNED` | Evidence DTO packager, root cause categorizer |
 | **Stage 19** | AI Recommendation Layer | Tier 3 | `PLANNED` | Gemini prompt synthesizer, fallback engine |

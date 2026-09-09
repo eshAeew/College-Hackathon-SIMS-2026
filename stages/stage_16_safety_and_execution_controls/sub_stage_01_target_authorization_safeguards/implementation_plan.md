@@ -7,9 +7,9 @@ Prevent accidental testing against unauthorized external domains and enforce exp
 Host validation middleware ensuring tests only target authorized base URLs.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Validate target base URLs against an allowlist of permitted domains/IPs.
-- [ ] Provide explicit localhost and private network development modes.
-- [ ] Display prominent 'Authorized Testing Only' advisory in UI.
+- [x] Validate target base URLs against an allowlist of permitted domains/IPs (wildcards supported).
+- [x] Provide explicit localhost and RFC-1918 private network development modes.
+- [x] Display prominent 'Authorized Testing Only' advisory in UI and validation payloads.
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Host validation middleware ensuring tests only target authorized base URLs.
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Requests targeting non-whitelisted external hosts are blocked with a clear safety warning.**
