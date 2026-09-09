@@ -15,6 +15,7 @@ from app.api.v1.performance import router as performance_router
 from app.api.v1.recurring_failures import router as recurring_failures_router
 from app.api.v1.test_runs import router as test_runs_router
 from app.api.v1.regression import router as regression_router
+from app.api.v1.openapi import router as openapi_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -74,6 +75,8 @@ api_router.include_router(performance_router)
 api_router.include_router(recurring_failures_router)
 api_router.include_router(test_runs_router)
 api_router.include_router(regression_router)
+api_router.include_router(openapi_router)
+
 
 
 

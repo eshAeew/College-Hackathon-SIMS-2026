@@ -1,5 +1,30 @@
 # API Sentinel — Changelog
 
+## [Stage 14 - OpenAPI Specification Support] - 2026-09-09
+- **Completed**: OpenAPI 3.0 / 3.1 and Swagger 2.0 Parser, Schema Dereferencer, and Database Endpoint / Contract Batch Importer (Stage 14 Complete).
+- Created `app/models/schemas/openapi.py` with:
+  - `OpenApiSpecVersion` (`SWAGGER_2_0`, `OPENAPI_3_0`, `OPENAPI_3_1`, `UNKNOWN`).
+  - `ParameterLocation` (`QUERY`, `HEADER`, `PATH`, `COOKIE`, `BODY`).
+  - `DiscoveredParameter`, `DiscoveredOperation`, `ParsedOpenApiSummary`.
+  - `OpenApiParseRequest`, `OpenApiImportRequest`, `ImportedEndpointDetail`, `OpenApiImportReport`.
+- Created `app/utils/openapi_parser.py` with:
+  - `detect_spec_format_and_parse()`: Safely parses both YAML and JSON document formats using PyYAML and standard JSON.
+  - `detect_spec_version()`: Distinguishes Swagger 2.0 (`swagger: "2.0"`) from OpenAPI 3.0/3.1 (`openapi: 3.x.x`).
+  - `resolve_json_ref()` & `dereference_schema()`: Deeply dereferences `$ref` JSON pointers (e.g. `#/definitions/User`, `#/components/schemas/Pet`) with circular reference cycle detection.
+  - `parse_openapi_document()`: Extracts server base URLs, operations (`get`, `post`, `put`, `delete`, `patch`), summaries, path/query/header parameters, request body schemas, and response contracts.
+- Implemented `OpenApiService` in `app/services/openapi_service.py`:
+  - `validate_and_parse_spec()`: Ingests raw specification content and outputs structured summary metadata.
+  - `import_spec_into_project()`: Ingests OpenAPI operations into `Endpoint` database records, supports overwrite/upsert mode, automatically updates project base URL if empty, serializes headers/params/body/response schemas, and optionally generates default smoke test scenarios (`TestCase`).
+- Implemented REST API router in `app/api/v1/openapi.py`:
+  - `POST /api/v1/openapi/validate`
+  - `POST /api/v1/projects/{project_id}/openapi/parse`
+  - `POST /api/v1/projects/{project_id}/openapi/import`
+  - `POST /api/v1/projects/{project_id}/openapi/import-file` (multipart form file upload)
+- Mounted `openapi_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_openapi_support.py` (8 new tests passing).
+- Total test suite count increased to 195 passing tests with 100% pass rate.
+- Marked Stage 14: OpenAPI Specification Support as 100% COMPLETE.
+
 ## [Stage 13 - Regression Testing Engine] - 2026-09-09
 - **Completed**: Baseline vs Current Delta Comparator, Latency Degradation Classifier, Regression Alert Tagger, and Summary Cards (Stage 13 Complete).
 - Created `app/models/schemas/regression.py` with:

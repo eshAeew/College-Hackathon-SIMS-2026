@@ -17,7 +17,7 @@
 | **Stage 11** | Recurring Failure Detection | Tier 2 | `COMPLETED` | Historical failure aggregator, error trace normalizer, root-cause fingerprinter, persistence rating & failure clustering (10/10 tests OK) |
 | **Stage 12** | Test Run Management | Tier 1 | `COMPLETED` | TestRun & TestResult models, suite orchestrator, lifecycle state machine, cancellation & metrics (8/8 tests OK) |
 | **Stage 13** | Regression Testing Engine | Tier 2 | `COMPLETED` | Delta comparator, status/latency diffs, regression alert badges & summary verdict cards (8/8 tests OK) |
-| **Stage 14** | OpenAPI Specification Support | Tier 2 | `PLANNED` | OpenAPI 3.0/Swagger parser, endpoint generator |
+| **Stage 14** | OpenAPI Specification Support | Tier 2 | `COMPLETED` | OpenAPI 3.0/3.1 & Swagger 2.0 parser, $ref dereferencing, endpoint & contract batch importer (8/8 tests OK) |
 | **Stage 15** | Automatic Test Generation | Tier 2 | `PLANNED` | Positive/Negative combinatorial test generator |
 | **Stage 16** | Safety & Execution Controls | Tier 1 | `PLANNED` | Target authorization, dangerous method safeguards |
 | **Stage 17** | Result Classification Engine | Tier 1 | `PLANNED` | PASS/FAIL/WARN/ERROR matrix, severity scoring |
