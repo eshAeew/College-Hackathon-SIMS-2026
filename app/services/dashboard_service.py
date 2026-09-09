@@ -30,7 +30,12 @@ class DashboardService:
         """Calculate global platform KPIs, recent test runs, critical issues, and project listings."""
         total_projects = db.query(func.count(Project.id)).scalar() or 0
         total_endpoints = db.query(func.count(Endpoint.id)).scalar() or 0
-        total_test_cases = db.query(func.count(TestCase.id)).scalar() or 0
+        total_active_endpoints = db.query(func.count(Endpoint.id)).filter(Endpoint.is_active.is_(True)).scalar() or 0
+        
+        test_cases_all = db.query(TestCase).all()
+        total_test_cases = len(test_cases_all)
+        total_assertions = sum(len(tc.assertions) for tc in test_cases_all)
+        
         total_test_runs = db.query(func.count(TestRun.id)).scalar() or 0
         total_remediations = db.query(func.count(AIRecommendation.id)).scalar() or 0
 
@@ -47,24 +52,31 @@ class DashboardService:
 
         # Latency statistics from completed runs
         durations = [r.duration_ms for r in completed_runs if r.duration_ms is not None]
-        avg_latency = round(sum(durations) / len(durations), 1) if durations else 18.5
-        sorted_durations = sorted(durations) if durations else [18.5]
-        p95_idx = int(len(sorted_durations) * 0.95)
-        p95_latency = round(sorted_durations[min(p95_idx, len(sorted_durations) - 1)], 1)
+        if durations:
+            avg_latency = round(sum(durations) / len(durations), 1)
+            sorted_durations = sorted(durations)
+            p95_idx = int(len(sorted_durations) * 0.95)
+            p95_latency = round(sorted_durations[min(p95_idx, len(sorted_durations) - 1)], 1)
+        else:
+            avg_latency = 0.0
+            p95_latency = 0.0
 
         # Active critical issues (remediations with CRITICAL or HIGH severity)
         crit_records = (
             db.query(AIRecommendation)
             .filter(AIRecommendation.severity.in_(["CRITICAL", "HIGH"]))
             .order_by(AIRecommendation.created_at.desc())
-            .limit(5)
+            .limit(10)
             .all()
         )
         critical_alerts: List[CriticalIssueAlert] = []
         for cr in crit_records:
-            method = "POST"
-            url = "/api/v1/resource"
-            if cr.test_result and cr.test_result.test_case and cr.test_result.test_case.endpoint:
+            method = "UNKNOWN"
+            url = "Ad-hoc Target"
+            if cr.test_result:
+                method = cr.test_result.http_method or "UNKNOWN"
+                url = cr.test_result.url or "Ad-hoc Target"
+            elif cr.test_result and cr.test_result.test_case and cr.test_result.test_case.endpoint:
                 ep = cr.test_result.test_case.endpoint
                 method = ep.method
                 url = ep.path
@@ -130,6 +142,11 @@ class DashboardService:
                 for ep in p.endpoints
             ]
             tc_count = sum(c.test_cases_count for c in ep_cards)
+            proj_runs = [r for r in completed_runs if r.project_id == p.id]
+            proj_exec = sum(r.total_tests for r in proj_runs)
+            proj_pass = sum(r.passed_tests for r in proj_runs)
+            proj_pass_rate = round((proj_pass / proj_exec * 100.0), 1) if proj_exec > 0 else 100.0
+
             project_views.append(
                 ProjectDetailView(
                     id=p.id,
@@ -140,14 +157,20 @@ class DashboardService:
                     endpoints=ep_cards,
                     total_endpoints=len(ep_cards),
                     total_test_cases=tc_count,
-                    pass_rate_pct=100.0,
+                    pass_rate_pct=proj_pass_rate,
                 )
             )
+
+        from app.core.config import get_settings
+        app_settings = get_settings()
+        ai_mode = "GEMINI_LLM" if (app_settings.GEMINI_API_KEY and app_settings.GEMINI_API_KEY.strip()) else "RULE_BASED_HEURISTIC"
 
         kpi = GlobalKPISummary(
             total_projects=total_projects,
             total_endpoints=total_endpoints,
+            total_active_endpoints=total_active_endpoints,
             total_test_cases=total_test_cases,
+            total_assertions=total_assertions,
             total_test_runs=total_test_runs,
             global_pass_rate_pct=pass_rate,
             avg_latency_ms=avg_latency,
@@ -155,6 +178,8 @@ class DashboardService:
             active_critical_issues=active_critical_issues,
             ai_remediations_count=total_remediations,
             health_index_pct=health_index,
+            db_engine="SQLite 3",
+            ai_engine_status=ai_mode,
         )
 
         return DashboardOverviewResponse(
@@ -211,6 +236,15 @@ class DashboardService:
             for r in recent_runs_db
         ]
 
+        proj_runs = (
+            db.query(TestRun)
+            .filter(TestRun.project_id == project_id, TestRun.status == "COMPLETED")
+            .all()
+        )
+        proj_exec = sum(r.total_tests for r in proj_runs)
+        proj_pass = sum(r.passed_tests for r in proj_runs)
+        proj_pass_rate = round((proj_pass / proj_exec * 100.0), 1) if proj_exec > 0 else 100.0
+
         return ProjectDetailView(
             id=project.id,
             name=project.name,
@@ -221,5 +255,5 @@ class DashboardService:
             recent_runs=recent_runs,
             total_endpoints=len(ep_cards),
             total_test_cases=tc_count,
-            pass_rate_pct=100.0,
+            pass_rate_pct=proj_pass_rate,
         )

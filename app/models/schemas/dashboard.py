@@ -7,7 +7,9 @@ class GlobalKPISummary(BaseModel):
     """Aggregated global KPI metrics across all workspaces."""
     total_projects: int = Field(..., ge=0, description="Total registered projects / workspaces")
     total_endpoints: int = Field(..., ge=0, description="Total registered API endpoints")
+    total_active_endpoints: int = Field(default=0, ge=0, description="Total active API endpoints")
     total_test_cases: int = Field(..., ge=0, description="Total registered test scenarios")
+    total_assertions: int = Field(default=0, ge=0, description="Total active assertion checks across all test cases")
     total_test_runs: int = Field(..., ge=0, description="Total executed test runs")
     global_pass_rate_pct: float = Field(..., ge=0.0, le=100.0, description="Global test pass rate percentage")
     avg_latency_ms: float = Field(..., ge=0.0, description="Average response latency in milliseconds")
@@ -15,6 +17,8 @@ class GlobalKPISummary(BaseModel):
     active_critical_issues: int = Field(..., ge=0, description="Active 500 server crashes and broken tests")
     ai_remediations_count: int = Field(..., ge=0, description="Total AI & heuristic remediations generated")
     health_index_pct: float = Field(..., ge=0.0, le=100.0, description="Overall system health index")
+    db_engine: str = Field(default="SQLite 3", description="Active database engine")
+    ai_engine_status: str = Field(default="RULE_BASED_HEURISTIC", description="Current AI diagnostic mode")
 
 
 class RecentTestRunCard(BaseModel):

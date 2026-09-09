@@ -113,9 +113,13 @@ class TestDashboardUI(unittest.TestCase):
         # Check KPI counts
         self.assertEqual(data["kpi"]["total_projects"], 1)
         self.assertEqual(data["kpi"]["total_endpoints"], 2)
+        self.assertEqual(data["kpi"]["total_active_endpoints"], 2)
         self.assertEqual(data["kpi"]["total_test_cases"], 1)
+        self.assertGreaterEqual(data["kpi"]["total_assertions"], 0)
         self.assertEqual(data["kpi"]["total_test_runs"], 1)
         self.assertEqual(data["kpi"]["global_pass_rate_pct"], 100.0)
+        self.assertEqual(data["kpi"]["db_engine"], "SQLite 3")
+        self.assertIn("ai_engine_status", data["kpi"])
 
         # Check critical issues
         self.assertEqual(len(data["critical_issues"]), 1)
@@ -133,6 +137,7 @@ class TestDashboardUI(unittest.TestCase):
         self.assertEqual(data["name"], "E-Commerce API")
         self.assertEqual(len(data["endpoints"]), 2)
         self.assertEqual(data["total_endpoints"], 2)
+        self.assertEqual(data["pass_rate_pct"], 100.0)
 
     def test_05_project_detail_not_found(self):
         """Verify GET /api/v1/dashboard/projects/999 returns HTTP 404."""
