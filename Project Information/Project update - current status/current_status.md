@@ -23,10 +23,11 @@
   - **Stage 18: Failure Analysis Engine (100% Complete)**
   - **Stage 19: AI Recommendation Layer (100% Complete)**
   - **Stage 20: Dashboard & Web Interface (100% Complete)**
-  - **Stage 21: Run Comparison & Diff Tool (100% Complete)**
   - **Stage 22: Reporting & Export Engine (100% Complete)**
-- **Next Sub-Stage**: Stage 23: Persistence & Database Layer
-- **Latest Build Status**: Passing (260/260 unit tests green, 100% pass rate)
+  - **Stage 23: Persistence & Database Layer (100% Complete)**
+- **Next Sub-Stage**: Stage 24: Error Handling & Resilience (or Stage 27: Demo Target API)
+- **Latest Build Status**: Passing (268/268 unit tests green, 100% pass rate)
+
 
 
 
@@ -104,8 +105,13 @@
   - [x] **Sub-Stage 01: Comprehensive Multi-Section Report Synthesis**: 6-section report DTO (`ExecutiveSummary`, `FunctionalReportSection`, `PerformanceReportSection`, `RecurringFailuresSection`, `RegressionReportSection`, `RecommendationsSection`), SLA breach detection, and automated verdict calculation (`PASS`, `DEGRADED`, `FAIL`).
   - [x] **Sub-Stage 02: Multi-Format Serialization & File Download Engine**: Standalone self-contained Dark Cyber HTML report generator with print/PDF styling, GitHub-flavored Markdown generator, machine-readable JSON serializer, and file download attachment endpoints (`GET /api/v1/reports/runs/{id}`, `/html`, `/markdown`, `/download`).
   - [x] **Sub-Stage 03: Web UI Report Viewer & Download Modal**: Interactive modal (`#reportModal`) with live HTML iframe preview, baseline selector for automated regression diffing, direct download triggers for HTML/MD/JSON, and per-run "Report" buttons in recent test feeds.
-- [ ] Stage 23: Persistence & Database Layer
+- [x] **Stage 23: Persistence & Database Layer (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Core Database PRAGMAs & Generic Repository DAL**: Connection event listener enabling SQLite `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, and `PRAGMA synchronous=NORMAL`; generic type-safe `BaseRepository[T]` providing CRUD, count, pagination, batch creation, and existence verification.
+  - [x] **Sub-Stage 02: Specialized Entity Repositories**: Concrete domain repositories (`ProjectRepository`, `EndpointRepository`, `TestCaseRepository`, `TestRunRepository`, `TestResultRepository`, `AIRecommendationRepository`) encapsulating specialized relational queries, filtering, and summary statistics.
+  - [x] **Sub-Stage 03: Database Diagnostics, Maintenance, Backup & Seeding Engine**: `DatabaseService` delivering latency health probes, SQLite online snapshot backup (`sentinel_backup_*.db`), disk vacuum & query plan optimization (`VACUUM & ANALYZE`), retention pruning (`purge_old_runs`), realistic demo workspace bootstrapping (`seed_sample_data`), and REST endpoints (`GET /api/v1/database/health`, `POST /maintenance/vacuum`, `POST /maintenance/backup`, `POST /maintenance/purge-runs`, `POST /seed-sample`).
+- [ ] Stage 24: Error Handling & Resilience
 - [ ] Stage 27: Intentionally Flawed Demo Target API
+
 
 
 

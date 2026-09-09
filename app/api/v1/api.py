@@ -23,7 +23,9 @@ from app.api.v1.failure_analysis import router as failure_analysis_router
 from app.api.v1.ai_recommendations import router as ai_recommendations_router
 from app.api.v1.run_comparison import comparison_router
 from app.api.v1.reports import router as reports_router
+from app.api.v1.database import router as database_router
 from app.web.routes import dashboard_api_router
+
 
 settings = get_settings()
 api_router = APIRouter()
@@ -91,7 +93,9 @@ api_router.include_router(classification_router)
 api_router.include_router(failure_analysis_router)
 api_router.include_router(ai_recommendations_router)
 api_router.include_router(reports_router)
+api_router.include_router(database_router)
 api_router.include_router(dashboard_api_router)
+
 
 
 

@@ -1,6 +1,42 @@
 # API Sentinel — Changelog
 
+## [Stage 23 - Persistence & Database Layer] - 2026-09-09
+- **Completed**: SQLite WAL/FK PRAGMA Configuration, Generic & Concrete Repository Data Access Layer (DAL), Database Health Diagnostics, Online Snapshot Backups, Disk Space Optimization (VACUUM & ANALYZE), Data Retention Pruning, Sample Data Seeding, and Maintenance REST APIs (Stage 23 Complete).
+- Updated `app/core/database.py`:
+  - Added SQLAlchemy connection event listener enabling `PRAGMA foreign_keys=ON`, `PRAGMA journal_mode=WAL`, and `PRAGMA synchronous=NORMAL` on SQLite engine connections.
+  - Enhanced `init_db()` to discover and initialize all 6 entity models (`Project`, `Endpoint`, `TestCase`, `TestRun`, `TestResult`, `AIRecommendation`).
+- Created `app/models/schemas/database.py`:
+  - `DatabaseDialect` (`SQLITE`, `POSTGRESQL`, `OTHER`).
+  - `TableRecordCounts`, `DatabaseHealthResponse`, `DatabaseBackupResponse`, `DatabaseMaintenanceResult`, `DatabasePurgeRequest`, `DatabasePurgeResponse`, `DatabaseSeedResponse`.
+- Implemented Data Access Layer (DAL / Repositories) under `app/repositories/`:
+  - `BaseRepository[T]`: Generic type-safe CRUD repository providing `get_by_id`, `get_all`, `count`, `create`, `create_batch`, `update`, `delete`, and `exists`.
+  - `ProjectRepository`: Specialized queries for workspace summaries, environment filtering, and name lookups.
+  - `EndpointRepository`: Endpoint lookup by project, method/path, and active status.
+  - `TestCaseRepository`: Scenario queries by endpoint, project scope, tag, and severity rating.
+  - `TestRunRepository`: Run queries for recent feeds, latest completed run, and age threshold filtering.
+  - `TestResultRepository`: Granular result queries by run, failure status, and endpoint execution history.
+  - `AIRecommendationRepository`: Diagnostic recommendation queries by test result, evidence fingerprint hash, and root-cause category.
+  - Exported all repositories in `app/repositories/__init__.py`.
+- Implemented `DatabaseService` in `app/services/database_service.py`:
+  - `get_health()`: Connection ping latency probe, PRAGMA status check, database file size inspection, and table row counting.
+  - `vacuum()`: Executes SQLite `VACUUM` and `ANALYZE` to reclaim unallocated disk pages and rebuild index statistics.
+  - `backup()`: Creates point-in-time timestamped snapshot backups (`sentinel_backup_{timestamp}.db`) via SQLite online backup API.
+  - `purge_old_runs()`: Prunes historical test runs and cascading child results/recommendations older than $N$ days.
+  - `seed_sample_data()`: Bootstraps a demo "Alpha Commerce Demo Store" workspace with catalog/checkout endpoints, test cases, and execution runs.
+- Implemented REST API router in `app/api/v1/database.py`:
+  - `GET /api/v1/database/health`: Returns comprehensive engine metrics and table record counts.
+  - `POST /api/v1/database/maintenance/vacuum`: Reclaims disk space and reindexes.
+  - `POST /api/v1/database/maintenance/backup`: Generates timestamped database snapshot backup.
+  - `POST /api/v1/database/maintenance/purge-runs`: Prunes historical test runs by age threshold.
+  - `POST /api/v1/database/seed-sample`: Bootstraps sample project and test suites.
+- Mounted `database_router` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_database_layer.py`:
+  - 8 unit & integration tests covering BaseRepository CRUD, specialized entity repositories, DatabaseService health/vacuum/backup/purge/seed, and REST maintenance endpoints.
+- Full test suite verified: **268 / 268 passing tests with 100% pass rate**.
+- Marked Stage 23: Persistence & Database Layer as 100% COMPLETE.
+
 ## [Stage 22 - Reporting & Export Engine] - 2026-09-09
+
 - **Completed**: Comprehensive 6-Section Report Synthesis, Multi-Format Serialization (JSON, Dark Cyber HTML, Markdown), Attachment Download Engine, and Interactive Web UI Report Viewer Modal (Stage 22 Complete).
 - Created `app/models/schemas/report.py`:
   - `ReportFormat` (`JSON`, `HTML`, `MARKDOWN`), `ReportVerdict` (`PASS`, `FAIL`, `DEGRADED`).
