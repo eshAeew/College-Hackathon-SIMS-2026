@@ -1,7 +1,11 @@
-"""Validation Service: Protocol, Header, and Payload Syntax Verification Engine."""
+"""Validation Service: Protocol, Header, Payload Syntax, and JSON Schema Verification Engine."""
+import json
 import logging
 from typing import Any, Dict, List, Optional, Union, Tuple
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
+from app.models.entities.endpoint import Endpoint
 from app.models.schemas.validation import (
     ValidationCheckResult,
     StatusValidationRequest,
@@ -9,6 +13,10 @@ from app.models.schemas.validation import (
     PayloadSyntaxValidationRequest,
     ProtocolValidationRequest,
     ProtocolValidationReport,
+    JsonSchemaValidationRequest,
+    JsonSchemaValidationReport,
+    SchemaErrorDetail,
+    TypeMismatchDetail,
 )
 from app.utils.protocol_validator import (
     validate_status_code,
@@ -16,12 +24,13 @@ from app.utils.protocol_validator import (
     validate_payload_syntax,
     normalize_content_type,
 )
+from app.utils.schema_validator import validate_json_schema_instance
 
 logger = logging.getLogger("app.services.validation_service")
 
 
 class ValidationService:
-    """Service layer managing protocol and format verification."""
+    """Service layer managing protocol, format, and JSON schema verification."""
 
     @staticmethod
     def validate_status(
@@ -123,3 +132,81 @@ class ValidationService:
             parsed_payload=parsed_payload,
             summary=summary
         )
+
+    @classmethod
+    def validate_json_schema(
+        cls,
+        instance: Any,
+        schema_definition: Dict[str, Any]
+    ) -> JsonSchemaValidationReport:
+        """Validate a JSON data instance against a JSON Schema Draft-7 definition."""
+        # Auto-parse JSON string instance if needed
+        data_to_validate = instance
+        if isinstance(instance, str):
+            try:
+                data_to_validate = json.loads(instance)
+            except Exception:
+                # Keep raw string to let schema validator report type mismatch if string is unexpected
+                pass
+
+        is_valid, raw_errors, stats = validate_json_schema_instance(data_to_validate, schema_definition)
+
+        schema_errors = [
+            SchemaErrorDetail(
+                path=err["path"],
+                field=err.get("field"),
+                error_type=err["error_type"],
+                message=err["message"],
+                schema_path=err.get("schema_path", "#"),
+                expected=err.get("expected"),
+                actual=err.get("actual")
+            )
+            for err in raw_errors
+        ]
+
+        type_mismatches = [
+            TypeMismatchDetail(
+                path=m["path"],
+                expected=m["expected"],
+                actual=m["actual"],
+                value=m.get("value")
+            )
+            for m in stats.get("type_mismatches", [])
+        ]
+
+        return JsonSchemaValidationReport(
+            is_valid=is_valid,
+            total_errors=stats.get("total_errors", len(schema_errors)),
+            missing_fields=stats.get("missing_fields", []),
+            type_mismatches=type_mismatches,
+            errors=schema_errors,
+            summary=stats.get("summary", "Validation complete.")
+        )
+
+    @classmethod
+    def validate_endpoint_response_schema(
+        cls,
+        endpoint_id: int,
+        response_payload: Any,
+        db: Session
+    ) -> JsonSchemaValidationReport:
+        """Validate an observed response payload against the stored Endpoint contract response schema."""
+        endpoint = db.query(Endpoint).filter(Endpoint.id == endpoint_id).first()
+        if not endpoint:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Endpoint with ID {endpoint_id} not found."
+            )
+
+        resp_schema = endpoint.response_schema
+        if not resp_schema:
+            return JsonSchemaValidationReport(
+                is_valid=True,
+                total_errors=0,
+                missing_fields=[],
+                type_mismatches=[],
+                errors=[],
+                summary=f"Endpoint #{endpoint_id} has no registered response_schema contract. Validation passed by default."
+            )
+
+        return cls.validate_json_schema(response_payload, resp_schema)

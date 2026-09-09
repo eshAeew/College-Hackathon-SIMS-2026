@@ -1,5 +1,21 @@
 # API Sentinel — Changelog
 
+## [Stage 07 - Sub-Stage 02] - 2026-09-09
+- **Completed**: JSON Schema & Strict Data Type Validator (Stage 07 Complete).
+- Created `app/utils/schema_validator.py` with:
+  - `validate_json_schema_instance()`: Comprehensive Draft-7 / Draft 2020-12 schema validation using `jsonschema.Draft7Validator.iter_errors()`.
+  - Granular field-level error categorization for missing required fields, type mismatches, enum violations, numeric range bounds (`minimum`, `maximum`), length bounds (`minLength`, `maxLength`, `minItems`), pattern regexes, and forbidden additional properties.
+  - Formatted JSONPath / dot-bracket notation generator (`format_json_path()`) for arrays and nested objects.
+  - Human-readable summary diff generator.
+- Added Pydantic DTO schemas in `app/models/schemas/validation.py` (`SchemaErrorDetail`, `TypeMismatchDetail`, `JsonSchemaValidationRequest`, `JsonSchemaValidationReport`, `EndpointResponseSchemaValidationRequest`).
+- Extended `ValidationService` in `app/services/validation_service.py` with `validate_json_schema()` and `validate_endpoint_response_schema()`.
+- Implemented REST validation endpoints in `app/api/v1/validations.py`:
+  - `POST /api/v1/validations/json-schema`
+  - `POST /api/v1/validations/endpoints/{endpoint_id}/response-schema`
+- Added comprehensive unit and integration test suite in `tests/test_schema_validation.py` (13 new tests passing).
+- Total test suite count increased to 122 passing tests with 100% pass rate.
+- Marked Stage 07: Functional Validation Engine as 100% COMPLETE.
+
 ## [Stage 07 - Sub-Stage 01] - 2026-09-09
 - **Completed**: Status Code Matching, MIME Type Normalization, and Payload Syntax Validation.
 - Created `app/utils/protocol_validator.py` with:

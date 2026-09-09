@@ -9,9 +9,9 @@
   - **Stage 04: Request Configuration Engine (100% Complete)**
   - **Stage 05: Core API Execution Engine (100% Complete)**
   - **Stage 06: Test Case Management (Sub-Stage 01 Complete)**
-  - **Stage 07: Functional Validation Engine (Sub-Stage 01 Complete)**
-- **Next Sub-Stage**: Stage 07 — Sub-Stage 02: JSON Schema & Strict Type Validator
-- **Latest Build Status**: Passing (109/109 unit tests green, 100% pass rate)
+  - **Stage 07: Functional Validation Engine (100% Complete)**
+- **Next Sub-Stage**: Stage 06 — Sub-Stage 02: Assertion Rules & Expectation Setup
+- **Latest Build Status**: Passing (122/122 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -35,9 +35,9 @@
 - [ ] **Stage 06: Test Case Management (IN PROGRESS - 9/9 tests passing)**
   - [x] **Sub-Stage 01: Test Case CRUD Operations**: SQLite `TestCase` model, endpoint cascade relationship, tags (`smoke`, `regression`, `security`, `negative`), severity ratings, cloning, active toggle, and REST endpoints (`/api/v1/endpoints/{id}/test-cases`, `/api/v1/test-cases/{id}`).
   - [ ] **Sub-Stage 02: Assertion Rules & Expectation Setup**: Configurable expected status codes, latency ceilings, header matchers, and JSON body field expectations.
-- [ ] **Stage 07: Functional Validation Engine (IN PROGRESS - 14/14 tests passing)**
+- [x] **Stage 07: Functional Validation Engine (COMPLETED - 27/27 tests passing)**
   - [x] **Sub-Stage 01: Status Code & Content-Type Validator**: Exact/range/class status matcher (`2xx`, `200-299`), MIME type normalizer & alias resolver, safe JSON/XML/Text payload syntax validator (`/api/v1/validations/status-code`, `/api/v1/validations/content-type`, `/api/v1/validations/payload-syntax`, `/api/v1/validations/protocol`).
-  - [ ] **Sub-Stage 02: JSON Schema & Strict Type Validator**: Draft-7 schema validation, field presence, and type constraints.
+  - [x] **Sub-Stage 02: JSON Schema & Strict Type Validator**: Draft-7 schema validation, field presence, data type mismatches, range/enum/regex constraint checking, and endpoint response schema validation (`/api/v1/validations/json-schema`, `/api/v1/validations/endpoints/{endpoint_id}/response-schema`).
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API

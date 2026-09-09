@@ -8,7 +8,8 @@
 | **Stage 04** | Request Configuration Engine | Tier 1 | `COMPLETED` | Dynamic request builder, path interpolation, header merger, body serialization, pre-flight validator (18/18 tests OK) |
 | **Stage 05** | Core API Execution Engine | Tier 1 | `COMPLETED` | Async `httpx` dispatcher, connection pool, sub-millisecond metrics, binary/cookie/redirect telemetry, exception diagnostics (23/23 tests OK) |
 | **Stage 06** | Test Case Management | Tier 1 | `IN PROGRESS` | SQLite `TestCase` model, tags (smoke/regression/security/negative), severity ratings, scenario CRUD & cloning (9/9 tests OK) |
-| **Stage 07** | Functional Validation Engine | Tier 1 | `IN PROGRESS` | Status code matcher (exact/class/range), MIME normalizer, safe JSON/XML/text payload syntax validator (14/14 tests OK) |
+| **Stage 07** | Functional Validation Engine | Tier 1 | `COMPLETED` | Status code matcher, MIME normalizer, payload syntax, Draft-7 JSON schema & data type validator (27/27 tests OK) |
+
 
 | **Stage 08** | Negative / Adversarial Testing | Tier 2 | `PLANNED` | Fuzzing mutations, 4xx vs 500 leak detection |
 | **Stage 09** | Inconsistent Behavior Detection | Tier 2 | `PLANNED` | Multi-run executor, variance & flakiness analyzer |

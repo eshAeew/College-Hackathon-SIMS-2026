@@ -1,5 +1,8 @@
-"""Validation API Endpoints: Status Code, Content-Type, and Payload Syntax Verification."""
-from fastapi import APIRouter, status
+"""Validation API Endpoints: Status Code, Content-Type, Payload Syntax, and JSON Schema Verification."""
+from fastapi import APIRouter, Depends, Path, status
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
 from app.models.schemas.response import StandardResponse
 from app.models.schemas.validation import (
     ValidationCheckResult,
@@ -8,6 +11,9 @@ from app.models.schemas.validation import (
     PayloadSyntaxValidationRequest,
     ProtocolValidationRequest,
     ProtocolValidationReport,
+    JsonSchemaValidationRequest,
+    JsonSchemaValidationReport,
+    EndpointResponseSchemaValidationRequest,
 )
 from app.services.validation_service import ValidationService
 
@@ -85,6 +91,46 @@ async def validate_protocol_endpoint(
     report = ValidationService.validate_protocol(req)
     return StandardResponse(
         success=report.all_passed,
+        data=report,
+        message=report.summary
+    )
+
+
+@router.post(
+    "/json-schema",
+    response_model=StandardResponse[JsonSchemaValidationReport],
+    status_code=status.HTTP_200_OK,
+    summary="Validate JSON Payload Against Draft-7 JSON Schema",
+    description="Exhaustively validates any JSON instance against a Draft-7 / Draft 2020-12 schema, reporting field-level missing properties, type mismatches, and constraint diffs."
+)
+async def validate_json_schema_endpoint(
+    req: JsonSchemaValidationRequest
+) -> StandardResponse[JsonSchemaValidationReport]:
+    """Validate ad-hoc JSON instance against provided schema definition."""
+    report = ValidationService.validate_json_schema(req.instance, req.schema_definition)
+    return StandardResponse(
+        success=report.is_valid,
+        data=report,
+        message=report.summary
+    )
+
+
+@router.post(
+    "/endpoints/{endpoint_id}/response-schema",
+    response_model=StandardResponse[JsonSchemaValidationReport],
+    status_code=status.HTTP_200_OK,
+    summary="Validate Observed Response Against Stored Endpoint Contract",
+    description="Validates an actual response payload directly against the registered response_schema of a saved API endpoint."
+)
+async def validate_endpoint_response_schema_endpoint(
+    endpoint_id: int = Path(..., description="Target Endpoint ID", ge=1),
+    req: EndpointResponseSchemaValidationRequest = ...,
+    db: Session = Depends(get_db)
+) -> StandardResponse[JsonSchemaValidationReport]:
+    """Validate response payload against stored endpoint contract."""
+    report = ValidationService.validate_endpoint_response_schema(endpoint_id, req.response_payload, db)
+    return StandardResponse(
+        success=report.is_valid,
         data=report,
         message=report.summary
     )
