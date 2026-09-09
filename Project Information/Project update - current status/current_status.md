@@ -28,8 +28,9 @@
   - **Stage 23: Persistence & Database Layer (100% Complete)**
   - **Stage 24: Error Handling & Resilience (100% Complete)**
   - **Stage 25: Logging, Tracing & Auditability (100% Complete)**
-- **Next Sub-Stage**: Stage 26: Platform Self-Testing Suite (or Stage 27: Demo Target API)
-- **Latest Build Status**: Passing (284/284 unit tests green, 100% pass rate)
+  - **Stage 26: Platform Self-Testing Suite (100% Complete)**
+- **Next Sub-Stage**: Stage 27: Intentionally Flawed Demo Target API (or Stage 28: Final Demo Workflow & Pitch)
+- **Latest Build Status**: Passing (289/289 unit tests green, 100% pass rate)
 
 
 
@@ -121,7 +122,11 @@
   - [x] **Sub-Stage 02: In-Memory Ring Buffer & Live Log Telemetry**: Thread-safe `InMemoryLogBuffer` capturing recent log entries with real-time level/search querying (`GET /api/v1/audit/live-logs`, `POST /api/v1/audit/live-logs/clear`).
   - [x] **Sub-Stage 03: Distributed Tracer Execution Spans**: `Tracer` engine with context manager `tracer.span(...)`, nested span trees, parent-child duration metrics, and timeline retrieval (`GET /api/v1/audit/traces/{trace_id}`).
   - [x] **Sub-Stage 04: Immutable Audit Trail DAL & Compliance Export**: `AuditEvent` SQLite model, `AuditRepository` with multi-criteria filtering and summary KPI aggregations, `AuditService` CSV/JSON compliance exporter (`GET /api/v1/audit/events`, `POST /events`, `GET /summary`, `GET /export`).
-- [ ] Stage 26: Platform Self-Testing Suite
+- [x] **Stage 26: Platform Self-Testing Suite (COMPLETED - 5/5 tests passing)**
+  - [x] **Sub-Stage 01: Subsystem Test Suite Discovery & Mapping**: Architectural categorization of all 26 stage test modules across `core_foundation`, `execution_engine`, `validation_engine`, `analysis_ai`, and `resilience_data_audit`.
+  - [x] **Sub-Stage 02: Programmatic Execution Engine & Timing Tracker**: `SelfTestService` and `DetailedTestResult` capturing millisecond execution durations, assertion failure traces, error messages, and pass rates without crashing.
+  - [x] **Sub-Stage 03: Subsystem Readiness & Health Matrix**: Readiness verdict calculation (`ALL_PASSED`, `DEGRADED`, `FAILED`), subsystem health matrix aggregation, and catalog metadata (`GET /api/v1/self-test/suites`, `POST /run`, `GET /latest`, `GET /matrix`).
+  - [x] **Sub-Stage 04: Standalone Self-Test CLI Diagnostic Utility**: Command-line verification runner (`scripts/self_test_runner.py`) with `--subsystem`, `--json`, and `--failfast` arguments for CI/CD integration.
 - [ ] Stage 27: Intentionally Flawed Demo Target API
 - [ ] Stage 28: Final Demo Workflow & Pitch
 

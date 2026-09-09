@@ -1,5 +1,29 @@
 # API Sentinel — Changelog
 
+## [Stage 26 - Platform Self-Testing Suite] - 2026-09-09
+- **Completed**: Programmatic SelfTestService, Subsystem Test Mapping, Detailed Test Timing Tracker, Subsystem Readiness & Health Matrix, Standalone CLI Runner, and Self-Test REST Router (Stage 26 Complete).
+- Created `app/models/schemas/self_test.py`:
+  - `SubsystemCategory` (`CORE_FOUNDATION`, `EXECUTION_ENGINE`, `VALIDATION_ENGINE`, `ANALYSIS_AI`, `RESILIENCE_DATA_AUDIT`, `FULL_SUITE`).
+  - `TestCaseResultDTO`, `SubsystemSummaryDTO`, `SelfTestRunRequest`, `SelfTestRunResponse`, `SuiteMetadata`, `SubsystemHealthMatrixResponse`.
+- Created `app/services/self_test_service.py`:
+  - `SUBSYSTEM_MAP`: Maps test modules to their architectural domains.
+  - `DetailedTestResult`: Captures millisecond execution timings, stack traces, assertion messages, and skip reasons for individual test cases.
+  - `SelfTestService.run_self_tests()`: Programmatically discovers, filters, and executes test suites, compiling comprehensive pass rates, failure lists, and subsystem breakdowns.
+  - `SelfTestService.get_health_matrix()`: Evaluates overall platform readiness and per-subsystem health status.
+  - `SelfTestService.get_available_suites()`: Returns catalog of test suites with estimated test counts.
+- Created `scripts/self_test_runner.py`:
+  - Standalone terminal CLI runner supporting `--subsystem`, `--json`, and `--failfast` flags with formatted ASCII summary tables and exit codes for CI/CD pipelines.
+- Created `app/api/v1/self_test.py`:
+  - `GET /api/v1/self-test/suites`: List available test suites and metadata.
+  - `POST /api/v1/self-test/run`: Trigger programmatic execution of targeted or full self-test suites.
+  - `GET /api/v1/self-test/latest`: Retrieve the most recent self-testing execution report.
+  - `GET /api/v1/self-test/matrix`: Retrieve subsystem health and readiness matrix.
+- Mounted `self_test_router` under `/api/v1/self-test` in `app/api/v1/api.py`.
+- Added comprehensive unit and integration test suite in `tests/test_platform_self_testing.py`:
+  - 5 tests covering test discovery, programmatic execution of targeted & full test suites, health matrix calculations, and REST API endpoints.
+- Full test suite verified: **289 / 289 passing tests with 100% pass rate**.
+- Marked Stage 26: Platform Self-Testing Suite as 100% COMPLETE.
+
 ## [Stage 25 - Logging, Tracing & Auditability] - 2026-09-09
 - **Completed**: Structured JSON Logging, In-Memory Ring Buffer Live Telemetry, Distributed Tracer Execution Spans, AuditEvent Database Entity & DAL Repository, CSV/JSON Compliance Exporter, and Telemetry REST APIs (Stage 25 Complete).
 - Created `app/models/entities/audit_event.py`:
