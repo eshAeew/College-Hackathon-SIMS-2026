@@ -1,5 +1,32 @@
 # API Sentinel — Changelog
 
+## [Stage 12 - Test Run Management] - 2026-09-09
+- **Completed**: Test Run Suite Orchestrator, Lifecycle State Machine, Concurrency Dispatcher, and Run Telemetry Persistence (Stage 12 Complete).
+- Created `app/models/entities/test_run.py` & `app/models/entities/test_result.py`:
+  - `TestRun`: Project-scoped suite execution container with status lifecycle (`QUEUED`, `RUNNING`, `COMPLETED`, `CANCELLED`, `FAILED`), environment, concurrency semaphores, KPI counters (total, passed, failed, warnings, errors), timestamps, duration, and cancellation reason.
+  - `TestResult`: Granular per-test-case execution record with response code, latency ms, snippet, headers, failure category, and evidence JSON.
+- Created `app/models/schemas/test_run.py`:
+  - `RunStatus`, `TestResultStatus`, `TestRunCreateRequest`, `TestRunCancelRequest`, `TestResultResponse`, `TestRunSummaryResponse`, `TestRunDetailResponse`.
+- Created `app/utils/run_state_machine.py`:
+  - Transition matrix and validator `validate_state_transition()` preventing duplicate executions or invalid transitions.
+  - Timezone-safe metrics calculation `calculate_run_metrics()`.
+- Implemented `TestRunService` in `app/services/test_run_service.py`:
+  - `create_test_run()`: Filters test cases by project, tag (`smoke`, `regression`), or explicit IDs and initializes queued run.
+  - `execute_test_run()`: Dispatches test cases concurrently with `asyncio.Semaphore`, captures per-test assertion evaluation telemetry, records `TestResult` entities, and calculates final duration/KPIs upon transition to `COMPLETED`.
+  - `cancel_test_run()`: Gracefully halts running/queued test runs, transitioning state to `CANCELLED`.
+  - `get_test_run()`, `list_project_runs()`, `delete_test_run()`, `format_summary()`, and `format_detail()`.
+- Implemented REST router in `app/api/v1/test_runs.py`:
+  - `POST /api/v1/projects/{project_id}/runs`
+  - `GET /api/v1/projects/{project_id}/runs`
+  - `GET /api/v1/runs/{run_id}`
+  - `POST /api/v1/runs/{run_id}/execute`
+  - `POST /api/v1/runs/{run_id}/cancel`
+  - `DELETE /api/v1/runs/{run_id}`
+- Mounted `test_runs_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_test_run_management.py` (8 new tests passing).
+- Total test suite count increased to 179 passing tests with 100% pass rate.
+- Marked Stage 12: Test Run Management as 100% COMPLETE.
+
 ## [Stage 11 - Recurring Failure Detection] - 2026-09-09
 - **Completed**: Historical Failure Aggregator, Root Cause Categorizer, SHA-256 Error Trace Fingerprinter, and Failure Pattern Clustering Engine (Stage 11 Complete).
 - Created `app/models/schemas/recurring_failure.py` with:

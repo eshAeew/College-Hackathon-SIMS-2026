@@ -22,6 +22,7 @@ class Project(Base):
 
     # Relationships
     endpoints = relationship("Endpoint", back_populates="project", cascade="all, delete-orphan")
+    test_runs = relationship("TestRun", back_populates="project", cascade="all, delete-orphan")
 
     @property
     def global_headers(self) -> dict:

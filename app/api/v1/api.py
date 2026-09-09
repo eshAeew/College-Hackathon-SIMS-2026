@@ -13,6 +13,7 @@ from app.api.v1.adversarial import router as adversarial_router
 from app.api.v1.inconsistency import router as inconsistency_router
 from app.api.v1.performance import router as performance_router
 from app.api.v1.recurring_failures import router as recurring_failures_router
+from app.api.v1.test_runs import router as test_runs_router
 
 settings = get_settings()
 api_router = APIRouter()
@@ -70,6 +71,7 @@ api_router.include_router(adversarial_router)
 api_router.include_router(inconsistency_router)
 api_router.include_router(performance_router)
 api_router.include_router(recurring_failures_router)
+api_router.include_router(test_runs_router)
 
 
 

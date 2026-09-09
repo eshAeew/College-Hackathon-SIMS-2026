@@ -7,9 +7,9 @@ Coordinate batch execution of multiple test cases across endpoints with concurre
 Async worker pipeline executing test queues and aggregating real-time progress.
 
 ## 3. Step-by-Step Implementation Tasks
-- [ ] Create `POST /api/v1/projects/{id}/runs` to launch a new test run.
-- [ ] Queue selected test cases for execution.
-- [ ] Dispatch tests asynchronously with configurable concurrency (e.g. 5 concurrent requests).
+- [x] Create `POST /api/v1/projects/{id}/runs` to launch a new test run.
+- [x] Queue selected test cases for execution.
+- [x] Dispatch tests asynchronously with configurable concurrency (e.g. 5 concurrent requests).
 
 ## 4. Edge Cases & Fault Tolerance
 - Validate all input parameters before execution.
@@ -17,9 +17,9 @@ Async worker pipeline executing test queues and aggregating real-time progress.
 - Return structured error responses adhering to the global error model.
 
 ## 5. Verification & Testing Checklist
-- [ ] Unit tests written and passing with >90% coverage.
-- [ ] FastAPI route documentation visible in Swagger UI (`/docs`).
-- [ ] Integration verified with SQLite database.
+- [x] Unit tests written and passing with >90% coverage.
+- [x] FastAPI route documentation visible in Swagger UI (`/docs`).
+- [x] Integration verified with SQLite database.
 
 ## 6. Definition of Done (DoD)
 > **Orchestrator initiates and runs full test suites, accurately recording start and finish timestamps.**

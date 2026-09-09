@@ -14,8 +14,9 @@
   - **Stage 09: Inconsistent Behavior Detection (100% Complete)**
   - **Stage 10: Performance Analysis Engine (100% Complete)**
   - **Stage 11: Recurring Failure Detection (100% Complete)**
-- **Next Sub-Stage**: Stage 12: Test Run Management
-- **Latest Build Status**: Passing (171/171 unit tests green, 100% pass rate)
+  - **Stage 12: Test Run Management (100% Complete)**
+- **Next Sub-Stage**: Stage 13: Regression Testing Engine
+- **Latest Build Status**: Passing (179/179 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -54,6 +55,9 @@
 - [x] **Stage 11: Recurring Failure Detection (COMPLETED - 10/10 tests passing)**
   - [x] **Sub-Stage 01: Historical Failure Aggregator**: Historical test execution aggregator, consecutive failure streak tracking, failure rate calculation, and flapping state transitions.
   - [x] **Sub-Stage 02: Failure Pattern Clustering & Fingerprinting**: Error trace normalization (stripping UUIDs, timestamps, hex pointers, numeric IDs), root cause categorization (Server Crash, Auth, Validation, Timeout, Schema Mismatch, Assertion, Network), SHA-256 deterministic fingerprinting, and persistence ratings (`CHRONIC`, `INTERMITTENT`, `NEW`, `RESOLVED`, `HEALTHY`) via `/api/v1/recurring-failures/analyze`, `/api/v1/recurring-failures/projects/{id}`, and `/api/v1/recurring-failures/endpoints/{id}`.
+- [x] **Stage 12: Test Run Management (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Test Run Suite Orchestrator**: TestRun and TestResult database models, asynchronous worker queue dispatch with configurable concurrency semaphores, tag/endpoint filters, and immediate vs queued execution (`/api/v1/projects/{id}/runs`).
+  - [x] **Sub-Stage 02: Run Lifecycle & State Transitions**: Lifecycle state machine (`QUEUED` -> `RUNNING` -> `COMPLETED` / `CANCELLED` / `FAILED`), run cancellation (`/api/v1/runs/{id}/cancel`), metrics aggregation (pass rate, duration, counts), run execution trigger (`/api/v1/runs/{id}/execute`), and cascading deletions (`/api/v1/runs/{id}`).
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API
