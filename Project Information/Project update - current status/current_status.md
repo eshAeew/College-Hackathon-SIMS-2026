@@ -15,8 +15,9 @@
   - **Stage 10: Performance Analysis Engine (100% Complete)**
   - **Stage 11: Recurring Failure Detection (100% Complete)**
   - **Stage 12: Test Run Management (100% Complete)**
-- **Next Sub-Stage**: Stage 13: Regression Testing Engine
-- **Latest Build Status**: Passing (179/179 unit tests green, 100% pass rate)
+  - **Stage 13: Regression Testing Engine (100% Complete)**
+- **Next Sub-Stage**: Stage 14: OpenAPI Specification Support
+- **Latest Build Status**: Passing (187/187 unit tests green, 100% pass rate)
 
 ## 2. Milestone Checklist
 - [x] Case Study Analysis (JP-009 requirements mapped)
@@ -58,6 +59,9 @@
 - [x] **Stage 12: Test Run Management (COMPLETED - 8/8 tests passing)**
   - [x] **Sub-Stage 01: Test Run Suite Orchestrator**: TestRun and TestResult database models, asynchronous worker queue dispatch with configurable concurrency semaphores, tag/endpoint filters, and immediate vs queued execution (`/api/v1/projects/{id}/runs`).
   - [x] **Sub-Stage 02: Run Lifecycle & State Transitions**: Lifecycle state machine (`QUEUED` -> `RUNNING` -> `COMPLETED` / `CANCELLED` / `FAILED`), run cancellation (`/api/v1/runs/{id}/cancel`), metrics aggregation (pass rate, duration, counts), run execution trigger (`/api/v1/runs/{id}/execute`), and cascading deletions (`/api/v1/runs/{id}`).
+- [x] **Stage 13: Regression Testing Engine (COMPLETED - 8/8 tests passing)**
+  - [x] **Sub-Stage 01: Baseline vs Current Delta Comparator**: Status delta analysis (`STATUS_BROKEN`, `STATUS_FIXED`, `STABLE_PASS`), latency percent delta calculation (>50% degradation flagging), and response code differential checking.
+  - [x] **Sub-Stage 02: Regression Alert Tagging & Notifications**: Badges (`CRITICAL CRASH`, `BROKEN TEST`, `SLOWDOWN +X%`, `SCHEMA MISMATCH`, `RESOLVED / FIXED`), summary KPI card, verdict calculation (`CLEAN`, `DEGRADED`, `CRITICAL_REGRESSIONS_FOUND`), and REST endpoints (`/api/v1/regression/compare`, `/api/v1/runs/{id}/regression`, `/api/v1/projects/{id}/regressions/latest`).
 - [ ] Stage 19: AI Recommendation Layer
 - [ ] Stage 20: Dashboard & Web UI
 - [ ] Stage 27: Intentionally Flawed Demo Target API

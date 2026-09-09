@@ -1,5 +1,29 @@
 # API Sentinel — Changelog
 
+## [Stage 13 - Regression Testing Engine] - 2026-09-09
+- **Completed**: Baseline vs Current Delta Comparator, Latency Degradation Classifier, Regression Alert Tagger, and Summary Cards (Stage 13 Complete).
+- Created `app/models/schemas/regression.py` with:
+  - `RegressionType` (`FUNCTIONAL_REGRESSION`, `PERFORMANCE_REGRESSION`, `SCHEMA_REGRESSION`, `NEW_FAILURE`, `RESOLVED_IMPROVEMENT`, `NO_REGRESSION`).
+  - `RegressionSeverity` (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NONE`).
+  - `RegressionVerdict` (`CLEAN`, `DEGRADED`, `CRITICAL_REGRESSIONS_FOUND`).
+  - `ComparisonExecutionItem`, `RegressionItem`, `RegressionSummaryCard`, `DirectRegressionComparisonRequest`, `ProjectRegressionReport`.
+- Created `app/utils/regression_comparator.py` with:
+  - `calculate_latency_delta()`: Calculates absolute latency difference (ms) and percentage change.
+  - `classify_regression()`: Classifies regression type, assigns severity, generates badge labels (`CRITICAL CRASH`, `BROKEN TEST`, `SLOWDOWN +X%`, `SCHEMA MISMATCH`, `RESOLVED / FIXED`), and generates suggested remediations.
+  - `compare_execution_results()`: Differential comparison between baseline and current runs, generating a structured `RegressionSummaryCard` and categorized lists.
+- Implemented `RegressionService` in `app/services/regression_service.py`:
+  - `compare_direct_batches()`: Evaluates ad-hoc execution lists.
+  - `compare_runs_by_id()`: Compares database-persisted test runs, automatically discovering the prior successful baseline if not explicitly supplied.
+  - `get_latest_project_regression()`: Queries the most recent project test run and evaluates deltas against its baseline.
+- Implemented REST router in `app/api/v1/regression.py`:
+  - `POST /api/v1/regression/compare`
+  - `GET /api/v1/runs/{run_id}/regression`
+  - `GET /api/v1/projects/{project_id}/regressions/latest`
+- Mounted `regression_router` in `app/api/v1/api.py`.
+- Added unit and integration test suite in `tests/test_regression_engine.py` (8 new tests passing).
+- Total test suite count increased to 187 passing tests with 100% pass rate.
+- Marked Stage 13: Regression Testing Engine as 100% COMPLETE.
+
 ## [Stage 12 - Test Run Management] - 2026-09-09
 - **Completed**: Test Run Suite Orchestrator, Lifecycle State Machine, Concurrency Dispatcher, and Run Telemetry Persistence (Stage 12 Complete).
 - Created `app/models/entities/test_run.py` & `app/models/entities/test_result.py`:

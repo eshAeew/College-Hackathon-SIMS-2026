@@ -16,7 +16,7 @@
 | **Stage 10** | Performance Analysis | Tier 2 | `COMPLETED` | Latency statistical percentiles (P50, P90, P95, P99), latency tier bucketing, SLA threshold grading & live benchmark dispatcher (8/8 tests OK) |
 | **Stage 11** | Recurring Failure Detection | Tier 2 | `COMPLETED` | Historical failure aggregator, error trace normalizer, root-cause fingerprinter, persistence rating & failure clustering (10/10 tests OK) |
 | **Stage 12** | Test Run Management | Tier 1 | `COMPLETED` | TestRun & TestResult models, suite orchestrator, lifecycle state machine, cancellation & metrics (8/8 tests OK) |
-| **Stage 13** | Regression Testing Engine | Tier 2 | `PLANNED` | Delta comparator, regression alert tagger |
+| **Stage 13** | Regression Testing Engine | Tier 2 | `COMPLETED` | Delta comparator, status/latency diffs, regression alert badges & summary verdict cards (8/8 tests OK) |
 | **Stage 14** | OpenAPI Specification Support | Tier 2 | `PLANNED` | OpenAPI 3.0/Swagger parser, endpoint generator |
 | **Stage 15** | Automatic Test Generation | Tier 2 | `PLANNED` | Positive/Negative combinatorial test generator |
 | **Stage 16** | Safety & Execution Controls | Tier 1 | `PLANNED` | Target authorization, dangerous method safeguards |
